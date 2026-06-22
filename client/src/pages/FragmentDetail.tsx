@@ -52,7 +52,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
         className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#faf8f4]"
       >
         {/* 헤더 */}
-        <header className="flex items-center justify-between px-5 pt-12 pb-6">
+        <header className="flex items-center justify-between border-b border-[#FAF7F2] bg-[#FFFEFB] px-4 pt-5 pb-4">
           <button
             onClick={() => navigate("/")}
             className="flex items-center gap-1.5 text-[#787064b2]"
@@ -84,7 +84,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
           </div>
         </header>
 
-        <div className="flex-1 px-5 flex flex-col gap-6 pb-36">
+        <div className="flex-1 px-5 pt-4 flex flex-col gap-6 pb-36">
           {/* 출처 + 날짜 */}
           <div className="flex items-center gap-3">
             {fragment.source && (

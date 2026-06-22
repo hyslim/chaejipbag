@@ -12,9 +12,23 @@ const recentPokachips = [
   { label: "수조", bg: "rgba(168,220,232,0.45)" },
 ];
 
+const koreanInitials = [
+  "ㄱ", "ㄲ", "ㄴ", "ㄷ", "ㄸ", "ㄹ", "ㅁ", "ㅂ", "ㅃ", "ㅅ",
+  "ㅆ", "ㅇ", "ㅈ", "ㅉ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ",
+];
+
+const getKoreanInitials = (value: string) =>
+  Array.from(value)
+    .map((character) => {
+      const code = character.charCodeAt(0);
+      if (code < 0xac00 || code > 0xd7a3) return character;
+      return koreanInitials[Math.floor((code - 0xac00) / 588)];
+    })
+    .join("");
+
 export const FragmentEdit = ({ params }: { params: { id: string } }) => {
   const [, navigate] = useLocation();
-  const { getFragment, updateFragment } = useFragments();
+  const { fragments, getFragment, updateFragment } = useFragments();
   const fragment = getFragment(params.id);
 
   const [title, setTitle] = useState(fragment?.title ?? "");
@@ -60,6 +74,15 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
     setIsInputActive(false);
   };
 
+  const selectCandidate = (label: string) => {
+    const normalized = normalizePokachipName(label);
+    if (normalized && normalized !== "추가" && !selectedChips.includes(normalized)) {
+      setSelectedChips((prev) => [...prev, normalized]);
+    }
+    setNewChipInput("");
+    setIsInputActive(false);
+  };
+
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -77,6 +100,22 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
   };
 
   const visibleRecent = recentPokachips.filter((c) => !selectedChips.includes(c.label));
+  const normalizedQuery = normalizePokachipName(newChipInput).toLocaleLowerCase("ko-KR");
+  const autocompleteCandidates = isInputActive && normalizedQuery
+    ? Array.from(
+        new Set([
+          ...recentPokachips.map((chip) => chip.label),
+          ...fragments.flatMap((item) => item.pokachips ?? []).map(normalizePokachipName).filter(Boolean),
+        ])
+      )
+        .filter((label) => {
+          if (selectedChips.includes(label)) return false;
+          const normalizedLabel = label.toLocaleLowerCase("ko-KR");
+          return normalizedLabel.includes(normalizedQuery)
+            || getKoreanInitials(label).includes(normalizedQuery);
+        })
+        .slice(0, 5)
+    : [];
 
   const handleConfirm = () => {
     const pendingChip = normalizePokachipName(newChipInput);
@@ -101,7 +140,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
       <section className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#faf8f4]">
 
         {/* 헤더 */}
-        <header className="flex items-center px-5 pt-12 pb-6">
+        <header className="flex items-center border-b border-[#FAF7F2] bg-[#FFFEFB] px-4 pt-5 pb-4">
           <button
             onClick={() => navigate(`/fragment/${fragment.id}`)}
             className="flex items-center gap-1.5"
@@ -117,10 +156,10 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
           </button>
         </header>
 
-        <div className="flex-1 px-5 flex flex-col gap-5 pb-36">
+        <div className="flex-1 px-5 pt-4 flex flex-col gap-5 pb-36">
 
           {/* 출처 + 날짜 */}
-          <div className="flex items-center gap-3">
+          <div className="mb-1 flex items-center gap-3">
             {fragment.source && (
               <div className="flex items-center gap-1.5">
                 <div className="w-3.5 h-3.5 rounded-sm bg-[#e8e4dc] flex items-center justify-center">
@@ -143,13 +182,19 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
           </div>
 
           {/* 제목 입력 */}
-          <div className="flex items-start gap-2 border-l-2 border-[#d8d4cc] pl-3">
+          <div className="flex flex-col gap-2">
+            <label
+              className="text-[11px] font-medium tracking-[0.6px] text-[#a0988c80]"
+              style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+            >
+              제목
+            </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="제목 수정하기"
-              className="flex-1 bg-transparent text-[17px] font-medium text-[#3a3228] placeholder-[#c0b8b080] outline-none leading-snug"
+              placeholder="제목을 적어주세요"
+              className="w-full rounded-xl border border-[#0000000a] bg-white px-4 py-3 text-[13.5px] leading-relaxed text-[#4a4540] placeholder-[#c0b8b080] outline-none shadow-[0px_1px_4px_#0000000a]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             />
           </div>
@@ -215,66 +260,93 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
               </div>
             )}
 
-            <div className="rounded-xl border border-[#0000000a] bg-white shadow-[0px_1px_4px_#0000000a] overflow-hidden">
-              {/* 새 포카칩 입력 행 */}
-              <div
-                className="flex items-center gap-2 px-4 py-3 border-b border-[#0000000a] cursor-text"
+            {isInputActive ? (
+              <div className="flex items-center gap-2 rounded-xl border border-[#0000000a] bg-white px-4 py-3 shadow-[0px_1px_4px_#0000000a]">
+                <span className="shrink-0 text-[12px] text-[#b8b0a8]">+</span>
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={newChipInput}
+                    onChange={(e) => setNewChipInput(e.target.value)}
+                    onKeyDown={handleInputKeyDown}
+                    onBlur={() => {
+                      if (!newChipInput.trim()) setIsInputActive(false);
+                    }}
+                    autoComplete="off"
+                    placeholder="새 조각 이름..."
+                    className="min-w-0 flex-1 bg-transparent text-[13px] text-[#4a4540] placeholder-[#c0b8b080] outline-none"
+                    style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+                  />
+                  {newChipInput.trim() && (
+                    <button
+                      type="button"
+                      onMouseDown={(e) => { e.preventDefault(); addNewChip(); }}
+                      className="shrink-0 rounded-full bg-[#9898d0] px-2.5 py-0.5 text-[11px] font-medium text-white"
+                    >
+                      추가
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
                 onClick={handleActivateInput}
+                className="flex w-full items-center gap-2 rounded-xl border border-[#0000000a] bg-white px-4 py-3 text-left shadow-[0px_1px_4px_#0000000a]"
               >
-                <span className="text-[12px] text-[#b8b0a8] shrink-0" style={{ fontFamily: "Inter, sans-serif" }}>+</span>
-                {isInputActive ? (
-                  <div className="flex flex-1 items-center gap-2">
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      value={newChipInput}
-                      onChange={(e) => setNewChipInput(e.target.value)}
-                      onKeyDown={handleInputKeyDown}
-                      onBlur={() => {
-                        if (!newChipInput.trim()) setIsInputActive(false);
-                      }}
-                      placeholder="새 조각 이름..."
-                      className="flex-1 bg-transparent text-[13px] text-[#4a4540] placeholder-[#c0b8b080] outline-none"
-                      style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
-                    />
-                    {newChipInput.trim() && (
-                      <button
-                        type="button"
-                        onMouseDown={(e) => { e.preventDefault(); addNewChip(); }}
-                        className="shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-medium text-white"
-                        style={{ backgroundColor: "#9898d0" }}
-                      >
-                        추가
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <span
-                    className="text-[13px] text-[#c0b8b080]"
+                <span className="text-[12px] text-[#b8b0a8]">+</span>
+                <span className="text-[13px] text-[#c0b8b080]">새로운 조각이름 달기</span>
+              </button>
+            )}
+
+            {autocompleteCandidates.length > 0 && (
+              <div className="mt-1 overflow-hidden rounded-xl border border-[#0000000a] bg-white shadow-[0px_2px_8px_#0000000a]">
+                {autocompleteCandidates.map((label, index) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onMouseDown={(event) => {
+                      event.preventDefault();
+                      selectCandidate(label);
+                    }}
+                    className={`flex w-full items-center px-4 py-2.5 text-left text-[13px] text-[#5a5248] ${
+                      index > 0 ? "border-t border-[#00000008]" : ""
+                    }`}
                     style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
                   >
-                    새로운 조각이름 달기
-                  </span>
-                )}
+                    {label}
+                  </button>
+                ))}
               </div>
+            )}
 
-              {/* 최근 사용한 포카칩 — 최대 5개, 선택된 항목 제외 */}
-              {visibleRecent.map((chip, idx) => (
-                <button
-                  key={chip.label}
-                  type="button"
-                  onClick={() => toggleChip(chip.label)}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[#00000004] text-left ${idx < visibleRecent.length - 1 ? "border-b border-[#0000000a]" : ""}`}
-                >
-                  <span className="text-[12px] text-[#c0b8b0]" style={{ fontFamily: "Inter, sans-serif" }}>+</span>
-                  <span className="text-[13px] text-[#5a5248b0]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
-                    {chip.label}
-                  </span>
-                </button>
-              ))}
-
-              {visibleRecent.length === 0 && !isInputActive && (
-                <div className="px-4 py-3 text-[12px] text-[#c0b8b060]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
+            <div className="flex flex-col gap-2 pt-1">
+              <span
+                className="text-[11px] font-medium tracking-[0.5px] text-[#a0988c80]"
+                style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+              >
+                최근 사용
+              </span>
+              {visibleRecent.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {visibleRecent.map((chip) => (
+                    <button
+                      key={chip.label}
+                      type="button"
+                      onClick={() => toggleChip(chip.label)}
+                      className="h-[30px] rounded-full border border-white/70 px-3 text-[12px] font-medium text-[#5a5248b0]"
+                      style={{
+                        backgroundColor: getPokachipColor(chip.label),
+                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.7)",
+                      }}
+                    >
+                      {chip.label}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-1 text-[12px] text-[#c0b8b060]">
                   최근 사용한 조각이 없어요
                 </div>
               )}
