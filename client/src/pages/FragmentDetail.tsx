@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { ArrowLeft, Pencil, Trash2, ExternalLink } from "lucide-react";
@@ -12,8 +13,14 @@ const sourceTypeLabel: Record<string, string> = {
 
 export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   const [, navigate] = useLocation();
-  const { getFragment } = useFragments();
+  const { getFragment, deleteFragment } = useFragments();
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const fragment = getFragment(params.id);
+
+  const handleDelete = () => {
+    deleteFragment(params.id);
+    navigate("/");
+  };
 
   if (!fragment) {
     return (
@@ -68,6 +75,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
               <Pencil size={16} strokeWidth={1.8} />
             </button>
             <button
+              onClick={() => setIsDeleteOpen(true)}
               className="text-[#a0988c90] hover:text-red-400"
               aria-label="삭제"
             >
@@ -222,6 +230,47 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
             공유하기
           </button>
         </div>
+
+        {isDeleteOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#2a262033] px-5 backdrop-blur-[2px]"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-fragment-title"
+          >
+            <div className="w-full max-w-[350px] rounded-2xl border border-white/80 bg-[#FFFEFB] p-5 shadow-[0_18px_50px_rgba(60,50,40,0.18)]">
+              <h2
+                id="delete-fragment-title"
+                className="text-[18px] font-semibold text-[#3a3228]"
+                style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+              >
+                이 조각을 버릴까요?
+              </h2>
+              <p
+                className="mt-2 text-[13px] leading-relaxed text-[#787064b0]"
+                style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+              >
+                버린 조각은 다시 주울 수 없어요.
+              </p>
+              <div className="mt-5 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsDeleteOpen(false)}
+                  className="flex-1 rounded-full border border-[#0000000a] bg-[#FAF8F4] py-3 text-[13px] font-medium text-[#787064]"
+                >
+                  조금 더 둘래요
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="flex-1 rounded-full bg-[#d98b8b] py-3 text-[13px] font-medium text-white"
+                >
+                  버리기
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </motion.section>
     </main>
   );

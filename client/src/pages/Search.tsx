@@ -1,0 +1,111 @@
+import { useState } from "react";
+import { Link, useLocation } from "wouter";
+import { getPokachipColor, normalizePokachipName, type Fragment } from "@/data/fragments";
+import { useFragments } from "@/hooks/useFragments";
+
+const SearchCard = ({ fragment }: { fragment: Fragment }) => (
+  <Link href={`/fragment/${fragment.id}`}>
+    <div className="rounded-2xl border border-white/80 bg-white/80 p-4 shadow-[0_5px_18px_rgba(74,63,48,0.06)]">
+      <h2
+        className="line-clamp-2 text-[14px] font-medium leading-snug text-[#3a3228]"
+        style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+      >
+        {fragment.title}
+      </h2>
+      {fragment.memo && <p className="mt-2 line-clamp-2 text-[12px] text-[#78706499]">{fragment.memo}</p>}
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {(fragment.pokachips ?? []).map((chip) => {
+          const name = normalizePokachipName(chip);
+          return (
+            <span
+              key={chip}
+              className="rounded-full px-2.5 py-1 text-[10px] font-medium text-[#5a5248b0]"
+              style={{ backgroundColor: getPokachipColor(name) }}
+            >
+              {name}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  </Link>
+);
+
+export const Search = () => {
+  const [, navigate] = useLocation();
+  const { fragments } = useFragments();
+  const [query, setQuery] = useState("");
+  const normalizedQuery = query.trim().toLocaleLowerCase("ko-KR");
+  const recentChips = Array.from(
+    new Set(
+      fragments
+        .flatMap((fragment) => fragment.pokachips ?? [])
+        .map(normalizePokachipName)
+        .filter(Boolean)
+    )
+  ).slice(0, 8);
+  const results = normalizedQuery
+    ? fragments.filter((fragment) => {
+        const searchable = [
+          fragment.title,
+          fragment.memo,
+          fragment.source,
+          fragment.url,
+          ...(fragment.pokachips ?? []).map(normalizePokachipName),
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLocaleLowerCase("ko-KR");
+        return searchable.includes(normalizedQuery);
+      })
+    : [];
+
+  return (
+    <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
+      <section className="min-h-screen w-full max-w-[390px] bg-[#FFFEFB] px-4 pb-12 pt-6">
+        <button type="button" onClick={() => navigate("/")} className="mb-6 text-[13px] text-[#787064b2]">
+          ‹ 홈
+        </button>
+        <h1 className="text-[24px] font-medium text-[#353a69cc]">조각 찾기</h1>
+        <div className="mt-5 flex items-center gap-2 rounded-2xl border border-[#FAF7F2] bg-white px-4 py-3 shadow-[0_4px_14px_rgba(74,63,48,0.05)]">
+          <span aria-hidden="true" className="text-[#a0988c80]">⌕</span>
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="그 파란 거, 조명, 블렌더..."
+            autoComplete="off"
+            className="min-w-0 flex-1 bg-transparent text-[14px] text-[#3a3228] outline-none placeholder:text-[#a0988c80]"
+          />
+        </div>
+
+        {!normalizedQuery ? (
+          <div className="mt-6">
+            <p className="text-[12px] font-medium text-[#78706499]">최근 기억 조각</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {recentChips.map((chip) => (
+                <button
+                  key={chip}
+                  type="button"
+                  onClick={() => setQuery(chip)}
+                  className="rounded-full border border-white/70 px-3.5 py-1.5 text-[12px] font-medium text-[#5a5248b0]"
+                  style={{ backgroundColor: getPokachipColor(chip) }}
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : results.length > 0 ? (
+          <div className="mt-6 flex flex-col gap-3">
+            {results.map((fragment) => <SearchCard key={fragment.id} fragment={fragment} />)}
+          </div>
+        ) : (
+          <div className="mt-10 text-center">
+            <p className="text-[14px] font-medium text-[#787064]">찾는 조각이 아직 없어요.</p>
+            <p className="mt-2 text-[12px] text-[#a0988c]">다른 기억 단서로 다시 찾아보세요.</p>
+          </div>
+        )}
+      </section>
+    </main>
+  );
+};

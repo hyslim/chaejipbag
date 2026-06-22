@@ -57,5 +57,12 @@ export function useFragments() {
     return newFragment;
   }, [fragments]);
 
-  return { fragments, getFragment, updateFragment, addFragment };
+  const deleteFragment = useCallback((id: string) => {
+    const nextFragments = fragments.filter((fragment) => fragment.id !== id);
+
+    saveToStorage(nextFragments);
+    setFragments(nextFragments);
+  }, [fragments]);
+
+  return { fragments, getFragment, updateFragment, addFragment, deleteFragment };
 }

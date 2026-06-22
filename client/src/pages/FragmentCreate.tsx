@@ -19,7 +19,9 @@ export const FragmentCreate = () => {
   const [memo, setMemo] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
+  const [isInputActive, setIsInputActive] = useState(false);
   const selectedChipsRef = useRef<string[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const commitSelectedChips = (nextChips: string[]) => {
     selectedChipsRef.current = nextChips;
@@ -42,6 +44,7 @@ export const FragmentCreate = () => {
     const nextChips = Array.from(new Set([...selectedChipsRef.current, ...enteredTags]));
     commitSelectedChips(nextChips);
     setTagInput("");
+    setIsInputActive(false);
   };
 
   const handleTagKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -50,6 +53,15 @@ export const FragmentCreate = () => {
       addInputChips();
     }
   };
+
+  const handleActivateInput = () => {
+    setIsInputActive(true);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  };
+
+  const visibleRecentChips = recentPokachips.filter(
+    (chip) => !selectedChips.includes(chip)
+  );
 
   const handleSave = () => {
     const trimmedMemo = memo.trim();
@@ -137,32 +149,6 @@ export const FragmentCreate = () => {
             >
               기억 조각
             </label>
-            <p className="text-[12px] text-[#a0988c80]">지금 남기지 않아도 괜찮아요.</p>
-            <div className="flex h-10 items-center gap-2 rounded-xl border border-[#0000000a] bg-white px-3 shadow-[0_2px_8px_rgba(80,70,55,0.04)]">
-                <input
-                  id="new-fragment-tags"
-                  value={tagInput}
-                  onChange={(event) => setTagInput(event.target.value)}
-                  onKeyDown={handleTagKeyDown}
-                  autoComplete="off"
-                  placeholder="새로운 조각이름 달기"
-                  className="min-w-0 flex-1 bg-transparent text-[13px] text-[#4a4540] outline-none placeholder:text-[#a8a09a80]"
-                  style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
-                />
-                {tagInput.trim() && (
-                  <button
-                    type="button"
-                    onMouseDown={(event) => {
-                      event.preventDefault();
-                      addInputChips();
-                    }}
-                    className="shrink-0 rounded-full bg-[#9898d0] px-2.5 py-0.5 text-[11px] font-medium text-white"
-                  >
-                    추가
-                  </button>
-                )}
-            </div>
-
             {selectedChips.length > 0 && (
               <div className="flex flex-col gap-2 pt-1">
                 <span
@@ -197,39 +183,75 @@ export const FragmentCreate = () => {
               </div>
             )}
 
-            <div className="flex flex-col gap-2 pt-1">
-              <span
-                className="text-[11px] font-medium tracking-[0.5px] text-[#a0988c80]"
-                style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+            {isInputActive ? (
+              <div className="flex items-center gap-2 rounded-xl border border-[#0000000a] bg-white px-4 py-3 shadow-[0_2px_8px_rgba(80,70,55,0.04)]">
+                <span className="shrink-0 text-[12px] text-[#b8b0a8]">+</span>
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <input
+                      ref={inputRef}
+                      id="new-fragment-tags"
+                      value={tagInput}
+                      onChange={(event) => setTagInput(event.target.value)}
+                      onKeyDown={handleTagKeyDown}
+                      onBlur={() => {
+                        if (!tagInput.trim()) setIsInputActive(false);
+                      }}
+                      autoComplete="off"
+                      placeholder="새 조각 이름..."
+                      className="min-w-0 flex-1 bg-transparent text-[13px] text-[#4a4540] outline-none placeholder:text-[#a8a09a80]"
+                      style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+                    />
+                    {tagInput.trim() && (
+                      <button
+                        type="button"
+                        onMouseDown={(event) => {
+                          event.preventDefault();
+                          addInputChips();
+                        }}
+                        className="shrink-0 rounded-full bg-[#9898d0] px-2.5 py-0.5 text-[11px] font-medium text-white"
+                      >
+                        추가
+                      </button>
+                    )}
+                  </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleActivateInput}
+                className="flex w-full items-center gap-2 rounded-xl border border-[#0000000a] bg-white px-4 py-3 text-left shadow-[0_2px_8px_rgba(80,70,55,0.04)]"
               >
+                <span className="text-[12px] text-[#b8b0a8]">+</span>
+                <span className="text-[13px] text-[#a8a09a80]">새로운 조각이름 달기</span>
+              </button>
+            )}
+
+            <div className="flex flex-col gap-2 pt-1">
+              <span className="text-[11px] font-medium tracking-[0.5px] text-[#a0988c80]">
                 최근 사용
               </span>
-              <div className="flex flex-wrap gap-1.5">
-                {recentPokachips.map((label) => {
-                  const selected = selectedChips.includes(label);
-                  return (
+              {visibleRecentChips.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {visibleRecentChips.map((label) => (
                     <button
                       key={label}
                       type="button"
                       onClick={() => toggleChip(label)}
-                      className={`flex h-[30px] items-center rounded-full border border-white/70 px-3 text-left ${
-                        selected ? "ring-1 ring-[#8c847830]" : ""
-                      }`}
+                      className="h-[30px] rounded-full border border-white/70 px-3 text-[12px] font-medium text-[#5a5248b0]"
                       style={{
                         backgroundColor: getPokachipColor(label),
                         boxShadow: "inset 0 1px 0 rgba(255,255,255,0.7)",
                       }}
                     >
-                      <span
-                        className="text-[12px] font-medium text-[#5a5248b0]"
-                        style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
-                      >
-                        {label}
-                      </span>
+                      {label}
                     </button>
-                  );
-                })}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-1 text-[12px] text-[#c0b8b060]">
+                  최근 사용한 조각이 없어요
+                </div>
+              )}
             </div>
           </div>
         </div>

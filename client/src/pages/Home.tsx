@@ -169,12 +169,17 @@ export const Home = (): JSX.Element => {
               >
                 내 기억
               </h1>
-              <span aria-hidden="true" className="text-[#78706480]">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <button
+                type="button"
+                onClick={() => navigate("/search")}
+                className="text-[#78706480]"
+                aria-label="조각 찾기"
+              >
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
                   <circle cx="8" cy="8" r="5.25" stroke="currentColor" strokeWidth="1.3" />
                   <path d="M12 12L15 15" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
                 </svg>
-              </span>
+              </button>
             </header>
 
             {/* 관심사 타일 — 정돈된 3열 × 2행의 기억 조각 */}
@@ -337,7 +342,11 @@ export const Home = (): JSX.Element => {
               <span className="text-white text-xl font-light leading-none">+</span>
             </motion.button>
 
-            <button className="flex items-center gap-2 rounded-full px-3 py-2">
+            <button
+              type="button"
+              onClick={() => navigate("/history")}
+              className="flex items-center gap-2 rounded-full px-3 py-2"
+            >
               <img src="/figmaAssets/heart.png" alt="기록" className="w-5 h-5" />
               <span
                 className="text-[12px] font-medium text-[#a0988c90]"

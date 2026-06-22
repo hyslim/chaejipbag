@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { ArrowLeft, X } from "lucide-react";
-import { pokachipColorMap } from "@/data/fragments";
+import { getPokachipColor, normalizePokachipName } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 
 const recentPokachips = [
@@ -20,7 +20,11 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
   const [title, setTitle] = useState(fragment?.title ?? "");
   const [memo, setMemo] = useState(fragment?.memo ?? "");
   const [url, setUrl] = useState(fragment?.url ?? "");
-  const [selectedChips, setSelectedChips] = useState<string[]>(fragment?.pokachips ?? []);
+  const [selectedChips, setSelectedChips] = useState<string[]>(
+    Array.from(
+      new Set((fragment?.pokachips ?? []).map(normalizePokachipName).filter(Boolean))
+    )
+  );
   const [newChipInput, setNewChipInput] = useState("");
   const [isInputActive, setIsInputActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -48,7 +52,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
   };
 
   const addNewChip = () => {
-    const trimmed = newChipInput.trim();
+    const trimmed = normalizePokachipName(newChipInput);
     if (trimmed && !selectedChips.includes(trimmed)) {
       setSelectedChips((prev) => [...prev, trimmed]);
     }
@@ -75,11 +79,19 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
   const visibleRecent = recentPokachips.filter((c) => !selectedChips.includes(c.label));
 
   const handleConfirm = () => {
+    const pendingChip = normalizePokachipName(newChipInput);
+    const nextChips = Array.from(
+      new Set([
+        ...selectedChips.map(normalizePokachipName).filter(Boolean),
+        ...(pendingChip && pendingChip !== "추가" ? [pendingChip] : []),
+      ])
+    );
+
     updateFragment(fragment.id, {
       title,
       memo,
       url: url || undefined,
-      pokachips: selectedChips,
+      pokachips: nextChips.length > 0 ? nextChips : ["임시조각"],
     });
     navigate(`/fragment/${fragment.id}`);
   };
@@ -169,6 +181,40 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
               기억 조각
             </label>
 
+            {/* 선택된 포카칩 */}
+            {selectedChips.length > 0 && (
+              <div className="flex flex-col gap-2 pt-1">
+                <span
+                  className="text-[11px] font-medium tracking-[0.5px] text-[#a0988c80]"
+                  style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+                >
+                  선택한 조각
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedChips.map((label) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => toggleChip(label)}
+                      className="flex items-center gap-1 rounded-full border border-white/70 px-3 py-1"
+                      style={{
+                        backgroundColor: getPokachipColor(label),
+                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.8)",
+                      }}
+                    >
+                      <span
+                        className="text-[12px] font-medium text-[#5a5248b0]"
+                        style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+                      >
+                        {label}
+                      </span>
+                      <X size={10} className="mt-[1px] text-[#8c8478]" strokeWidth={2.5} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="rounded-xl border border-[#0000000a] bg-white shadow-[0px_1px_4px_#0000000a] overflow-hidden">
               {/* 새 포카칩 입력 행 */}
               <div
@@ -234,31 +280,6 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
               )}
             </div>
 
-            {/* 선택된 포카칩 */}
-            {selectedChips.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {selectedChips.map((label) => (
-                  <button
-                    key={label}
-                    type="button"
-                    onClick={() => toggleChip(label)}
-                    className="flex items-center gap-1 rounded-full px-3 py-1 border border-white/70"
-                    style={{
-                      backgroundColor: pokachipColorMap[label] ?? "rgba(200,196,188,0.45)",
-                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.8)",
-                    }}
-                  >
-                    <span
-                      className="text-[12px] font-medium text-[#5a5248b0]"
-                      style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
-                    >
-                      {label}
-                    </span>
-                    <X size={10} className="text-[#8c8478] mt-[1px]" strokeWidth={2.5} />
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* 원본 링크 */}

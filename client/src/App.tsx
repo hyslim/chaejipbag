@@ -9,12 +9,18 @@ import { Home } from "@/pages/Home";
 import { FragmentDetail } from "@/pages/FragmentDetail";
 import { FragmentEdit } from "@/pages/FragmentEdit";
 import { FragmentCreate } from "@/pages/FragmentCreate";
+import { History } from "@/pages/History";
+import { Search } from "@/pages/Search";
+import { QuickSave } from "@/pages/QuickSave";
 
 function Router() {
   return (
     <Switch>
       {/* Add pages below */}
       <Route path="/" component={Home} />
+      <Route path="/history" component={History} />
+      <Route path="/search" component={Search} />
+      <Route path="/quick-save" component={QuickSave} />
       <Route path="/fragment/new" component={FragmentCreate} />
       <Route path="/fragment/:id" component={FragmentDetail} />
       <Route path="/fragment/:id/edit" component={FragmentEdit} />
