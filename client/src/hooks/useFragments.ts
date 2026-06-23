@@ -34,9 +34,15 @@ export function useFragments() {
   );
 
   const updateFragment = useCallback((id: string, patch: Partial<Fragment>) => {
-    const nextFragments = fragments.map((fragment) =>
-      fragment.id === id ? { ...fragment, ...patch } : fragment
-    );
+    const targetFragment = fragments.find((fragment) => fragment.id === id);
+    const nextFragments = targetFragment
+      ? [
+          { ...targetFragment, ...patch },
+          ...fragments.filter((fragment) => fragment.id !== id),
+        ]
+      : fragments.map((fragment) =>
+          fragment.id === id ? { ...fragment, ...patch } : fragment
+        );
 
     saveToStorage(nextFragments);
     setFragments(nextFragments);
