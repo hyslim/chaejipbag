@@ -5,16 +5,34 @@ import { useFragments } from "@/hooks/useFragments";
 
 const defaultQuickChips = ["글쓰기", "수조", "조명", "웹앱", "블렌더"];
 
+const getUrlHostname = (url: string) => {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return "";
+  }
+};
+
 export const QuickSave = () => {
   const [, navigate] = useLocation();
   const { fragments, addFragment } = useFragments();
   const params = new URLSearchParams(window.location.search);
-  const sharedTitle = params.get("title")?.trim() || "외부에서 공유한 조각";
-  const sharedText = params.get("text")?.trim() || "나중에 다시 보고 싶은 내용을 공유로 주웠어요.";
-  const sharedUrl = params.get("url")?.trim() || "https://example.com/shared";
+  const sharedTitle = params.get("title")?.trim() ?? "";
+  const sharedText = params.get("text")?.trim() ?? "";
+  const sharedUrl = params.get("url")?.trim() ?? "";
   const [memo, setMemo] = useState(sharedText);
   const [chipInput, setChipInput] = useState("");
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
+  const trimmedMemo = memo.trim();
+  const canSave = Boolean(sharedUrl.trim() || trimmedMemo || sharedText.trim());
+  const sharedHostname = sharedUrl ? getUrlHostname(sharedUrl) : "";
+  const fallbackTitleSource = trimmedMemo || sharedText;
+  const displayTitle = (
+    sharedTitle ||
+    fallbackTitleSource.split(/\r?\n/)[0].trim() ||
+    sharedHostname ||
+    "링크 조각"
+  ).slice(0, 30);
   const recentChips = Array.from(
     new Set(
       fragments
@@ -32,24 +50,20 @@ export const QuickSave = () => {
   };
 
   const handleSave = () => {
+    if (!canSave) return;
+
     const inputChips = chipInput
       .split(",")
       .map(normalizePokachipName)
       .filter((chip) => chip && chip !== "추가");
     const pokachips = Array.from(new Set([...selectedChips, ...inputChips]));
     const now = new Date();
-    let source = "외부 공유";
-    try {
-      source = new URL(sharedUrl).hostname || source;
-    } catch {
-      // Keep the fallback source label.
-    }
 
     addFragment({
-      title: sharedTitle.slice(0, 30),
-      memo: memo.trim() || sharedText,
+      title: displayTitle,
+      memo: trimmedMemo || sharedText || undefined,
       url: sharedUrl || undefined,
-      source,
+      source: sharedHostname || undefined,
       sourceType: sharedUrl ? "link" : "text",
       time: "방금",
       date: new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "long", day: "numeric" }).format(now),
@@ -62,9 +76,9 @@ export const QuickSave = () => {
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
       <section className="min-h-screen w-full max-w-[390px] bg-[#FFFEFB] px-4 pb-28 pt-6">
-        <button type="button" onClick={() => navigate("/")} className="text-[13px] text-[#787064b2]">‹ 닫기</button>
+        <button type="button" onClick={() => navigate("/")} className="text-[13px] text-[#787064b2]">닫기</button>
         <p className="mt-6 text-[12px] font-medium text-[#78706499]">외부 공유에서 주운 조각</p>
-        <h1 className="mt-1 text-[22px] font-medium leading-snug text-[#353a69cc]">{sharedTitle}</h1>
+        <h1 className="mt-1 text-[22px] font-medium leading-snug text-[#353a69cc]">{displayTitle}</h1>
         <p className="mt-2 truncate text-[12px] text-[#a0988c]">{sharedUrl}</p>
 
         <label className="mt-7 block text-[12px] font-medium text-[#78706499]">한 줄 메모</label>
@@ -101,9 +115,11 @@ export const QuickSave = () => {
           <button
             type="button"
             onClick={handleSave}
-            className="w-full rounded-full bg-[#8e88ed] py-4 text-[15px] font-medium text-white shadow-[0_4px_18px_rgba(126,135,220,0.24)]"
+            disabled={!canSave}
+            aria-disabled={!canSave}
+            className="w-full rounded-full bg-[#8e88ed] py-4 text-[15px] font-medium text-white shadow-[0_4px_18px_rgba(126,135,220,0.24)] disabled:cursor-not-allowed disabled:opacity-40"
           >
-            기억 남기기
+            기억에 담기
           </button>
         </div>
       </section>
