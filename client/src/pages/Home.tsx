@@ -119,10 +119,56 @@ const FragmentCard = ({ fragment, index }: { fragment: Fragment; index: number }
   </div>
 );
 
+const SearchResultCard = ({ fragment }: { fragment: Fragment }) => {
+  const primaryChip = fragment.pokachips[0] ? normalizePokachipName(fragment.pokachips[0]) : "";
+
+  return (
+    <Link href={`/fragment/${fragment.id}`}>
+      <motion.div
+        whileTap={{ scale: 0.97 }}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        className="min-h-[104px] rounded-[14px] border border-white/85 bg-white/90 px-3.5 py-3 shadow-[0_6px_18px_rgba(74,63,48,0.08)]"
+      >
+        {primaryChip && (
+          <span
+            className="mb-2 inline-flex h-[20px] items-center rounded-full px-2.5 text-[10px] font-medium text-[#5a5248b0]"
+            style={{
+              backgroundColor: getPokachipColor(primaryChip),
+              fontFamily: "'Pretendard Variable', sans-serif",
+            }}
+          >
+            {primaryChip}
+          </span>
+        )}
+        <p
+          className="line-clamp-2 text-[12px] font-semibold leading-[1.55] text-[#3a3228]"
+          style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+        >
+          {fragment.title}
+        </p>
+        {fragment.memo && (
+          <p
+            className="mt-1 line-clamp-1 text-[10px] leading-snug text-[#8f877c99]"
+            style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+          >
+            {fragment.memo}
+          </p>
+        )}
+        <div className="mt-2 flex items-center gap-1 text-[10px] text-[#aaa29a99]">
+          <span aria-hidden="true">⌂</span>
+          <span style={{ fontFamily: "Inter, sans-serif" }}>{fragment.time || fragment.date}</span>
+        </div>
+      </motion.div>
+    </Link>
+  );
+};
+
 export const Home = (): JSX.Element => {
   const { fragments } = useFragments();
   const [, navigate] = useLocation();
   const [selectedChip, setSelectedChip] = useState<string | null>(null);
+  const [isSearchMode, setIsSearchMode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const storedPokachips = Array.from(
     new Set(
       fragments
@@ -139,10 +185,131 @@ export const Home = (): JSX.Element => {
         )
       )
     : fragments;
+  const normalizedSearchQuery = searchQuery.trim().toLocaleLowerCase("ko-KR");
+  const searchResults = normalizedSearchQuery
+    ? fragments.filter((fragment) => {
+        const searchable = [
+          fragment.title,
+          fragment.memo,
+          fragment.source,
+          fragment.url,
+          ...(fragment.pokachips ?? []).map(normalizePokachipName),
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLocaleLowerCase("ko-KR");
+
+        return searchable.includes(normalizedSearchQuery);
+      })
+    : [];
+
+  const openSearchMode = () => {
+    setSelectedChip(null);
+    setIsSearchMode(true);
+  };
+
+  const closeSearchMode = () => {
+    setSearchQuery("");
+    setIsSearchMode(false);
+  };
 
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
       <section className="relative flex min-h-screen w-full max-w-[390px] flex-col bg-[#faf8f4]">
+        {isSearchMode ? (
+          <section className="flex min-h-screen flex-1 flex-col bg-[#faf8f4] pb-[118px]">
+            <header className="border-b border-[#FAF7F2] bg-[#FFFEFB] px-4 py-3">
+              <div className="flex h-[42px] items-center gap-2 rounded-[14px] bg-[rgba(120,112,100,0.05)] px-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
+                <span aria-hidden="true" className="text-[15px] text-[rgba(120,112,100,0.5)]">
+                  ⌕
+                </span>
+                <input
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="기억 속에서 찾기..."
+                  autoComplete="off"
+                  autoFocus
+                  className="min-w-0 flex-1 bg-transparent text-[13px] font-medium text-[rgba(50,44,34,0.8)] outline-none placeholder:text-[rgba(120,112,100,0.4)]"
+                  style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+                />
+                <button
+                  type="button"
+                  onClick={closeSearchMode}
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-[18px] font-light leading-none text-[rgba(120,112,100,0.5)]"
+                  aria-label="검색 닫기"
+                >
+                  ×
+                </button>
+              </div>
+            </header>
+
+            <div className="flex flex-1 flex-col px-4 pt-4">
+              {!normalizedSearchQuery && storedPokachips.length > 0 && (
+                <div>
+                  <p
+                    className="text-[12px] font-medium text-[#78706499]"
+                    style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+                  >
+                    최근 기억 조각
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {storedPokachips.map((chip) => (
+                      <button
+                        key={chip}
+                        type="button"
+                        onClick={() => setSearchQuery(chip)}
+                        className="h-[29px] rounded-full border border-[rgba(255,255,255,0.55)] px-3.5 py-0 text-[11px] font-medium text-[rgba(50,44,34,0.7)]"
+                        style={{
+                          backgroundColor: getPokachipColor(chip),
+                          boxShadow: "0 1px 4px rgba(200,196,188,0.28), inset 0 1px 1px rgba(255,255,255,0.45)",
+                          fontFamily: "'Pretendard Variable', sans-serif",
+                        }}
+                      >
+                        {chip}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {normalizedSearchQuery && (
+                <p
+                  className="text-[13px] font-medium text-[#8f877c99]"
+                  style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+                >
+                  '{searchQuery.trim()}' · {searchResults.length}개
+                </p>
+              )}
+
+              {normalizedSearchQuery && searchResults.length > 0 && (
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  {searchResults.map((fragment) => (
+                    <SearchResultCard key={fragment.id} fragment={fragment} />
+                  ))}
+                </div>
+              )}
+
+              {normalizedSearchQuery && searchResults.length === 0 && (
+                <div className="flex flex-1 flex-col items-center justify-center pb-24 text-center">
+                  <div className="relative mb-4 flex h-10 w-10 items-center justify-center rounded-[12px] border-2 border-[#c9c2b8]">
+                    <span className="h-2.5 w-px bg-[#c9c2b8]" />
+                    <span className="ml-2 h-2.5 w-px bg-[#c9c2b8]" />
+                    <span className="absolute -top-4 left-1/2 h-2 w-px -translate-x-1/2 bg-[#c9c2b8]" />
+                    <span className="absolute -top-3 left-[9px] h-2 w-px -rotate-45 bg-[#c9c2b8]" />
+                    <span className="absolute -top-3 right-[9px] h-2 w-px rotate-45 bg-[#c9c2b8]" />
+                  </div>
+                  <p
+                    className="text-[16px] font-medium text-[#78706480]"
+                    style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+                  >
+                    모아둔 기억 조각이 없어요
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
+        ) : (
+          <>
 
         {/* 상단 memory section */}
         <section
@@ -171,7 +338,7 @@ export const Home = (): JSX.Element => {
               </h1>
               <button
                 type="button"
-                onClick={() => navigate("/search")}
+                onClick={openSearchMode}
                 className="text-[#78706480]"
                 aria-label="조각 찾기"
               >
@@ -300,6 +467,8 @@ export const Home = (): JSX.Element => {
             </div>
           </div>
         </section>
+          </>
+        )}
 
         {/* 하단 네비게이션 */}
         <footer
