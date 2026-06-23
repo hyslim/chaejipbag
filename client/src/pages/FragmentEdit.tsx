@@ -184,7 +184,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
           {/* 제목 입력 */}
           <div className="flex flex-col gap-2">
             <label
-              className="text-[11px] font-medium tracking-[0.6px] text-[#a0988c80]"
+              className="text-[13px] font-medium tracking-[0.6px] text-[#787064bf]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
               제목
@@ -202,7 +202,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
           {/* 내 메모 */}
           <div className="flex flex-col gap-2">
             <label
-              className="text-[11px] font-medium tracking-[0.6px] text-[#a0988c80]"
+              className="text-[13px] font-medium tracking-[0.6px] text-[#787064bf]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
               내 메모
@@ -220,7 +220,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
           {/* 기억 조각 */}
           <div className="flex flex-col gap-2.5">
             <label
-              className="text-[11px] font-medium tracking-[0.6px] text-[#a0988c80]"
+              className="text-[13px] font-medium tracking-[0.6px] text-[#787064bf]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
               기억 조각
@@ -230,7 +230,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
             {selectedChips.length > 0 && (
               <div className="flex flex-col gap-2 pt-1">
                 <span
-                  className="text-[11px] font-medium tracking-[0.5px] text-[#a0988c80]"
+                  className="text-[12px] font-medium tracking-[0.5px] text-[#78706480]"
                   style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
                 >
                   선택한 조각
@@ -301,7 +301,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
             )}
 
             {autocompleteCandidates.length > 0 && (
-              <div className="mt-1 overflow-hidden rounded-xl border border-[#0000000a] bg-white shadow-[0px_2px_8px_#0000000a]">
+              <div className="mt-2 overflow-hidden rounded-xl border border-[#0000000a] bg-[rgba(120,112,100,0.05)] shadow-[0px_2px_8px_#0000000a]">
                 {autocompleteCandidates.map((label, index) => (
                   <button
                     key={label}
@@ -323,7 +323,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
 
             <div className="flex flex-col gap-2 pt-1">
               <span
-                className="text-[11px] font-medium tracking-[0.5px] text-[#a0988c80]"
+                className="text-[12px] font-medium tracking-[0.5px] text-[#78706480]"
                 style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
               >
                 최근 사용
@@ -355,9 +355,9 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
           </div>
 
           {/* 원본 링크 */}
-          <div className="flex flex-col gap-2">
+          <div className="mt-2 flex flex-col gap-2">
             <label
-              className="text-[11px] font-medium tracking-[0.6px] text-[#a0988c80]"
+              className="text-[13px] font-medium tracking-[0.6px] text-[#787064bf]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
               원본 링크

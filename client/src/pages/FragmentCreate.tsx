@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { X } from "lucide-react";
 import { getPokachipColor, normalizePokachipName } from "@/data/fragments";
@@ -15,7 +15,7 @@ const parseChipInput = (value: string) =>
 
 export const FragmentCreate = () => {
   const [, navigate] = useLocation();
-  const { addFragment } = useFragments();
+  const { addFragment, fragments } = useFragments();
   const [memo, setMemo] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
@@ -62,6 +62,39 @@ export const FragmentCreate = () => {
   const visibleRecentChips = recentPokachips.filter(
     (chip) => !selectedChips.includes(chip)
   );
+
+  const normalizedQuery = normalizePokachipName(tagInput).toLocaleLowerCase("ko-KR");
+  const autocompleteCandidates = useMemo(() => {
+    if (!isInputActive || !normalizedQuery) return [];
+
+    const selectedChipSet = new Set(
+      selectedChips.map(normalizePokachipName).filter(Boolean)
+    );
+
+    return Array.from(
+      new Set([
+        ...recentPokachips.map(normalizePokachipName).filter(Boolean),
+        ...fragments
+          .flatMap((fragment) => fragment.pokachips ?? [])
+          .map(normalizePokachipName)
+          .filter(Boolean),
+      ])
+    )
+      .filter((label) => {
+        if (selectedChipSet.has(label)) return false;
+        return label.toLocaleLowerCase("ko-KR").includes(normalizedQuery);
+      })
+      .slice(0, 5);
+  }, [fragments, isInputActive, normalizedQuery, selectedChips]);
+
+  const selectAutocompleteCandidate = (label: string) => {
+    const normalized = normalizePokachipName(label);
+    if (normalized && !selectedChipsRef.current.includes(normalized)) {
+      commitSelectedChips([...selectedChipsRef.current, normalized]);
+    }
+    setTagInput("");
+    setIsInputActive(false);
+  };
 
   const handleSave = () => {
     const trimmedMemo = memo.trim();
@@ -224,6 +257,27 @@ export const FragmentCreate = () => {
                 <span className="text-[12px] text-[#b8b0a8]">+</span>
                 <span className="text-[13px] text-[#a8a09a80]">새로운 조각이름 달기</span>
               </button>
+            )}
+
+            {autocompleteCandidates.length > 0 && (
+              <div className="mt-1 overflow-hidden rounded-xl border border-[#0000000a] bg-white shadow-[0_2px_8px_rgba(80,70,55,0.04)]">
+                {autocompleteCandidates.map((label, index) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onMouseDown={(event) => {
+                      event.preventDefault();
+                      selectAutocompleteCandidate(label);
+                    }}
+                    className={`flex w-full items-center px-4 py-2.5 text-left text-[13px] text-[#5a5248] ${
+                      index > 0 ? "border-t border-[#00000008]" : ""
+                    }`}
+                    style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             )}
 
             <div className="flex flex-col gap-2 pt-1">
