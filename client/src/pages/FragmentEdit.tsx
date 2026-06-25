@@ -59,14 +59,28 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
     );
   }
 
+  const getCleanChipName = (value: string) => {
+    const normalized = normalizePokachipName(value);
+    return normalized && normalized !== "추가" ? normalized : "";
+  };
+
   const toggleChip = (label: string) => {
+    const normalized = getCleanChipName(label);
+    if (!normalized) return;
+
     setSelectedChips((prev) =>
-      prev.includes(label) ? prev.filter((c) => c !== label) : [...prev, label]
+      prev.includes(normalized)
+        ? prev.filter((chip) => chip !== normalized)
+        : [...prev, normalized]
     );
   };
 
+  const removeChip = (label: string) => {
+    setSelectedChips((prev) => prev.filter((chip) => chip !== label));
+  };
+
   const addNewChip = () => {
-    const trimmed = normalizePokachipName(newChipInput);
+    const trimmed = getCleanChipName(newChipInput);
     if (trimmed && !selectedChips.includes(trimmed)) {
       setSelectedChips((prev) => [...prev, trimmed]);
     }
@@ -75,8 +89,8 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
   };
 
   const selectCandidate = (label: string) => {
-    const normalized = normalizePokachipName(label);
-    if (normalized && normalized !== "추가" && !selectedChips.includes(normalized)) {
+    const normalized = getCleanChipName(label);
+    if (normalized && !selectedChips.includes(normalized)) {
       setSelectedChips((prev) => [...prev, normalized]);
     }
     setNewChipInput("");
@@ -99,13 +113,15 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
     setTimeout(() => inputRef.current?.focus(), 0);
   };
 
-  const visibleRecent = recentPokachips.filter((c) => !selectedChips.includes(c.label));
+  const visibleRecent = recentPokachips.filter(
+    (chip) => !selectedChips.includes(getCleanChipName(chip.label))
+  );
   const normalizedQuery = normalizePokachipName(newChipInput).toLocaleLowerCase("ko-KR");
   const autocompleteCandidates = isInputActive && normalizedQuery
     ? Array.from(
         new Set([
-          ...recentPokachips.map((chip) => chip.label),
-          ...fragments.flatMap((item) => item.pokachips ?? []).map(normalizePokachipName).filter(Boolean),
+          ...recentPokachips.map((chip) => getCleanChipName(chip.label)).filter(Boolean),
+          ...fragments.flatMap((item) => item.pokachips ?? []).map(getCleanChipName).filter(Boolean),
         ])
       )
         .filter((label) => {
@@ -121,12 +137,8 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
 
   const handleConfirm = () => {
     if (!canSave) return;
-    const pendingChip = normalizePokachipName(newChipInput);
     const nextChips = Array.from(
-      new Set([
-        ...selectedChips.map(normalizePokachipName).filter(Boolean),
-        ...(pendingChip && pendingChip !== "추가" ? [pendingChip] : []),
-      ])
+      new Set(selectedChips.map(getCleanChipName).filter(Boolean))
     );
 
     updateFragment(fragment.id, {
@@ -240,10 +252,8 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {selectedChips.map((label) => (
-                    <button
+                    <div
                       key={label}
-                      type="button"
-                      onClick={() => toggleChip(label)}
                       className="flex items-center gap-1 rounded-full border border-white/70 px-3 py-1"
                       style={{
                         backgroundColor: getPokachipColor(label),
@@ -256,12 +266,50 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
                       >
                         {label}
                       </span>
-                      <X size={10} className="mt-[1px] text-[#8c8478]" strokeWidth={2.5} />
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => removeChip(label)}
+                        className="-mr-1 flex h-4 w-4 items-center justify-center rounded-full text-[#8c8478]"
+                        aria-label={`${label} 삭제`}
+                      >
+                        <X size={10} className="mt-[1px]" strokeWidth={2.5} />
+                      </button>
+                    </div>
                   ))}
                 </div>
               </div>
             )}
+
+            <div className="flex flex-col gap-2 pt-1">
+              <span
+                className="text-[12px] font-medium tracking-[0.5px] text-[#78706480]"
+                style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+              >
+                최근 사용
+              </span>
+              {visibleRecent.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {visibleRecent.map((chip) => (
+                    <button
+                      key={chip.label}
+                      type="button"
+                      onClick={() => toggleChip(chip.label)}
+                      className="h-[30px] rounded-full border border-white/70 px-3 text-[12px] font-medium text-[#5a5248b0]"
+                      style={{
+                        backgroundColor: getPokachipColor(chip.label),
+                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.7)",
+                      }}
+                    >
+                      {chip.label}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-1 text-[12px] text-[#c0b8b060]">
+                  최근 사용한 조각이 없어요
+                </div>
+              )}
+            </div>
 
             {isInputActive ? (
               <div className="flex items-center gap-2 rounded-xl border border-[#0000000a] bg-white px-4 py-3 shadow-[0px_1px_4px_#0000000a]">
@@ -323,37 +371,6 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
                 ))}
               </div>
             )}
-
-            <div className="flex flex-col gap-2 pt-1">
-              <span
-                className="text-[12px] font-medium tracking-[0.5px] text-[#78706480]"
-                style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
-              >
-                최근 사용
-              </span>
-              {visibleRecent.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {visibleRecent.map((chip) => (
-                    <button
-                      key={chip.label}
-                      type="button"
-                      onClick={() => toggleChip(chip.label)}
-                      className="h-[30px] rounded-full border border-white/70 px-3 text-[12px] font-medium text-[#5a5248b0]"
-                      style={{
-                        backgroundColor: getPokachipColor(chip.label),
-                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.7)",
-                      }}
-                    >
-                      {chip.label}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="py-1 text-[12px] text-[#c0b8b060]">
-                  최근 사용한 조각이 없어요
-                </div>
-              )}
-            </div>
 
           </div>
 
