@@ -117,7 +117,10 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
         .slice(0, 5)
     : [];
 
+  const canSave = Boolean(memo.trim() || url.trim());
+
   const handleConfirm = () => {
+    if (!canSave) return;
     const pendingChip = normalizePokachipName(newChipInput);
     const nextChips = Array.from(
       new Set([
@@ -387,7 +390,8 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
         >
           <button
             onClick={handleConfirm}
-            className="w-full rounded-full py-4 text-white text-[15px] font-medium"
+            disabled={!canSave}
+            className="w-full rounded-full py-4 text-white text-[15px] font-medium disabled:cursor-not-allowed disabled:opacity-40"
             style={{
               background: "linear-gradient(135deg, #b0b8e8 0%, #9898d0 100%)",
               boxShadow: "0px 4px 20px rgba(153,152,208,0.35)",
