@@ -7,6 +7,8 @@ export interface Fragment {
   url?: string;
   time: string;
   date: string;
+  createdAt?: string;
+  updatedAt?: string;
   pokachips: string[];
   thumbnailColor: string;
 }
@@ -63,6 +65,8 @@ export const sampleFragments: Fragment[] = [
     url: "https://designerspick.co/lighting-designer",
     time: "오늘",
     date: "2026년 6월 19일",
+    createdAt: "2026-06-19T09:00:00.000Z",
+    updatedAt: "2026-06-19T09:00:00.000Z",
     pokachips: ["조명"],
     thumbnailColor: "#f0e8d0",
   },
@@ -73,6 +77,8 @@ export const sampleFragments: Fragment[] = [
     memo: "쓰기 전에는 몰랐던 내 생각을 글을 쓰면서 처음 알게 된다. 그래서 쓴다.",
     time: "어제",
     date: "2026년 6월 18일",
+    createdAt: "2026-06-18T09:00:00.000Z",
+    updatedAt: "2026-06-18T09:00:00.000Z",
     pokachips: ["글쓰기"],
     thumbnailColor: "#f0dce4",
   },
@@ -85,6 +91,8 @@ export const sampleFragments: Fragment[] = [
     url: "https://aquascape.kr/nano-cube",
     time: "2일 전",
     date: "2026년 6월 17일",
+    createdAt: "2026-06-17T09:00:00.000Z",
+    updatedAt: "2026-06-17T09:00:00.000Z",
     pokachips: ["수조"],
     thumbnailColor: "#d4eef4",
   },
@@ -95,6 +103,8 @@ export const sampleFragments: Fragment[] = [
     memo: "Emission 노드 + Volume Scatter = 빛 산란 효과. 강도는 0.02~0.05 사이가 자연스러움. 나중에 유리 재질에도 써보기.",
     time: "3일 전",
     date: "2026년 6월 16일",
+    createdAt: "2026-06-16T09:00:00.000Z",
+    updatedAt: "2026-06-16T09:00:00.000Z",
     pokachips: ["블렌더", "유리"],
     thumbnailColor: "#d8eef8",
   },
@@ -107,6 +117,8 @@ export const sampleFragments: Fragment[] = [
     url: "https://brunch.co.kr/@design/webtrend2024",
     time: "4일 전",
     date: "2026년 6월 15일",
+    createdAt: "2026-06-15T09:00:00.000Z",
+    updatedAt: "2026-06-15T09:00:00.000Z",
     pokachips: ["웹앱"],
     thumbnailColor: "#dce8f8",
   },
@@ -117,6 +129,8 @@ export const sampleFragments: Fragment[] = [
     memo: "오늘 아침 창문으로 들어온 빛이 너무 좋았다. 황금빛 각도가 딱 15분간 지속됐다.",
     time: "5일 전",
     date: "2026년 6월 14일",
+    createdAt: "2026-06-14T09:00:00.000Z",
+    updatedAt: "2026-06-14T09:00:00.000Z",
     pokachips: ["사진", "조명"],
     thumbnailColor: "#dce8d0",
   },

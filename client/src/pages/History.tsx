@@ -37,9 +37,32 @@ const HistoryCard = ({ fragment }: { fragment: Fragment }) => {
   );
 };
 
+function getCreatedAtSortValue(fragment: Fragment, index: number): number {
+  const createdAtTime = Date.parse(fragment.createdAt ?? "");
+
+  if (!Number.isNaN(createdAtTime)) {
+    return createdAtTime;
+  }
+
+  const dateParts = fragment.date.match(/\d+/g)?.map(Number);
+
+  if (dateParts && dateParts.length >= 3) {
+    const [year, month, day] = dateParts;
+    return Date.UTC(year, month - 1, day) - index;
+  }
+
+  return -index;
+}
+
 export const History = () => {
   const [, navigate] = useLocation();
   const { fragments } = useFragments();
+  const fragmentOrder = new Map(fragments.map((fragment, index) => [fragment.id, index]));
+  const sortedFragments = [...fragments].sort(
+    (a, b) =>
+      getCreatedAtSortValue(b, fragmentOrder.get(b.id) ?? 0) -
+      getCreatedAtSortValue(a, fragmentOrder.get(a.id) ?? 0)
+  );
 
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
@@ -62,9 +85,9 @@ export const History = () => {
           내가 주워둔 조각들을 시간순으로 다시 봅니다.
         </p>
 
-        {fragments.length > 0 ? (
+        {sortedFragments.length > 0 ? (
           <div className="mt-6 flex flex-col gap-3">
-            {fragments.map((fragment) => (
+            {sortedFragments.map((fragment) => (
               <HistoryCard key={fragment.id} fragment={fragment} />
             ))}
           </div>

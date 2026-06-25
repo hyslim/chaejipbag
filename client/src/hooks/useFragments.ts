@@ -21,6 +21,17 @@ function saveToStorage(fragments: Fragment[]) {
   }
 }
 
+function getFallbackCreatedAt(fragment: Fragment, index: number): string {
+  const dateParts = fragment.date.match(/\d+/g)?.map(Number);
+
+  if (dateParts && dateParts.length >= 3) {
+    const [year, month, day] = dateParts;
+    return new Date(Date.UTC(year, month - 1, day) - index).toISOString();
+  }
+
+  return new Date(Date.now() - index).toISOString();
+}
+
 export function useFragments() {
   const [fragments, setFragments] = useState<Fragment[]>(loadFromStorage);
 
@@ -34,10 +45,17 @@ export function useFragments() {
   );
 
   const updateFragment = useCallback((id: string, patch: Partial<Fragment>) => {
-    const targetFragment = fragments.find((fragment) => fragment.id === id);
+    const targetIndex = fragments.findIndex((fragment) => fragment.id === id);
+    const targetFragment = targetIndex >= 0 ? fragments[targetIndex] : undefined;
+    const now = new Date().toISOString();
     const nextFragments = targetFragment
       ? [
-          { ...targetFragment, ...patch },
+          {
+            ...targetFragment,
+            ...patch,
+            createdAt: targetFragment.createdAt ?? getFallbackCreatedAt(targetFragment, targetIndex),
+            updatedAt: now,
+          },
           ...fragments.filter((fragment) => fragment.id !== id),
         ]
       : fragments.map((fragment) =>
@@ -49,11 +67,14 @@ export function useFragments() {
   }, [fragments]);
 
   const addFragment = useCallback((fragment: Omit<Fragment, "id">) => {
+    const now = new Date().toISOString();
     const newFragment: Fragment = {
       ...fragment,
       id: typeof crypto.randomUUID === "function"
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      createdAt: now,
+      updatedAt: now,
     };
     const nextFragments = [newFragment, ...fragments];
 
