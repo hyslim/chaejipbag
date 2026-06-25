@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -117,21 +116,16 @@ export const Element = (): JSX.Element => {
                       const selected = selectedTags.includes(tag.label);
 
                       return (
-                        <Badge
+                        <button
                           key={tag.label}
-                          asChild
-                          className={`h-[30px] cursor-pointer rounded-[71px] border border-[#ffffff8c] px-3.5 py-1.5 shadow-[inset_0px_1px_0px_#ffffff94,0px_1px_4px_#eec4d059] ${tag.color} ${
+                          type="button"
+                          onClick={() => toggleTag(tag.label)}
+                          className={`h-[30px] rounded-[71px] border border-[#ffffff8c] px-3.5 py-1.5 [font-family:'Pretendard-Medium',Helvetica] text-xs font-medium leading-[16.5px] text-[#322c22b2] shadow-[inset_0px_1px_0px_#ffffff94,0px_1px_4px_#eec4d059] ${tag.color} ${
                             selected ? "ring-1 ring-[#8c84784d]" : ""
                           }`}
                         >
-                          <button
-                            type="button"
-                            onClick={() => toggleTag(tag.label)}
-                            className="h-[30px] [font-family:'Pretendard-Medium',Helvetica] text-xs font-medium leading-[16.5px] text-[#322c22b2]"
-                          >
-                            {tag.label}
-                          </button>
-                        </Badge>
+                          {tag.label}
+                        </button>
                       );
                     })}
                   </div>
