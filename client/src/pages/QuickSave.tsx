@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useLocation } from "wouter";
+import { X } from "lucide-react";
 import { getPokachipColor, normalizePokachipName } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 
@@ -23,6 +24,8 @@ export const QuickSave = () => {
   const [memo, setMemo] = useState(sharedText);
   const [chipInput, setChipInput] = useState("");
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
+  const [isInputActive, setIsInputActive] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   const trimmedMemo = memo.trim();
   const canSave = Boolean(sharedUrl.trim() || trimmedMemo || sharedText.trim());
   const sharedHostname = sharedUrl ? getUrlHostname(sharedUrl) : "";
@@ -33,29 +36,70 @@ export const QuickSave = () => {
     sharedHostname ||
     "링크 조각"
   ).slice(0, 30);
+
+  const getCleanChipName = (value: string) => {
+    const normalized = normalizePokachipName(value);
+    return normalized && normalized !== "추가" ? normalized : "";
+  };
+
+  const parseChipInput = (value: string) =>
+    value
+      .split(",")
+      .map(getCleanChipName)
+      .filter(Boolean);
+
   const recentChips = Array.from(
     new Set(
       fragments
         .flatMap((fragment) => fragment.pokachips ?? [])
-        .map(normalizePokachipName)
+        .map(getCleanChipName)
         .filter(Boolean)
     )
   ).slice(0, 5);
-  const visibleRecentChips = recentChips.length > 0 ? recentChips : defaultQuickChips;
+  const visibleRecentChips = Array.from(
+    new Set((recentChips.length > 0 ? recentChips : defaultQuickChips).map(getCleanChipName).filter(Boolean))
+  ).filter((chip) => !selectedChips.includes(chip));
 
   const toggleChip = (chip: string) => {
+    const normalized = getCleanChipName(chip);
+    if (!normalized) return;
+
     setSelectedChips((current) =>
-      current.includes(chip) ? current.filter((item) => item !== chip) : [...current, chip]
+      current.includes(normalized)
+        ? current.filter((item) => item !== normalized)
+        : [...current, normalized]
     );
+  };
+
+  const removeChip = (chip: string) => {
+    setSelectedChips((current) => current.filter((item) => item !== chip));
+  };
+
+  const addInputChips = () => {
+    const inputChips = parseChipInput(chipInput);
+    if (inputChips.length === 0) return;
+
+    setSelectedChips((current) => Array.from(new Set([...current, ...inputChips])));
+    setChipInput("");
+    setIsInputActive(false);
+  };
+
+  const handleChipKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      addInputChips();
+    }
+  };
+
+  const handleActivateInput = () => {
+    setIsInputActive(true);
+    setTimeout(() => inputRef.current?.focus(), 0);
   };
 
   const handleSave = () => {
     if (!canSave) return;
 
-    const inputChips = chipInput
-      .split(",")
-      .map(normalizePokachipName)
-      .filter((chip) => chip && chip !== "추가");
+    const inputChips = parseChipInput(chipInput);
     const pokachips = Array.from(new Set([...selectedChips, ...inputChips]));
     const now = new Date();
 
@@ -89,27 +133,86 @@ export const QuickSave = () => {
         />
 
         <label className="mt-5 block text-[12px] font-medium text-[#78706499]">기억 조각</label>
-        <input
-          value={chipInput}
-          onChange={(event) => setChipInput(event.target.value)}
-          placeholder="쉼표로 여러 조각 입력"
-          autoComplete="off"
-          className="mt-2 w-full rounded-2xl border border-[#FAF7F2] bg-white px-4 py-3 text-[13px] text-[#3a3228] outline-none placeholder:text-[#a0988c80]"
-        />
+        {selectedChips.length > 0 && (
+          <div className="mt-2 flex flex-col gap-2">
+            <p className="text-[11px] font-medium text-[#a0988c80]">선택한 조각</p>
+            <div className="flex flex-wrap gap-2">
+              {selectedChips.map((chip) => (
+                <div
+                  key={chip}
+                  className="flex items-center gap-1 rounded-full border border-white/70 px-3.5 py-1.5 text-[12px] font-medium text-[#5a5248b0]"
+                  style={{ backgroundColor: getPokachipColor(chip) }}
+                >
+                  <span>{chip}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeChip(chip)}
+                    className="-mr-1 flex h-4 w-4 items-center justify-center rounded-full text-[#8c8478]"
+                    aria-label={`${chip} 삭제`}
+                  >
+                    <X size={10} strokeWidth={2.5} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <p className="mt-4 text-[11px] font-medium text-[#a0988c80]">최근 사용 조각</p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {visibleRecentChips.map((chip) => (
-            <button
-              key={chip}
-              type="button"
-              onClick={() => toggleChip(chip)}
-              className={`rounded-full border border-white/70 px-3.5 py-1.5 text-[12px] font-medium text-[#5a5248b0] ${selectedChips.includes(chip) ? "ring-1 ring-[#8c847830]" : ""}`}
-              style={{ backgroundColor: getPokachipColor(chip) }}
-            >
-              {chip}
-            </button>
-          ))}
-        </div>
+        {visibleRecentChips.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {visibleRecentChips.map((chip) => (
+              <button
+                key={chip}
+                type="button"
+                onClick={() => toggleChip(chip)}
+                className="rounded-full border border-white/70 px-3.5 py-1.5 text-[12px] font-medium text-[#5a5248b0]"
+                style={{ backgroundColor: getPokachipColor(chip) }}
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {isInputActive ? (
+          <div className="mt-4 flex items-center gap-2 rounded-2xl border border-[#FAF7F2] bg-white px-4 py-3">
+            <span className="shrink-0 text-[12px] text-[#b8b0a8]">+</span>
+            <input
+              ref={inputRef}
+              value={chipInput}
+              onChange={(event) => setChipInput(event.target.value)}
+              onKeyDown={handleChipKeyDown}
+              onBlur={() => {
+                if (!chipInput.trim()) setIsInputActive(false);
+              }}
+              placeholder="쉼표로 여러 조각 입력"
+              autoComplete="off"
+              className="min-w-0 flex-1 bg-transparent text-[13px] text-[#3a3228] outline-none placeholder:text-[#a0988c80]"
+            />
+            {chipInput.trim() && (
+              <button
+                type="button"
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                  addInputChips();
+                }}
+                className="shrink-0 rounded-full bg-[#9898d0] px-2.5 py-0.5 text-[11px] font-medium text-white"
+              >
+                추가
+              </button>
+            )}
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={handleActivateInput}
+            className="mt-4 flex w-full items-center gap-2 rounded-2xl border border-[#FAF7F2] bg-white px-4 py-3 text-left"
+          >
+            <span className="text-[12px] text-[#b8b0a8]">+</span>
+            <span className="text-[13px] text-[#a0988c80]">새로운 조각이름 달기</span>
+          </button>
+        )}
 
         <div className="fixed bottom-0 left-1/2 w-full max-w-[390px] -translate-x-1/2 bg-gradient-to-t from-[#FFFEFB] px-4 pb-8 pt-5">
           <button
