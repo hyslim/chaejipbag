@@ -37,6 +37,10 @@ export const FragmentCreate = () => {
     commitSelectedChips(nextChips);
   };
 
+  const removeChip = (label: string) => {
+    commitSelectedChips(selectedChipsRef.current.filter((chip) => chip !== label));
+  };
+
   const addInputChips = () => {
     const enteredTags = parseChipInput(tagInput);
     if (enteredTags.length === 0) return;
@@ -59,9 +63,9 @@ export const FragmentCreate = () => {
     setTimeout(() => inputRef.current?.focus(), 0);
   };
 
-  const visibleRecentChips = recentPokachips.filter(
-    (chip) => !selectedChips.includes(chip)
-  );
+  const visibleRecentChips = recentPokachips
+    .map(normalizePokachipName)
+    .filter((chip) => chip && chip !== "추가" && !selectedChips.includes(chip));
 
   const normalizedQuery = normalizePokachipName(tagInput).toLocaleLowerCase("ko-KR");
   const autocompleteCandidates = useMemo(() => {
@@ -81,7 +85,7 @@ export const FragmentCreate = () => {
       ])
     )
       .filter((label) => {
-        if (selectedChipSet.has(label)) return false;
+        if (selectedChipSet.has(label) || label === "추가") return false;
         return label.toLocaleLowerCase("ko-KR").includes(normalizedQuery);
       })
       .slice(0, 5);
@@ -89,7 +93,7 @@ export const FragmentCreate = () => {
 
   const selectAutocompleteCandidate = (label: string) => {
     const normalized = normalizePokachipName(label);
-    if (normalized && !selectedChipsRef.current.includes(normalized)) {
+    if (normalized && normalized !== "추가" && !selectedChipsRef.current.includes(normalized)) {
       commitSelectedChips([...selectedChipsRef.current, normalized]);
     }
     setTagInput("");
@@ -127,18 +131,18 @@ export const FragmentCreate = () => {
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
       <section className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FFFEFB]">
-        <header className="px-5 pt-6 pb-4">
+        <header className="border-b border-[#FAF7F2] bg-[#FAF8F4] px-5 pt-6 pb-4">
           <button
             type="button"
             onClick={() => navigate("/")}
-            className="mb-4 flex items-center gap-1.5 text-[#787064b2]"
+            className="mb-4 flex items-center gap-1.5 text-[rgba(120,112,100,0.7)]"
             aria-label="홈으로 돌아가기"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path d="M10 3.5 5.5 8 10 12.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             <span className="text-[13px] font-medium" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
-              조각 담기
+              가방으로
             </span>
           </button>
           <h1
@@ -149,8 +153,8 @@ export const FragmentCreate = () => {
           </h1>
         </header>
 
-        <div className="flex flex-1 flex-col gap-4 px-5 pb-36">
-          <div className="overflow-hidden rounded-2xl border border-[#0000000a] bg-white shadow-[0_4px_16px_rgba(80,70,55,0.06)]">
+        <div className="flex flex-1 flex-col gap-4 bg-[#FFFEFB] px-5 pb-36">
+          <div className="overflow-hidden rounded-[18px] border border-[rgba(0,0,0,0.04)] bg-[#FFFFFF] shadow-[0_4px_16px_rgba(80,70,55,0.06)]">
             <textarea
               value={memo}
               onChange={(event) => setMemo(event.target.value)}
@@ -162,7 +166,7 @@ export const FragmentCreate = () => {
             <div className="border-t border-[#FAF7F2] p-2.5">
               <button
                 type="button"
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#FAF8F4] py-3 text-[13px] font-medium text-[#78706499]"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#FAF8F4] py-3 text-[13px] font-medium text-[rgba(120,112,100,0.6)]"
               >
                 <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
                   <rect x="2" y="2.5" width="11" height="10" rx="2" stroke="currentColor" strokeWidth="1.2" />
@@ -192,16 +196,13 @@ export const FragmentCreate = () => {
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {selectedChips.map((label) => (
-                    <button
+                    <div
                       key={label}
-                      type="button"
-                      onClick={() => toggleChip(label)}
                       className="flex items-center gap-1 rounded-full border border-white/70 px-3 py-1"
                       style={{
                         backgroundColor: getPokachipColor(label),
                         boxShadow: "inset 0 1px 0 rgba(255,255,255,0.8)",
                       }}
-                      aria-label={`${label} 삭제`}
                     >
                       <span
                         className="text-[12px] font-medium text-[#5a5248b0]"
@@ -209,44 +210,79 @@ export const FragmentCreate = () => {
                       >
                         {label}
                       </span>
-                      <X size={10} className="mt-[1px] text-[#8c8478]" strokeWidth={2.5} />
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => removeChip(label)}
+                        className="-mr-1 flex h-4 w-4 items-center justify-center rounded-full text-[#8c8478]"
+                        aria-label={`${label} 삭제`}
+                      >
+                        <X size={10} className="mt-[1px]" strokeWidth={2.5} />
+                      </button>
+                    </div>
                   ))}
                 </div>
               </div>
             )}
 
+            <div className="flex flex-col gap-2 pt-1">
+              <span className="text-[11px] font-medium tracking-[0.5px] text-[#a0988c80]">
+                최근 사용
+              </span>
+              {visibleRecentChips.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {visibleRecentChips.map((label) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => toggleChip(label)}
+                      className="h-[30px] rounded-[999px] border border-white/70 px-3 text-[12px] font-medium text-[#5a5248b0]"
+                      style={{
+                        backgroundColor: getPokachipColor(label),
+                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.7)",
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-1 text-[12px] text-[#c0b8b060]">
+                  최근 사용한 조각이 없어요
+                </div>
+              )}
+            </div>
+
             {isInputActive ? (
               <div className="flex items-center gap-2 rounded-xl border border-[#0000000a] bg-white px-4 py-3 shadow-[0_2px_8px_rgba(80,70,55,0.04)]">
                 <span className="shrink-0 text-[12px] text-[#b8b0a8]">+</span>
-                  <div className="flex min-w-0 flex-1 items-center gap-2">
-                    <input
-                      ref={inputRef}
-                      id="new-fragment-tags"
-                      value={tagInput}
-                      onChange={(event) => setTagInput(event.target.value)}
-                      onKeyDown={handleTagKeyDown}
-                      onBlur={() => {
-                        if (!tagInput.trim()) setIsInputActive(false);
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <input
+                    ref={inputRef}
+                    id="new-fragment-tags"
+                    value={tagInput}
+                    onChange={(event) => setTagInput(event.target.value)}
+                    onKeyDown={handleTagKeyDown}
+                    onBlur={() => {
+                      if (!tagInput.trim()) setIsInputActive(false);
+                    }}
+                    autoComplete="off"
+                    placeholder="새 조각 이름..."
+                    className="min-w-0 flex-1 bg-transparent text-[13px] text-[#4a4540] outline-none placeholder:text-[#a8a09a80]"
+                    style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+                  />
+                  {tagInput.trim() && (
+                    <button
+                      type="button"
+                      onMouseDown={(event) => {
+                        event.preventDefault();
+                        addInputChips();
                       }}
-                      autoComplete="off"
-                      placeholder="새 조각 이름..."
-                      className="min-w-0 flex-1 bg-transparent text-[13px] text-[#4a4540] outline-none placeholder:text-[#a8a09a80]"
-                      style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
-                    />
-                    {tagInput.trim() && (
-                      <button
-                        type="button"
-                        onMouseDown={(event) => {
-                          event.preventDefault();
-                          addInputChips();
-                        }}
-                        className="shrink-0 rounded-full bg-[#9898d0] px-2.5 py-0.5 text-[11px] font-medium text-white"
-                      >
-                        추가
-                      </button>
-                    )}
-                  </div>
+                      className="shrink-0 rounded-full bg-[#9898d0] px-2.5 py-0.5 text-[11px] font-medium text-white"
+                    >
+                      추가
+                    </button>
+                  )}
+                </div>
               </div>
             ) : (
               <button
@@ -279,34 +315,6 @@ export const FragmentCreate = () => {
                 ))}
               </div>
             )}
-
-            <div className="flex flex-col gap-2 pt-1">
-              <span className="text-[11px] font-medium tracking-[0.5px] text-[#a0988c80]">
-                최근 사용
-              </span>
-              {visibleRecentChips.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {visibleRecentChips.map((label) => (
-                    <button
-                      key={label}
-                      type="button"
-                      onClick={() => toggleChip(label)}
-                      className="h-[30px] rounded-full border border-white/70 px-3 text-[12px] font-medium text-[#5a5248b0]"
-                      style={{
-                        backgroundColor: getPokachipColor(label),
-                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.7)",
-                      }}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="py-1 text-[12px] text-[#c0b8b060]">
-                  최근 사용한 조각이 없어요
-                </div>
-              )}
-            </div>
           </div>
         </div>
 
