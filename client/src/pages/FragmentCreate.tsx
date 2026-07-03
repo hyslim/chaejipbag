@@ -131,11 +131,11 @@ export const FragmentCreate = () => {
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
       <section className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FFFEFB]">
-        <header className="border-b border-[#FAF7F2] bg-[#FAF8F4] px-5 pt-6 pb-4">
+        <header className="flex flex-col border-b border-[rgba(250,247,242,0.5)] bg-[#FCFBF8] px-5 pt-6 pb-3">
           <button
             type="button"
             onClick={() => navigate("/")}
-            className="mb-4 flex items-center gap-1.5 text-[rgba(120,112,100,0.7)]"
+            className="mb-1 flex items-center gap-1.5 text-[rgba(120,112,100,0.7)]"
             aria-label="홈으로 돌아가기"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -153,7 +153,7 @@ export const FragmentCreate = () => {
           </h1>
         </header>
 
-        <div className="flex flex-1 flex-col gap-4 bg-[#FFFEFB] px-5 pb-36">
+        <div className="flex flex-1 flex-col gap-4 bg-[#FFFEFB] px-5 pt-5 pb-36">
           <div className="overflow-hidden rounded-[18px] border border-[rgba(0,0,0,0.04)] bg-[#FFFFFF] shadow-[0_4px_16px_rgba(80,70,55,0.06)]">
             <textarea
               value={memo}
