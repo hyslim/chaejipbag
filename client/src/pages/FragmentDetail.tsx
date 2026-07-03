@@ -90,60 +90,60 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
           </div>
         </header>
 
-        <div className="flex flex-1 flex-col gap-4 px-5 pt-5 pb-28">
-          <article className="rounded-[20px] border border-[rgba(0,0,0,0.04)] bg-[#FFFFFF] p-[18px] shadow-[0_8px_20px_rgba(80,65,45,0.06)]">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[rgba(160,152,140,0.65)]">
-              {metaLabel && (
-                <div className="flex items-center gap-1.5">
-                  <div className="flex h-3.5 w-3.5 items-center justify-center rounded-sm bg-[#e8e4dc]">
-                    <div className="h-1.5 w-2 rounded-[1px] bg-[#c8c0b4]" />
-                  </div>
-                  <span style={{ fontFamily: "Inter, sans-serif" }}>{metaLabel}</span>
+        <div className="flex flex-1 flex-col px-5 pt-5 pb-28">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[rgba(120,112,100,0.6)]">
+            {metaLabel && (
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#FFFEFB] pr-2">
+                <div className="flex h-3.5 w-3.5 items-center justify-center rounded-sm bg-[#e8e4dc]">
+                  <div className="h-1.5 w-2 rounded-[1px] bg-[#c8c0b4]" />
                 </div>
-              )}
-              <div className="flex items-center gap-1">
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <circle cx="6" cy="6" r="5" stroke="#c0b8b0" strokeWidth="1.2" />
-                  <path d="M6 3.5V6l1.5 1.5" stroke="#c0b8b0" strokeWidth="1.2" strokeLinecap="round" />
-                </svg>
-                <span style={{ fontFamily: "Inter, sans-serif" }}>{fragment.date}</span>
+                <span style={{ fontFamily: "Inter, sans-serif" }}>{metaLabel}</span>
               </div>
+            )}
+            <div className="flex items-center gap-1">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <circle cx="6" cy="6" r="5" stroke="#c0b8b0" strokeWidth="1.2" />
+                <path d="M6 3.5V6l1.5 1.5" stroke="#c0b8b0" strokeWidth="1.2" strokeLinecap="round" />
+              </svg>
+              <span style={{ fontFamily: "Inter, sans-serif" }}>{fragment.date}</span>
             </div>
+          </div>
 
+          <section className="mt-7">
             <h1
-              className="mt-4 text-[21px] font-medium leading-[1.45] text-[#3a3228]"
+              className="text-[21px] font-medium leading-[1.45] text-[#3a3228]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
               {fragment.title}
             </h1>
+          </section>
 
-            {fragment.memo && (
-              <div className="mt-5 flex flex-col gap-2">
-                <span
-                  className="text-[11px] font-medium tracking-[0.6px] text-[rgba(120,112,100,0.6)]"
-                  style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
-                >
-                  내 메모
-                </span>
-                <p
-                  className="text-[14px] leading-[1.7] text-[rgba(74,69,64,0.85)]"
-                  style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
-                >
-                  {fragment.memo}
-                </p>
-              </div>
-            )}
-          </article>
+          {fragment.memo && (
+            <section className="mt-8 flex flex-col gap-3">
+              <span
+                className="text-[11px] font-medium tracking-[0.6px] text-[rgba(120,112,100,0.65)]"
+                style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+              >
+                내 메모
+              </span>
+              <p
+                className="text-[14px] leading-[1.7] text-[rgba(74,69,64,0.85)]"
+                style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+              >
+                {fragment.memo}
+              </p>
+            </section>
+          )}
 
           {fragment.pokachips.length > 0 && (
-            <section className="rounded-[20px] border border-[rgba(0,0,0,0.04)] bg-[#FFFFFF] p-4 shadow-[0_8px_20px_rgba(80,65,45,0.06)]">
+            <section className="mt-8 flex flex-col gap-3">
               <span
-                className="text-[11px] font-medium tracking-[0.6px] text-[rgba(120,112,100,0.6)]"
+                className="text-[11px] font-medium tracking-[0.6px] text-[rgba(120,112,100,0.65)]"
                 style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
               >
                 기억 조각
               </span>
-              <div className="mt-2.5 flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-1.5">
                 {fragment.pokachips.map((chip) => {
                   const normalizedChip = normalizePokachipName(chip);
 
@@ -166,28 +166,33 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
           )}
 
           {fragment.url && (
-            <section className="rounded-[20px] border border-[rgba(0,0,0,0.04)] bg-[#FFFFFF] p-4 shadow-[0_8px_20px_rgba(80,65,45,0.06)]">
-              <span
-                className="text-[11px] font-medium tracking-[0.6px] text-[rgba(120,112,100,0.6)]"
-                style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
-              >
-                원본 링크
-              </span>
-              <a
-                href={fragment.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2.5 flex items-center gap-2 rounded-xl border border-[rgba(0,0,0,0.04)] bg-[#FFFEFB] px-3.5 py-3"
-              >
-                <ExternalLink size={13} className="shrink-0 text-[rgba(160,152,140,0.65)]" strokeWidth={1.8} />
+            <>
+              {fragment.pokachips.length > 0 && (
+                <div className="mt-6 mb-5 h-px bg-[rgba(120,112,100,0.18)]" />
+              )}
+              <section className={fragment.pokachips.length > 0 ? "" : "mt-8"}>
                 <span
-                  className="truncate text-[12px] text-[rgba(120,112,100,0.6)]"
-                  style={{ fontFamily: "Inter, sans-serif" }}
+                  className="text-[11px] font-medium tracking-[0.6px] text-[rgba(120,112,100,0.65)]"
+                  style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
                 >
-                  {fragment.url.replace(/^https?:\/\//, "")}
+                  원본 링크
                 </span>
-              </a>
-            </section>
+                <a
+                  href={fragment.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 flex items-center gap-2 rounded-[14px] border border-[rgba(120,112,100,0.16)] bg-[#FFFEFB] px-4 py-3"
+                >
+                  <ExternalLink size={13} className="shrink-0 text-[rgba(160,152,140,0.65)]" strokeWidth={1.8} />
+                  <span
+                    className="truncate text-[12px] text-[rgba(120,112,100,0.6)]"
+                    style={{ fontFamily: "Inter, sans-serif" }}
+                  >
+                    {fragment.url.replace(/^https?:\/\//, "")}
+                  </span>
+                </a>
+              </section>
+            </>
           )}
         </div>
 
