@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 import { getPokachipColor, normalizePokachipName, type Fragment } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
+import { BottomNav } from "@/components/BottomNav";
 
 const interests = [
   {
@@ -165,7 +166,6 @@ const SearchResultCard = ({ fragment }: { fragment: Fragment }) => {
 
 export const Home = (): JSX.Element => {
   const { fragments } = useFragments();
-  const [, navigate] = useLocation();
   const [selectedChip, setSelectedChip] = useState<string | null>(null);
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -469,63 +469,7 @@ export const Home = (): JSX.Element => {
         </section>
           </>
         )}
-
-        {/* 하단 네비게이션 */}
-        <footer
-          className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[390px] px-5 pb-6 pt-4 z-40"
-          style={{
-            background: "linear-gradient(to top, #faf8f4 65%, transparent)",
-          }}
-        >
-          <nav
-            className="flex items-center justify-between rounded-full border border-white/75 bg-white/50 px-3 py-2 backdrop-blur-[18px]"
-            style={{
-              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.86), 0 8px 24px rgba(62,54,46,0.10)",
-              backdropFilter: "blur(18px) saturate(125%)",
-              WebkitBackdropFilter: "blur(18px) saturate(125%)",
-            }}
-          >
-            <button className="flex items-center gap-2 rounded-full px-3 py-2 bg-white/70 shadow-[0px_1px_4px_rgba(0,0,0,0.06)]">
-              <img src="/figmaAssets/chart-pie-portfolio-no-coral.svg" alt="탐색" className="w-5 h-5" />
-              <span
-                className="text-[12px] font-medium text-[#353a69cc]"
-                style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
-              >
-                탐색
-              </span>
-            </button>
-
-            {/* 중앙 + 버튼 — 새 조각 담기 */}
-            <motion.button
-              onClick={() => navigate("/fragment/new")}
-              whileTap={{ scale: 0.88 }}
-              whileHover={{ scale: 1.06 }}
-              transition={{ type: "spring", stiffness: 500, damping: 18, mass: 0.6 }}
-              className="flex h-12 w-12 items-center justify-center rounded-full ring-1 ring-white/70"
-              style={{
-                background: "linear-gradient(135deg, #8fe8ff 0%, #6f96ff 48%, #a277ff 100%)",
-                boxShadow: "0 0 0 6px rgba(130,158,255,0.10), 0 7px 24px rgba(105,125,255,0.55)",
-              }}
-              aria-label="새 조각 담기"
-            >
-              <span className="text-white text-xl font-light leading-none">+</span>
-            </motion.button>
-
-            <button
-              type="button"
-              onClick={() => navigate("/history")}
-              className="flex items-center gap-2 rounded-full px-3 py-2"
-            >
-              <img src="/figmaAssets/heart.png" alt="기록" className="w-5 h-5" />
-              <span
-                className="text-[12px] font-medium text-[#a0988c90]"
-                style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
-              >
-                기록
-              </span>
-            </button>
-          </nav>
-        </footer>
+        <BottomNav activeTab="home" />
 
       </section>
     </main>

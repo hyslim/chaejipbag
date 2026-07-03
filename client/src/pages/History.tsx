@@ -1,6 +1,7 @@
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 import { getPokachipColor, normalizePokachipName, type Fragment } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
+import { BottomNav } from "@/components/BottomNav";
 
 const HistoryCard = ({ fragment }: { fragment: Fragment }) => {
   const chip = fragment.pokachips[0] ? normalizePokachipName(fragment.pokachips[0]) : "";
@@ -55,7 +56,6 @@ function getCreatedAtSortValue(fragment: Fragment, index: number): number {
 }
 
 export const History = () => {
-  const [, navigate] = useLocation();
   const { fragments } = useFragments();
   const fragmentOrder = new Map(fragments.map((fragment, index) => [fragment.id, index]));
   const sortedFragments = [...fragments].sort(
@@ -66,15 +66,7 @@ export const History = () => {
 
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#FAF8F4]">
-      <section className="min-h-screen w-full max-w-[390px] bg-[#FAF8F4] px-4 pb-12 pt-6">
-        <button
-          type="button"
-          onClick={() => navigate("/")}
-          className="mb-6 flex items-center gap-1.5 text-[rgba(120,112,100,0.7)]"
-        >
-          <span aria-hidden="true">‹</span>
-          <span className="text-[13px] font-medium">홈</span>
-        </button>
+      <section className="min-h-screen w-full max-w-[390px] bg-[#FAF8F4] px-4 pb-[120px] pt-6">
         <h1
           className="text-[24px] font-medium text-[#353a69cc]"
           style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
@@ -99,6 +91,8 @@ export const History = () => {
             </p>
           </div>
         )}
+
+        <BottomNav activeTab="history" />
       </section>
     </main>
   );
