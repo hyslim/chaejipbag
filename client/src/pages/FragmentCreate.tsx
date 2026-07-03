@@ -7,6 +7,28 @@ import { useFragments } from "@/hooks/useFragments";
 const thumbnailColors = ["#f0e8d0", "#f0dce4", "#d4eef4", "#d8eef8", "#dce8f8"];
 const recentPokachips = ["글쓰기", "수조", "조명", "웹앱", "블렌더"];
 
+const getPokachipShadowColor = (label: string) => {
+  const color = getPokachipColor(label);
+  const rgbaMatch = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+
+  if (rgbaMatch) {
+    const [, red, green, blue] = rgbaMatch;
+    return `rgba(${red},${green},${blue},0.32)`;
+  }
+
+  const hexMatch = color.match(/^#([0-9a-f]{6})$/i);
+
+  if (hexMatch) {
+    const hex = hexMatch[1];
+    const red = parseInt(hex.slice(0, 2), 16);
+    const green = parseInt(hex.slice(2, 4), 16);
+    const blue = parseInt(hex.slice(4, 6), 16);
+    return `rgba(${red},${green},${blue},0.32)`;
+  }
+
+  return color;
+};
+
 const parseChipInput = (value: string) =>
   value
     .split(",")
@@ -201,7 +223,7 @@ export const FragmentCreate = () => {
                       className="flex items-center gap-1 rounded-full border border-white/70 px-3 py-1"
                       style={{
                         backgroundColor: getPokachipColor(label),
-                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.8)",
+                        boxShadow: `0 1px 4px ${getPokachipShadowColor(label)}, inset 0 1px 0 rgba(255,255,255,0.8)`,
                       }}
                     >
                       <span
@@ -238,7 +260,7 @@ export const FragmentCreate = () => {
                       className="h-[30px] rounded-[999px] border border-white/70 px-3 text-[12px] font-medium text-[#5a5248b0]"
                       style={{
                         backgroundColor: getPokachipColor(label),
-                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.7)",
+                        boxShadow: `0 1px 4px ${getPokachipShadowColor(label)}, inset 0 1px 0 rgba(255,255,255,0.7)`,
                       }}
                     >
                       {label}
