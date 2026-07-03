@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { ArrowLeft, Pencil, Trash2, ExternalLink } from "lucide-react";
-import { pokachipColorMap } from "@/data/fragments";
+import { getPokachipColor, normalizePokachipName } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 
 const sourceTypeLabel: Record<string, string> = {
@@ -25,23 +25,29 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   if (!fragment) {
     return (
       <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
-        <section className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#faf8f4] px-5 pt-12">
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center gap-1.5 text-[#787064b2] mb-8"
-          >
-            <ArrowLeft size={16} />
-            <span className="text-sm" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
-              돌아가기
-            </span>
-          </button>
-          <p className="text-sm text-[#a0988c]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
-            조각을 찾을 수 없어요.
-          </p>
+        <section className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FFFEFB]">
+          <header className="border-b border-[rgba(250,247,242,0.5)] bg-[#FCFBF8] px-5 pt-6 pb-4">
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center gap-1.5 text-[rgba(120,112,100,0.7)]"
+            >
+              <ArrowLeft size={16} />
+              <span className="text-sm" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
+                돌아가기
+              </span>
+            </button>
+          </header>
+          <div className="px-5 pt-5">
+            <p className="text-sm text-[rgba(120,112,100,0.6)]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
+              조각을 찾을 수 없어요.
+            </p>
+          </div>
         </section>
       </main>
     );
   }
+
+  const metaLabel = fragment.source || (fragment.sourceType ? sourceTypeLabel[fragment.sourceType] ?? "기록" : "");
 
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
@@ -49,13 +55,13 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#faf8f4]"
+        className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FFFEFB]"
       >
         {/* 헤더 */}
-        <header className="flex items-center justify-between border-b border-[#FAF7F2] bg-[#FFFEFB] px-4 pt-5 pb-4">
+        <header className="flex items-center justify-between border-b border-[rgba(250,247,242,0.5)] bg-[#FCFBF8] px-5 pt-6 pb-4">
           <button
             onClick={() => navigate("/")}
-            className="flex items-center gap-1.5 text-[#787064b2]"
+            className="flex items-center gap-1.5 text-[rgba(120,112,100,0.7)]"
             aria-label="뒤로 가기"
           >
             <ArrowLeft size={16} strokeWidth={2} />
@@ -69,14 +75,14 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(`/fragment/${fragment.id}/edit`)}
-              className="text-[#a0988c90] hover:text-[#787064]"
+              className="text-[rgba(160,152,140,0.65)] hover:text-[rgba(120,112,100,0.7)]"
               aria-label="수정"
             >
               <Pencil size={16} strokeWidth={1.8} />
             </button>
             <button
               onClick={() => setIsDeleteOpen(true)}
-              className="text-[#a0988c90] hover:text-red-400"
+              className="text-[rgba(160,152,140,0.65)] hover:text-red-400"
               aria-label="삭제"
             >
               <Trash2 size={16} strokeWidth={1.8} />
@@ -84,112 +90,85 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
           </div>
         </header>
 
-        <div className="flex-1 px-5 pt-4 flex flex-col gap-6 pb-36">
-          {/* 출처 + 날짜 */}
-          <div className="flex items-center gap-3">
-            {fragment.source && (
-              <div className="flex items-center gap-1.5">
-                <div className="w-3.5 h-3.5 rounded-sm bg-[#e8e4dc] flex items-center justify-center">
-                  <div className="w-2 h-1.5 rounded-[1px] bg-[#c8c0b4]" />
+        <div className="flex flex-1 flex-col gap-4 px-5 pt-5 pb-28">
+          <article className="rounded-[20px] border border-[rgba(0,0,0,0.04)] bg-[#FFFFFF] p-[18px] shadow-[0_8px_20px_rgba(80,65,45,0.06)]">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[rgba(160,152,140,0.65)]">
+              {metaLabel && (
+                <div className="flex items-center gap-1.5">
+                  <div className="flex h-3.5 w-3.5 items-center justify-center rounded-sm bg-[#e8e4dc]">
+                    <div className="h-1.5 w-2 rounded-[1px] bg-[#c8c0b4]" />
+                  </div>
+                  <span style={{ fontFamily: "Inter, sans-serif" }}>{metaLabel}</span>
                 </div>
-                <span
-                  className="text-[12px] text-[#a0988cb0]"
-                  style={{ fontFamily: "Inter, sans-serif" }}
-                >
-                  {fragment.source}
-                </span>
+              )}
+              <div className="flex items-center gap-1">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <circle cx="6" cy="6" r="5" stroke="#c0b8b0" strokeWidth="1.2" />
+                  <path d="M6 3.5V6l1.5 1.5" stroke="#c0b8b0" strokeWidth="1.2" strokeLinecap="round" />
+                </svg>
+                <span style={{ fontFamily: "Inter, sans-serif" }}>{fragment.date}</span>
               </div>
-            )}
-            {!fragment.source && fragment.sourceType && (
-              <div className="flex items-center gap-1.5">
-                <div className="w-3.5 h-3.5 rounded-sm bg-[#e8e4dc] flex items-center justify-center">
-                  <div className="w-2 h-1.5 rounded-[1px] bg-[#c8c0b4]" />
-                </div>
-                <span
-                  className="text-[12px] text-[#a0988cb0]"
-                  style={{ fontFamily: "Inter, sans-serif" }}
-                >
-                  {sourceTypeLabel[fragment.sourceType] ?? "기록"}
-                </span>
-              </div>
-            )}
-            <div className="flex items-center gap-1">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <circle cx="6" cy="6" r="5" stroke="#c0b8b0" strokeWidth="1.2" />
-                <path d="M6 3.5V6l1.5 1.5" stroke="#c0b8b0" strokeWidth="1.2" strokeLinecap="round" />
-              </svg>
-              <span
-                className="text-[12px] text-[#a0988c80]"
-                style={{ fontFamily: "Inter, sans-serif" }}
-              >
-                {fragment.date}
-              </span>
             </div>
-          </div>
 
-          {/* 제목 */}
-          <div>
             <h1
-              className="text-[20px] font-medium leading-[1.45] text-[#2a2620]"
+              className="mt-4 text-[21px] font-medium leading-[1.45] text-[#3a3228]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
               {fragment.title}
             </h1>
-          </div>
 
-          {/* 구분선 */}
-          <div className="h-px bg-[#0000000a]" />
+            {fragment.memo && (
+              <div className="mt-5 flex flex-col gap-2">
+                <span
+                  className="text-[11px] font-medium tracking-[0.6px] text-[rgba(120,112,100,0.6)]"
+                  style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+                >
+                  내 메모
+                </span>
+                <p
+                  className="text-[14px] leading-[1.7] text-[rgba(74,69,64,0.85)]"
+                  style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+                >
+                  {fragment.memo}
+                </p>
+              </div>
+            )}
+          </article>
 
-          {/* 내 메모 */}
-          {fragment.memo && (
-            <div className="flex flex-col gap-2">
-              <span
-                className="text-[11px] font-medium tracking-[0.6px] text-[#a0988c80]"
-                style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
-              >
-                내 메모
-              </span>
-              <p
-                className="text-[14px] leading-[1.7] text-[#4a4540]"
-                style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
-              >
-                {fragment.memo}
-              </p>
-            </div>
-          )}
-
-          {/* 기억 조각 (포카칩) */}
           {fragment.pokachips.length > 0 && (
-            <div className="flex flex-col gap-2.5">
+            <section className="rounded-[20px] border border-[rgba(0,0,0,0.04)] bg-[#FFFFFF] p-4 shadow-[0_8px_20px_rgba(80,65,45,0.06)]">
               <span
-                className="text-[11px] font-medium tracking-[0.6px] text-[#a0988c80]"
+                className="text-[11px] font-medium tracking-[0.6px] text-[rgba(120,112,100,0.6)]"
                 style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
               >
                 기억 조각
               </span>
-              <div className="flex flex-wrap gap-1.5">
-                {fragment.pokachips.map((chip) => (
-                  <span
-                    key={chip}
-                    className="rounded-full px-3 py-1.5 text-[12px] font-medium text-[#5a5248b0] border border-white/70"
-                    style={{
-                      backgroundColor: pokachipColorMap[chip] ?? "rgba(200,196,188,0.4)",
-                      fontFamily: "'Pretendard Variable', sans-serif",
-                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.8)",
-                    }}
-                  >
-                    {chip}
-                  </span>
-                ))}
+              <div className="mt-2.5 flex flex-wrap gap-1.5">
+                {fragment.pokachips.map((chip) => {
+                  const normalizedChip = normalizePokachipName(chip);
+
+                  return (
+                    <span
+                      key={chip}
+                      className="flex h-[30px] items-center rounded-[999px] border border-white/70 px-3 text-[12px] font-medium text-[#5a5248b0]"
+                      style={{
+                        backgroundColor: getPokachipColor(normalizedChip),
+                        fontFamily: "'Pretendard Variable', sans-serif",
+                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.8)",
+                      }}
+                    >
+                      {normalizedChip}
+                    </span>
+                  );
+                })}
               </div>
-            </div>
+            </section>
           )}
 
-          {/* 원본 링크 */}
           {fragment.url && (
-            <div className="flex flex-col gap-2.5">
+            <section className="rounded-[20px] border border-[rgba(0,0,0,0.04)] bg-[#FFFFFF] p-4 shadow-[0_8px_20px_rgba(80,65,45,0.06)]">
               <span
-                className="text-[11px] font-medium tracking-[0.6px] text-[#a0988c80]"
+                className="text-[11px] font-medium tracking-[0.6px] text-[rgba(120,112,100,0.6)]"
                 style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
               >
                 원본 링크
@@ -198,29 +177,29 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
                 href={fragment.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-xl border border-[#0000000a] bg-white px-3.5 py-3 shadow-[0px_1px_4px_#0000000a]"
+                className="mt-2.5 flex items-center gap-2 rounded-xl border border-[rgba(0,0,0,0.04)] bg-[#FFFEFB] px-3.5 py-3"
               >
-                <ExternalLink size={13} className="text-[#a0988c80] shrink-0" strokeWidth={1.8} />
+                <ExternalLink size={13} className="shrink-0 text-[rgba(160,152,140,0.65)]" strokeWidth={1.8} />
                 <span
-                  className="text-[12px] text-[#787064b0] truncate"
+                  className="truncate text-[12px] text-[rgba(120,112,100,0.6)]"
                   style={{ fontFamily: "Inter, sans-serif" }}
                 >
                   {fragment.url.replace(/^https?:\/\//, "")}
                 </span>
               </a>
-            </div>
+            </section>
           )}
         </div>
 
         {/* 하단 공유 버튼 */}
         <div
-          className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[390px] px-5 pb-8 pt-4"
+          className="fixed bottom-0 left-1/2 w-full max-w-[390px] -translate-x-1/2 px-5 pb-8 pt-4"
           style={{
-            background: "linear-gradient(to top, #faf8f4 65%, transparent)",
+            background: "linear-gradient(to top, #FFFEFB 65%, transparent)",
           }}
         >
           <button
-            className="w-full rounded-full py-4 text-white text-[15px] font-medium"
+            className="w-full rounded-full py-4 text-[15px] font-medium text-white"
             style={{
               background: "linear-gradient(135deg, #b0b8e8 0%, #9898d0 100%)",
               boxShadow: "0px 4px 20px rgba(153,152,208,0.35)",
