@@ -375,10 +375,10 @@ export const Home = (): JSX.Element => {
             </div>
 
             {/* 포카칩 영역 — 가로 드래그 가능, 우측에 + 버튼 */}
-            <div className="px-4 pb-2">
-              <div className="flex items-center gap-2.5">
+            <div className="overflow-visible px-4 pb-2">
+              <div className="flex items-center gap-2.5 overflow-visible">
                 <div
-                  className="flex min-w-0 flex-1 gap-2 overflow-x-auto"
+                  className="flex min-w-0 flex-1 gap-2 overflow-x-auto pb-1.5"
                   style={{
                     scrollbarWidth: "none",
                     msOverflowStyle: "none",
