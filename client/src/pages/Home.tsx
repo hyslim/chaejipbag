@@ -213,6 +213,11 @@ export const Home = (): JSX.Element => {
     setIsSearchMode(false);
   };
 
+  const resetHomeView = () => {
+    setSelectedChip(null);
+    closeSearchMode();
+  };
+
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
       <section className="relative flex min-h-screen w-full max-w-[390px] flex-col bg-[#faf8f4]">
@@ -469,7 +474,7 @@ export const Home = (): JSX.Element => {
         </section>
           </>
         )}
-        <BottomNav activeTab="home" />
+        <BottomNav activeTab="home" onHomeClick={resetHomeView} />
 
       </section>
     </main>

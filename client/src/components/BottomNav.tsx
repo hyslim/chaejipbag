@@ -3,9 +3,10 @@ import { useLocation } from "wouter";
 
 type BottomNavProps = {
   activeTab: "home" | "history";
+  onHomeClick?: () => void;
 };
 
-export const BottomNav = ({ activeTab }: BottomNavProps) => {
+export const BottomNav = ({ activeTab, onHomeClick }: BottomNavProps) => {
   const [, navigate] = useLocation();
   const isHomeActive = activeTab === "home";
   const isHistoryActive = activeTab === "history";
@@ -27,7 +28,10 @@ export const BottomNav = ({ activeTab }: BottomNavProps) => {
       >
         <button
           type="button"
-          onClick={() => navigate("/")}
+          onClick={() => {
+            onHomeClick?.();
+            navigate("/");
+          }}
           className={`flex items-center gap-2 rounded-full px-3 py-2 ${
             isHomeActive ? "bg-white/70 shadow-[0px_1px_4px_rgba(0,0,0,0.06)]" : ""
           }`}
