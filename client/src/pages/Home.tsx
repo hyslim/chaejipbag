@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { Globe, Instagram, Pencil, Sparkles, Youtube, type LucideIcon } from "lucide-react";
 import { Link } from "wouter";
 import { getPokachipColor, normalizePokachipName, type Fragment } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
@@ -46,82 +47,84 @@ const interests = [
 
 const defaultPokachips = ["유리", "파랑", "임시조각"];
 
-const thumbnailHeights = ["h-[102px]", "h-[128px]", "h-[90px]", "h-[116px]", "h-[98px]", "h-[124px]"];
 const cardSpacing = ["mb-3", "mb-4", "mb-3.5", "mb-5", "mb-4", "mb-3"];
 
-const FragmentCard = ({ fragment, index }: { fragment: Fragment; index: number }) => (
-  <div className={`${cardSpacing[index % cardSpacing.length]} break-inside-avoid`}>
-    <Link href={`/fragment/${fragment.id}`}>
-      <motion.div
-        whileTap={{ scale: 0.97 }}
-        transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        className="overflow-hidden rounded-[18px] border border-white/90 bg-white/90 shadow-[0px_8px_24px_rgba(74,63,48,0.08)] cursor-pointer"
-      >
-      {/* 썸네일 */}
-      <div
-        className={`${thumbnailHeights[index % thumbnailHeights.length]} relative w-full overflow-hidden`}
-        style={{
-          background: `linear-gradient(145deg, ${fragment.thumbnailColor} 0%, rgba(255,255,255,0.5) 54%, ${fragment.thumbnailColor} 100%)`,
-        }}
-      >
-        <div
-          className="absolute inset-0 opacity-70"
-          style={{
-            background: "radial-gradient(circle at 24% 18%, rgba(255,255,255,0.78), transparent 42%), radial-gradient(circle at 82% 86%, rgba(150,160,220,0.12), transparent 48%)",
-          }}
-        />
-      </div>
+const sourceIconColor = "rgba(120,112,100,0.65)";
 
-      {/* 본문 */}
-      <div className="flex flex-col px-3.5 pt-2.5 pb-3.5">
-        {/* 포카칩 */}
-        {fragment.pokachips[0] && (
-          <span
-            className="mb-2 self-start rounded-full px-2.5 py-1 text-[10px] font-medium leading-none text-[#5a5248b0]"
-            style={{
-              backgroundColor: getPokachipColor(fragment.pokachips[0]),
-              fontFamily: "'Pretendard Variable', sans-serif",
-            }}
-          >
-            {normalizePokachipName(fragment.pokachips[0])}
-          </span>
-        )}
+const getFragmentSourceIcon = (fragment: Fragment): LucideIcon => {
+  const sourceText = `${fragment.source ?? ""} ${fragment.url ?? ""}`.toLocaleLowerCase("en-US");
 
-        {/* 제목 — 주인공 */}
-        <p
-          className="line-clamp-2 text-[13px] font-medium leading-[1.45] text-[#3a3228cc]"
-          style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+  if (fragment.sourceType === "text") return Pencil;
+  if (fragment.sourceType === "youtube" || sourceText.includes("youtube") || sourceText.includes("youtu.be")) return Youtube;
+  if (sourceText.includes("instagram")) return Instagram;
+  if (sourceText.includes("chatgpt") || sourceText.includes("chat.openai")) return Sparkles;
+
+  return Globe;
+};
+
+const FragmentCard = ({ fragment, index }: { fragment: Fragment; index: number }) => {
+  const SourceIcon = getFragmentSourceIcon(fragment);
+
+  return (
+    <div className={`${cardSpacing[index % cardSpacing.length]} break-inside-avoid`}>
+      <Link href={`/fragment/${fragment.id}`}>
+        <motion.div
+          whileTap={{ scale: 0.97 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          className="overflow-hidden rounded-[18px] border border-white/90 bg-white/90 shadow-[0px_8px_24px_rgba(74,63,48,0.08)] cursor-pointer"
         >
-          {fragment.title}
-        </p>
+          {fragment.imageDataUrl && (
+            <img
+              src={fragment.imageDataUrl}
+              alt=""
+              className="h-[140px] w-full object-cover"
+            />
+          )}
 
-        {/* 출처 — 조용한 단서 */}
-        {fragment.source && (
-          <p
-            className="mt-1.5 text-[10px] text-[#aaa29a99]"
-            style={{ fontFamily: "Inter, sans-serif" }}
-          >
-            {fragment.source}
-          </p>
-        )}
+          <div className={`flex flex-col px-3.5 pb-3.5 ${fragment.imageDataUrl ? "pt-3" : "pt-3.5"}`}>
+            {fragment.pokachips[0] && (
+              <span
+                className="mb-2 self-start rounded-full px-2.5 py-1 text-[10px] font-medium leading-none text-[#5a5248b0]"
+                style={{
+                  backgroundColor: getPokachipColor(fragment.pokachips[0]),
+                  fontFamily: "'Pretendard Variable', sans-serif",
+                }}
+              >
+                {normalizePokachipName(fragment.pokachips[0])}
+              </span>
+            )}
 
-        {/* 시간 */}
-        <div className="mt-2 flex items-center justify-end">
-          <span
-            className="text-[10px] text-[#b8b0a8] ml-auto"
-            style={{ fontFamily: "Inter, sans-serif" }}
-          >
-            {fragment.time}
-          </span>
-        </div>
-        </div>
-      </motion.div>
-    </Link>
-  </div>
-);
+            <p
+              className="line-clamp-2 text-[13px] font-medium leading-[1.45] text-[#3a3228cc]"
+              style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+            >
+              {fragment.title}
+            </p>
 
+            {fragment.memo && (
+              <p
+                className="mt-1 line-clamp-1 text-[10px] leading-snug text-[rgba(120,112,100,0.6)]"
+                style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+              >
+                {fragment.memo}
+              </p>
+            )}
+
+            <div className="mt-2.5 flex items-center gap-1.5 text-[10px] text-[rgba(120,112,100,0.65)]">
+              <SourceIcon size={12} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
+              <span className="truncate" style={{ fontFamily: "Inter, sans-serif" }}>
+                {fragment.time || fragment.date}
+              </span>
+            </div>
+          </div>
+        </motion.div>
+      </Link>
+    </div>
+  );
+};
 const SearchResultCard = ({ fragment }: { fragment: Fragment }) => {
   const primaryChip = fragment.pokachips[0] ? normalizePokachipName(fragment.pokachips[0]) : "";
+  const SourceIcon = getFragmentSourceIcon(fragment);
 
   return (
     <Link href={`/fragment/${fragment.id}`}>
@@ -155,9 +158,9 @@ const SearchResultCard = ({ fragment }: { fragment: Fragment }) => {
             {fragment.memo}
           </p>
         )}
-        <div className="mt-2 flex items-center gap-1 text-[10px] text-[#aaa29a99]">
-          <span aria-hidden="true">⌂</span>
-          <span style={{ fontFamily: "Inter, sans-serif" }}>{fragment.time || fragment.date}</span>
+        <div className="mt-2 flex items-center gap-1.5 text-[10px] text-[rgba(120,112,100,0.65)]">
+          <SourceIcon size={12} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
+          <span className="truncate" style={{ fontFamily: "Inter, sans-serif" }}>{fragment.time || fragment.date}</span>
         </div>
       </motion.div>
     </Link>
