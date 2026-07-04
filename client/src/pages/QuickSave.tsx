@@ -103,7 +103,7 @@ export const QuickSave = () => {
     const pokachips = Array.from(new Set([...selectedChips, ...inputChips]));
     const now = new Date();
 
-    addFragment({
+    const newFragment = addFragment({
       title: displayTitle,
       memo: trimmedMemo || sharedText || undefined,
       url: sharedUrl || undefined,
@@ -114,7 +114,7 @@ export const QuickSave = () => {
       pokachips: pokachips.length > 0 ? pokachips : ["임시조각"],
       thumbnailColor: "#dce8f8",
     });
-    navigate("/");
+    navigate(`/fragment/${newFragment.id}`);
   };
 
   return (
