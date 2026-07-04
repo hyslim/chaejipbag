@@ -138,8 +138,13 @@ const HistorySection = ({
   fragments: Fragment[];
 }) => {
   return (
-    <section className="flex flex-col gap-2.5">
-      <h2 className="px-1 text-[12px] font-medium text-[rgba(120,112,100,0.75)]">{label}</h2>
+    <section className="flex flex-col">
+      <div className="mb-3 flex items-center gap-3">
+        <h2 className="shrink-0 px-1 text-[12px] font-medium text-[rgba(120,112,100,0.75)]">
+          {label}
+        </h2>
+        <div className="h-px flex-1 bg-[rgba(120,112,100,0.16)]" />
+      </div>
       <div className="flex flex-col gap-2.5">
         {fragments.map((fragment) => (
           <HistoryCard key={fragment.id} fragment={fragment} />
@@ -174,7 +179,7 @@ export const History = () => {
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
       <section className="min-h-screen w-full max-w-[390px] bg-[#FAF8F4] pb-[120px]">
-        <header className="bg-[#FCFBF8] px-5 pb-4 pt-6">
+        <header className="bg-[#FCFBF8] px-5 pb-[12px] pt-[20px]">
           <p className="text-[12px] font-medium text-[rgba(54,58,105,0.7)]">조각의 역사</p>
           <h1
             className="mt-1 text-[28px] font-medium text-[rgba(54,58,105,0.7)]"
@@ -199,7 +204,7 @@ export const History = () => {
         </div>
 
         {sortedFragments.length > 0 ? (
-          <div className="flex flex-col gap-6 bg-[#FAF8F4] px-5 pt-5">
+          <div className="flex flex-col gap-5 bg-[#FAF8F4] px-5 pt-5">
             {groupedFragments.map(({ label, fragments }) => (
               <HistorySection key={label} label={label} fragments={fragments} />
             ))}
