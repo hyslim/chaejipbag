@@ -109,6 +109,16 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
             </div>
           </div>
 
+          {fragment.imageDataUrl && (
+            <section className="mt-5 overflow-hidden rounded-[18px] border border-white/70 bg-[#FAF8F4]">
+              <img
+                src={fragment.imageDataUrl}
+                alt=""
+                className="h-[220px] w-full object-cover"
+              />
+            </section>
+          )}
+
           <section className="mt-7">
             <h1
               className="text-[21px] font-medium leading-[1.45] text-[#3a3228]"

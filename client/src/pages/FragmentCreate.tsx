@@ -6,6 +6,7 @@ import { useFragments } from "@/hooks/useFragments";
 
 const thumbnailColors = ["#f0e8d0", "#f0dce4", "#d4eef4", "#d8eef8", "#dce8f8"];
 const recentPokachips = ["글쓰기", "수조", "조명", "웹앱", "블렌더"];
+const MAX_IMAGE_SIZE_BYTES = 2 * 1024 * 1024;
 
 const getPokachipShadowColor = (label: string) => {
   const color = getPokachipColor(label);
@@ -42,8 +43,10 @@ export const FragmentCreate = () => {
   const [tagInput, setTagInput] = useState("");
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
   const [isInputActive, setIsInputActive] = useState(false);
+  const [imageDataUrl, setImageDataUrl] = useState<string | undefined>();
   const selectedChipsRef = useRef<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const commitSelectedChips = (nextChips: string[]) => {
     selectedChipsRef.current = nextChips;
@@ -122,16 +125,40 @@ export const FragmentCreate = () => {
     setIsInputActive(false);
   };
 
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      alert("이미지는 2MB 이하로 선택해주세요.");
+      event.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setImageDataUrl(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  };
+
+  const canSave = Boolean(memo.trim() || imageDataUrl);
+
   const handleSave = () => {
     const trimmedMemo = memo.trim();
-    if (!trimmedMemo) return;
+    if (!canSave) return;
 
     const firstLine = trimmedMemo.split(/\r?\n/)[0].trim();
-    const title = firstLine.length > 30 ? `${firstLine.slice(0, 30)}…` : firstLine;
+    const title = firstLine
+      ? firstLine.length > 30 ? `${firstLine.slice(0, 30)}…` : firstLine
+      : "이미지 조각";
     const enteredTags = Array.from(new Set([...selectedChipsRef.current, ...parseChipInput(tagInput)]));
     const pokachips = enteredTags.length > 0 ? [...enteredTags] : ["임시조각"];
     const now = new Date();
-    addFragment({
+    const newFragment = addFragment({
       title,
       memo: trimmedMemo,
       url: undefined,
@@ -145,9 +172,10 @@ export const FragmentCreate = () => {
       }).format(now),
       pokachips,
       thumbnailColor: thumbnailColors[now.getTime() % thumbnailColors.length],
+      ...(imageDataUrl ? { imageDataUrl } : {}),
     });
 
-    navigate("/");
+    navigate(`/fragment/${newFragment.id}`);
   };
 
   return (
@@ -188,15 +216,33 @@ export const FragmentCreate = () => {
             <div className="border-t border-[#FAF7F2] p-2.5">
               <button
                 type="button"
+                onClick={() => imageInputRef.current?.click()}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#FAF8F4] py-3 text-[13px] font-medium text-[rgba(120,112,100,0.6)]"
               >
-                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
-                  <rect x="2" y="2.5" width="11" height="10" rx="2" stroke="currentColor" strokeWidth="1.2" />
-                  <circle cx="5" cy="5.5" r="1" fill="currentColor" />
-                  <path d="m3.8 10 2.3-2.3 1.7 1.6 1.4-1.2 2 1.9" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                이미지
+                {imageDataUrl ? (
+                  <img
+                    src={imageDataUrl}
+                    alt=""
+                    className="h-[148px] w-full rounded-[14px] object-cover"
+                  />
+                ) : (
+                  <>
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+                      <rect x="2" y="2.5" width="11" height="10" rx="2" stroke="currentColor" strokeWidth="1.2" />
+                      <circle cx="5" cy="5.5" r="1" fill="currentColor" />
+                      <path d="m3.8 10 2.3-2.3 1.7 1.6 1.4-1.2 2 1.9" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    이미지
+                  </>
+                )}
               </button>
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageChange}
+              />
             </div>
           </div>
 
@@ -347,7 +393,7 @@ export const FragmentCreate = () => {
           <button
             type="button"
             onClick={handleSave}
-            disabled={!memo.trim()}
+            disabled={!canSave}
             className="w-full rounded-full py-4 text-[15px] font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
             style={{
               background: "linear-gradient(135deg, #9edcff 0%, #8e88ed 100%)",
