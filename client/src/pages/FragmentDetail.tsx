@@ -1,14 +1,20 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { ArrowLeft, Pencil, Trash2, ExternalLink } from "lucide-react";
+import { ChevronLeft, Pencil, Trash2, ExternalLink } from "lucide-react";
 import { getPokachipColor, normalizePokachipName } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 
-const sourceTypeLabel: Record<string, string> = {
-  link: "링크",
-  text: "텍스트",
-  youtube: "YouTube",
+const getSourceMetaLabel = (sourceType?: string, source?: string, url?: string): string => {
+  const sourceText = `${source ?? ""} ${url ?? ""}`.toLocaleLowerCase("en-US");
+
+  if (sourceType === "text") return "직접 입력";
+  if (sourceType === "youtube" || sourceText.includes("youtube") || sourceText.includes("youtu.be")) return "YouTube";
+  if (sourceText.includes("instagram")) return "Instagram";
+  if (sourceText.includes("pinterest")) return "Pinterest";
+  if (sourceType === "link" || url) return "웹사이트";
+
+  return source || "기록";
 };
 
 export const FragmentDetail = ({ params }: { params: { id: string } }) => {
@@ -24,14 +30,14 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
 
   if (!fragment) {
     return (
-      <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
-        <section className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FFFEFB]">
-          <header className="border-b border-[rgba(250,247,242,0.5)] bg-[#FCFBF8] px-5 pt-6 pb-4">
+      <main className="flex min-h-screen w-full justify-center bg-[#343230]">
+        <section className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FAF8F4]">
+          <header className="border-b border-[#F5F2ED] bg-[#FFFFFB] px-5 pt-6 pb-4">
             <button
               onClick={() => navigate("/")}
               className="flex items-center gap-1.5 text-[rgba(120,112,100,0.7)]"
             >
-              <ArrowLeft size={16} />
+              <ChevronLeft size={16} />
               <span className="text-sm" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
                 돌아가기
               </span>
@@ -47,42 +53,42 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
     );
   }
 
-  const metaLabel = fragment.source || (fragment.sourceType ? sourceTypeLabel[fragment.sourceType] ?? "기록" : "");
+  const metaLabel = getSourceMetaLabel(fragment.sourceType, fragment.source, fragment.url);
 
   return (
-    <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
+    <main className="flex min-h-screen w-full justify-center bg-[#343230]">
       <motion.section
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FFFEFB]"
+        className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FAF8F4]"
       >
         {/* 헤더 */}
-        <header className="flex items-center justify-between border-b border-[rgba(250,247,242,0.5)] bg-[#FCFBF8] px-5 pt-6 pb-4">
+        <header className="flex items-center justify-between border-b border-[#F5F2ED] bg-[#FFFFFB] px-5 pt-6 pb-4">
           <button
             onClick={() => navigate("/")}
             className="flex items-center gap-1.5 text-[rgba(120,112,100,0.7)]"
             aria-label="뒤로 가기"
           >
-            <ArrowLeft size={16} strokeWidth={2} />
+            <ChevronLeft size={18} strokeWidth={2.2} />
             <span
-              className="text-[15px] font-medium text-[#353a69b2]"
+              className="text-[18px] font-semibold leading-[24px] text-[rgba(54,58,105,0.7)]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
               조각 들여다보기
             </span>
           </button>
-          <div className="flex items-center gap-3">
+          <div className="-mr-3 flex items-center gap-0">
             <button
               onClick={() => navigate(`/fragment/${fragment.id}/edit`)}
-              className="text-[rgba(160,152,140,0.65)] hover:text-[rgba(120,112,100,0.7)]"
+              className="relative flex h-4 w-10 items-center justify-center overflow-visible text-[rgba(160,152,140,0.65)] before:absolute before:inset-x-0 before:-inset-y-3 before:content-[''] hover:text-[rgba(120,112,100,0.7)]"
               aria-label="수정"
             >
               <Pencil size={16} strokeWidth={1.8} />
             </button>
             <button
               onClick={() => setIsDeleteOpen(true)}
-              className="text-[rgba(160,152,140,0.65)] hover:text-red-400"
+              className="relative flex h-4 w-10 items-center justify-center overflow-visible text-[rgba(160,152,140,0.65)] before:absolute before:inset-x-0 before:-inset-y-3 before:content-[''] hover:text-red-400"
               aria-label="삭제"
             >
               <Trash2 size={16} strokeWidth={1.8} />
@@ -91,13 +97,13 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
         </header>
 
         <div className="flex flex-1 flex-col px-5 pt-5 pb-28">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[rgba(120,112,100,0.6)]">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]">
             {metaLabel && (
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#FFFEFB] pr-2">
-                <div className="flex h-3.5 w-3.5 items-center justify-center rounded-sm bg-[#e8e4dc]">
-                  <div className="h-1.5 w-2 rounded-[1px] bg-[#c8c0b4]" />
+              <div className="inline-flex h-7 max-w-[160px] items-center gap-1.5 rounded-[999px] border border-[rgba(120,112,100,0.16)] bg-transparent px-3">
+                <div className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm border border-[rgba(120,112,100,0.16)]">
+                  <div className="h-1.5 w-2 rounded-[1px] bg-[rgba(120,112,100,0.45)]" />
                 </div>
-                <span style={{ fontFamily: "Inter, sans-serif" }}>{metaLabel}</span>
+                <span className="truncate text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]" style={{ fontFamily: "Inter, sans-serif" }}>{metaLabel}</span>
               </div>
             )}
             <div className="flex items-center gap-1">
@@ -110,7 +116,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
           </div>
 
           {fragment.imageDataUrl && (
-            <section className="mt-5 overflow-hidden rounded-[18px] border border-white/70 bg-[#FAF8F4]">
+            <section className="mt-5 overflow-hidden rounded-[18px] border border-white/70 bg-[#FFFFFF]">
               <img
                 src={fragment.imageDataUrl}
                 alt=""
@@ -121,7 +127,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
 
           <section className="mt-7">
             <h1
-              className="text-[21px] font-medium leading-[1.45] text-[#3a3228]"
+              className="text-[18px] font-medium leading-[26px] text-[rgba(50,44,34,0.8)]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
               {fragment.title}
@@ -131,13 +137,13 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
           {fragment.memo && (
             <section className="mt-8 flex flex-col gap-3">
               <span
-                className="text-[11px] font-medium tracking-[0.6px] text-[rgba(120,112,100,0.65)]"
+                className="text-[12px] font-medium leading-[17px] text-[rgba(120,112,100,0.75)]"
                 style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
               >
                 내 메모
               </span>
               <p
-                className="text-[14px] leading-[1.7] text-[rgba(74,69,64,0.85)]"
+                className="text-[14px] font-normal leading-[22px] text-[rgba(50,44,34,0.8)]"
                 style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
               >
                 {fragment.memo}
@@ -148,7 +154,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
           {fragment.pokachips.length > 0 && (
             <section className="mt-8 flex flex-col gap-3">
               <span
-                className="text-[11px] font-medium tracking-[0.6px] text-[rgba(120,112,100,0.65)]"
+                className="text-[12px] font-medium leading-[17px] text-[rgba(120,112,100,0.75)]"
                 style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
               >
                 기억 조각
@@ -160,7 +166,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
                   return (
                     <span
                       key={chip}
-                      className="flex h-[30px] items-center rounded-[999px] border border-white/70 px-3 text-[12px] font-medium text-[#5a5248b0]"
+                      className="flex h-[30px] items-center rounded-[999px] border border-white/70 px-3 text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
                       style={{
                         backgroundColor: getPokachipColor(normalizedChip),
                         fontFamily: "'Pretendard Variable', sans-serif",
@@ -178,11 +184,11 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
           {fragment.url && (
             <>
               {fragment.pokachips.length > 0 && (
-                <div className="mt-6 mb-5 h-px bg-[rgba(120,112,100,0.18)]" />
+                <div className="mt-6 mb-5 h-px bg-[rgba(120,112,100,0.16)]" />
               )}
               <section className={fragment.pokachips.length > 0 ? "" : "mt-8"}>
                 <span
-                  className="text-[11px] font-medium tracking-[0.6px] text-[rgba(120,112,100,0.65)]"
+                  className="text-[12px] font-medium leading-[17px] text-[rgba(120,112,100,0.75)]"
                   style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
                 >
                   원본 링크
@@ -191,11 +197,11 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
                   href={fragment.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-3 flex items-center gap-2 rounded-[14px] border border-[rgba(120,112,100,0.16)] bg-[#FFFEFB] px-4 py-3"
+                  className="mt-3 flex items-center gap-2 rounded-[14px] border border-[rgba(120,112,100,0.16)] bg-[#FFFFFF] px-4 py-3"
                 >
                   <ExternalLink size={13} className="shrink-0 text-[rgba(160,152,140,0.65)]" strokeWidth={1.8} />
                   <span
-                    className="truncate text-[12px] text-[rgba(120,112,100,0.6)]"
+                    className="truncate text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]"
                     style={{ fontFamily: "Inter, sans-serif" }}
                   >
                     {fragment.url.replace(/^https?:\/\//, "")}
@@ -210,7 +216,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
         <div
           className="fixed bottom-0 left-1/2 w-full max-w-[390px] -translate-x-1/2 px-5 pb-8 pt-4"
           style={{
-            background: "linear-gradient(to top, #FFFEFB 65%, transparent)",
+            background: "linear-gradient(to top, #FAF8F4 65%, transparent)",
           }}
         >
           <button
@@ -232,7 +238,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
             aria-modal="true"
             aria-labelledby="delete-fragment-title"
           >
-            <div className="w-full max-w-[350px] rounded-2xl border border-white/80 bg-[#FFFEFB] p-5 shadow-[0_18px_50px_rgba(60,50,40,0.18)]">
+            <div className="w-full max-w-[350px] rounded-2xl border border-white/80 bg-[#FFFFFF] p-5 shadow-[0_18px_50px_rgba(60,50,40,0.18)]">
               <h2
                 id="delete-fragment-title"
                 className="text-[18px] font-semibold text-[#3a3228]"
