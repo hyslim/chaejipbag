@@ -36,6 +36,83 @@ const parseChipInput = (value: string) =>
     .map(normalizePokachipName)
     .filter((tag) => tag && tag !== "추가");
 
+type ParsedFragmentInput = {
+  title: string;
+  memo: string;
+  url?: string;
+  source: string;
+  sourceType: "link" | "text" | "youtube";
+};
+
+const urlPattern = /(https?:\/\/[^\s]+|www\.[^\s]+)/i;
+
+const normalizeUrl = (value: string) =>
+  value.startsWith("www.") ? `https://${value}` : value;
+
+const getSourceFromUrl = (url: string) => {
+  try {
+    const hostname = new URL(normalizeUrl(url)).hostname.replace(/^www\./, "");
+    const lowerHostname = hostname.toLocaleLowerCase("en-US");
+
+    if (lowerHostname.includes("youtube.com") || lowerHostname.includes("youtu.be")) return "YouTube";
+    if (lowerHostname.includes("instagram.com")) return "Instagram";
+    if (lowerHostname.includes("pinterest.")) return "Pinterest";
+
+    return hostname;
+  } catch {
+    return "웹사이트";
+  }
+};
+
+const getSourceTypeFromUrl = (url: string): "link" | "youtube" => {
+  const normalizedUrl = normalizeUrl(url).toLocaleLowerCase("en-US");
+  return normalizedUrl.includes("youtube.com") || normalizedUrl.includes("youtu.be") ? "youtube" : "link";
+};
+
+const parseFragmentInput = (value: string, hasImage: boolean): ParsedFragmentInput => {
+  const trimmedValue = value.trim();
+  const matchedUrl = trimmedValue.match(urlPattern)?.[0];
+  const originalUrl = matchedUrl ? normalizeUrl(matchedUrl) : undefined;
+  const textWithoutUrl = matchedUrl
+    ? trimmedValue.replace(matchedUrl, "").trim()
+    : trimmedValue;
+  const textLines = textWithoutUrl
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const isYoutube = originalUrl ? getSourceTypeFromUrl(originalUrl) === "youtube" : false;
+
+  if (originalUrl && textLines.length === 0) {
+    return {
+      title: isYoutube ? "YouTube 링크" : "웹사이트",
+      memo: "",
+      url: originalUrl,
+      source: getSourceFromUrl(originalUrl),
+      sourceType: getSourceTypeFromUrl(originalUrl),
+    };
+  }
+
+  const title = textLines[0] || (hasImage ? "이미지 조각" : "새 조각");
+  const isLongSingleLineText = textLines.length === 1 && title.length >= 36;
+
+  if (isLongSingleLineText) {
+    return {
+      title: `${title.slice(0, 30)}…`,
+      memo: title,
+      url: originalUrl,
+      source: originalUrl ? getSourceFromUrl(originalUrl) : "직접 입력",
+      sourceType: originalUrl ? getSourceTypeFromUrl(originalUrl) : "text",
+    };
+  }
+
+  return {
+    title,
+    memo: textLines.slice(1).join("\n"),
+    url: originalUrl,
+    source: originalUrl ? getSourceFromUrl(originalUrl) : "직접 입력",
+    sourceType: originalUrl ? getSourceTypeFromUrl(originalUrl) : "text",
+  };
+};
 export const FragmentCreate = () => {
   const [, navigate] = useLocation();
   const { addFragment, fragments } = useFragments();
@@ -148,22 +225,18 @@ export const FragmentCreate = () => {
   const canSave = Boolean(memo.trim() || imageDataUrl);
 
   const handleSave = () => {
-    const trimmedMemo = memo.trim();
     if (!canSave) return;
 
-    const firstLine = trimmedMemo.split(/\r?\n/)[0].trim();
-    const title = firstLine
-      ? firstLine.length > 30 ? `${firstLine.slice(0, 30)}…` : firstLine
-      : "이미지 조각";
+    const parsedInput = parseFragmentInput(memo, Boolean(imageDataUrl));
     const enteredTags = Array.from(new Set([...selectedChipsRef.current, ...parseChipInput(tagInput)]));
     const pokachips = enteredTags.length > 0 ? [...enteredTags] : ["임시조각"];
     const now = new Date();
     const newFragment = addFragment({
-      title,
-      memo: trimmedMemo,
-      url: undefined,
-      source: "직접 입력",
-      sourceType: "text",
+      title: parsedInput.title,
+      memo: parsedInput.memo,
+      url: parsedInput.url,
+      source: parsedInput.source,
+      sourceType: parsedInput.sourceType,
       time: "방금",
       date: new Intl.DateTimeFormat("ko-KR", {
         year: "numeric",
@@ -273,7 +346,7 @@ export const FragmentCreate = () => {
                       }}
                     >
                       <span
-                        className="text-[12px] font-medium text-[#5a5248b0]"
+                        className="text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
                         style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
                       >
                         {label}
@@ -292,7 +365,7 @@ export const FragmentCreate = () => {
               </div>
             )}
 
-            <div className="flex flex-col gap-2 pt-1">
+            <div className="-mb-0.5 flex flex-col gap-2 pt-1">
               <span className="text-[11px] font-medium tracking-[0.5px] text-[#a0988c80]">
                 최근 사용
               </span>
@@ -303,13 +376,18 @@ export const FragmentCreate = () => {
                       key={label}
                       type="button"
                       onClick={() => toggleChip(label)}
-                      className="h-[30px] rounded-[999px] border border-white/70 px-3 text-[12px] font-medium text-[#5a5248b0]"
+                      className="flex h-[30px] items-center rounded-[999px] border border-white/70 px-3"
                       style={{
                         backgroundColor: getPokachipColor(label),
                         boxShadow: `0 1px 4px ${getPokachipShadowColor(label)}, inset 0 1px 0 rgba(255,255,255,0.7)`,
                       }}
                     >
-                      {label}
+                      <span
+                        className="inline-flex h-[17px] items-center text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
+                        style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+                      >
+                        {label}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -394,10 +472,10 @@ export const FragmentCreate = () => {
             type="button"
             onClick={handleSave}
             disabled={!canSave}
-            className="w-full rounded-full py-4 text-[15px] font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+            className="mx-auto flex h-[51px] w-[180px] items-center justify-center rounded-[999px] border-0 text-[15px] font-semibold text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
             style={{
-              background: "linear-gradient(135deg, #9edcff 0%, #8e88ed 100%)",
-              boxShadow: "0 4px 18px rgba(126,135,220,0.28)",
+              background: "linear-gradient(133deg, rgba(130,207,255,0.60) 12%, rgba(90,144,255,0.60) 54%, rgba(139,112,255,0.60) 100%)",
+              boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.7), 0 3px 6px 0 rgba(180,196,244,0.40)",
               fontFamily: "'Pretendard Variable', sans-serif",
             }}
           >

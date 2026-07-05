@@ -69,6 +69,18 @@ const getColorWithAlpha = (color: string, alpha: number): string => {
 
   return color;
 };
+const shouldShowMemoPreview = (fragment: Fragment): boolean => {
+  const title = fragment.title.trim();
+  const memo = fragment.memo?.trim() ?? "";
+
+  if (!memo || memo === title) return false;
+
+  const hasEllipsizedTitle = title.endsWith("…") || title.endsWith("...");
+  const titlePrefix = hasEllipsizedTitle ? title.replace(/(?:…|\.\.\.)$/, "").trim() : "";
+  if (titlePrefix && memo.startsWith(titlePrefix)) return false;
+
+  return true;
+};
 const getFragmentSourceIcon = (fragment: Fragment): LucideIcon => {
   const sourceText = `${fragment.source ?? ""} ${fragment.url ?? ""}`.toLocaleLowerCase("en-US");
 
@@ -84,7 +96,7 @@ const FragmentCard = ({ fragment, index }: { fragment: Fragment; index: number }
   const SourceIcon = getFragmentSourceIcon(fragment);
   const primaryChip = fragment.pokachips[0] ? normalizePokachipName(fragment.pokachips[0]) : "";
   const hasTitle = Boolean(fragment.title.trim());
-  const hasMemo = Boolean(fragment.memo?.trim());
+  const hasMemo = shouldShowMemoPreview(fragment);
   const chipBottomSpacing = hasTitle || hasMemo ? "mb-2" : "mb-0";
   const metaTopSpacing = hasTitle || hasMemo ? "mt-1" : primaryChip ? "mt-2" : "";
 
@@ -175,7 +187,7 @@ const SearchResultCard = ({ fragment }: { fragment: Fragment }) => {
         >
           {fragment.title}
         </p>
-        {fragment.memo && (
+        {shouldShowMemoPreview(fragment) && (
           <p
             className="mt-1 line-clamp-1 text-[10px] leading-snug text-[#8f877c99]"
             style={{ fontFamily: "'Pretendard Variable', sans-serif" }}

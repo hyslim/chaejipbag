@@ -54,6 +54,9 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   }
 
   const metaLabel = getSourceMetaLabel(fragment.sourceType, fragment.source, fragment.url);
+  const trimmedTitle = fragment.title.trim();
+  const trimmedMemo = fragment.memo?.trim() ?? "";
+  const shouldShowMemo = Boolean(trimmedMemo && trimmedMemo !== trimmedTitle);
 
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#FAF8F4]">
@@ -134,7 +137,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
             </h1>
           </section>
 
-          {fragment.memo && (
+          {shouldShowMemo && (
             <section className="mt-8 flex flex-col gap-3">
               <span
                 className="text-[12px] font-medium leading-[17px] text-[rgba(120,112,100,0.75)]"
@@ -146,7 +149,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
                 className="text-[14px] font-normal leading-[22px] text-[rgba(50,44,34,0.8)]"
                 style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
               >
-                {fragment.memo}
+                {trimmedMemo}
               </p>
             </section>
           )}
