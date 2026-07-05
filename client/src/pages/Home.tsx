@@ -64,6 +64,11 @@ const getFragmentSourceIcon = (fragment: Fragment): LucideIcon => {
 
 const FragmentCard = ({ fragment, index }: { fragment: Fragment; index: number }) => {
   const SourceIcon = getFragmentSourceIcon(fragment);
+  const primaryChip = fragment.pokachips[0] ? normalizePokachipName(fragment.pokachips[0]) : "";
+  const hasTitle = Boolean(fragment.title.trim());
+  const hasMemo = Boolean(fragment.memo?.trim());
+  const chipBottomSpacing = hasTitle || hasMemo ? "mb-2" : "mb-0";
+  const metaTopSpacing = hasTitle || hasMemo ? "mt-1" : primaryChip ? "mt-2" : "";
 
   return (
     <div className={`${cardSpacing[index % cardSpacing.length]} break-inside-avoid`}>
@@ -81,36 +86,38 @@ const FragmentCard = ({ fragment, index }: { fragment: Fragment; index: number }
             />
           )}
 
-          <div className={`flex flex-col px-3.5 pb-3.5 ${fragment.imageDataUrl ? "pt-3" : "pt-3.5"}`}>
-            {fragment.pokachips[0] && (
+          <div className="flex flex-col p-3">
+            {primaryChip && (
               <span
-                className="mb-2 self-start rounded-full px-2.5 py-1 text-[10px] font-medium leading-none text-[#5a5248b0]"
+                className={`${chipBottomSpacing} flex h-6 items-center self-start rounded-[999px] px-2.5 py-1 text-[11px] font-medium leading-4 text-[rgba(50,44,34,0.68)]`}
                 style={{
-                  backgroundColor: getPokachipColor(fragment.pokachips[0]),
+                  backgroundColor: getPokachipColor(primaryChip),
                   fontFamily: "'Pretendard Variable', sans-serif",
                 }}
               >
-                {normalizePokachipName(fragment.pokachips[0])}
+                {primaryChip}
               </span>
             )}
 
-            <p
-              className="line-clamp-2 text-[13px] font-medium leading-[1.45] text-[#3a3228cc]"
-              style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
-            >
-              {fragment.title}
-            </p>
-
-            {fragment.memo && (
+            {hasTitle && (
               <p
-                className="mt-1 line-clamp-1 text-[10px] leading-snug text-[rgba(120,112,100,0.6)]"
+                className="line-clamp-2 text-[14px] font-medium leading-[20px] text-[rgba(50,44,34,0.8)]"
+                style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+              >
+                {fragment.title}
+              </p>
+            )}
+
+            {hasMemo && (
+              <p
+                className="mt-1 line-clamp-1 text-[12px] font-normal leading-[17px] text-[rgba(50,44,34,0.65)]"
                 style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
               >
                 {fragment.memo}
               </p>
             )}
 
-            <div className="mt-2.5 flex items-center gap-1.5 text-[10px] text-[rgba(120,112,100,0.65)]">
+            <div className={`${metaTopSpacing} flex items-center gap-1.5 text-[12px] leading-[17px] text-[rgba(120,112,100,0.65)]`}>
               <SourceIcon size={12} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
               <span className="truncate" style={{ fontFamily: "Inter, sans-serif" }}>
                 {fragment.time || fragment.date}
@@ -438,7 +445,7 @@ export const Home = (): JSX.Element => {
 
         {/* 수집된 조각 피드 — 선 대신 따뜻한 배경 톤으로 부드럽게 전환 */}
         <section
-          className="relative flex-1 border-t border-[#FAF7F2] pt-6"
+          className="relative flex-1 border-t border-[#FAF7F2] pt-3"
           style={{
             backgroundColor: "#FAF8F4",
           }}
