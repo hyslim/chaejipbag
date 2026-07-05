@@ -35,7 +35,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
           <header className="border-b border-[#F5F2ED] bg-[#FFFFFB] px-5 pt-6 pb-4">
             <button
               onClick={() => navigate("/")}
-              className="flex items-center gap-1.5 text-[rgba(120,112,100,0.7)]"
+              className="flex items-center gap-1.5 text-[rgba(54,58,105,0.7)]"
             >
               <ChevronLeft size={16} />
               <span className="text-sm" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
@@ -67,10 +67,10 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
         <header className="flex items-center justify-between border-b border-[#F5F2ED] bg-[#FFFFFB] px-5 pt-6 pb-4">
           <button
             onClick={() => navigate("/")}
-            className="flex items-center gap-1.5 text-[rgba(120,112,100,0.7)]"
+            className="flex items-center gap-1.5 text-[rgba(54,58,105,0.7)]"
             aria-label="뒤로 가기"
           >
-            <ChevronLeft size={18} strokeWidth={2.2} />
+            <ChevronLeft size={22} strokeWidth={2.2} />
             <span
               className="text-[18px] font-semibold leading-[24px] text-[rgba(54,58,105,0.7)]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
@@ -166,11 +166,11 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
                   return (
                     <span
                       key={chip}
-                      className="flex h-[30px] items-center rounded-[999px] border border-white/70 px-3 text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
+                      className="flex h-[30px] items-center rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3 text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
                       style={{
                         backgroundColor: getPokachipColor(normalizedChip),
                         fontFamily: "'Pretendard Variable', sans-serif",
-                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.8)",
+                        boxShadow: "0 2px 4px 0 rgba(180,196,244,0.28), inset 0 1px 0 0 rgba(255,255,255,0.58)",
                       }}
                     >
                       {normalizedChip}
@@ -214,16 +214,16 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
 
         {/* 하단 공유 버튼 */}
         <div
-          className="fixed bottom-0 left-1/2 w-full max-w-[390px] -translate-x-1/2 px-5 pb-8 pt-4"
+          className="fixed bottom-0 left-1/2 flex w-full max-w-[390px] -translate-x-1/2 justify-center px-5 pb-8 pt-4"
           style={{
             background: "linear-gradient(to top, #FAF8F4 65%, transparent)",
           }}
         >
           <button
-            className="w-full rounded-full py-4 text-[15px] font-medium text-white"
+            className="h-[51px] w-[180px] rounded-full border-0 px-[50px] py-[14px] text-[15px] font-medium text-white"
             style={{
-              background: "linear-gradient(135deg, #b0b8e8 0%, #9898d0 100%)",
-              boxShadow: "0px 4px 20px rgba(153,152,208,0.35)",
+              background: "linear-gradient(135deg, rgba(130,207,255,0.60) 12%, rgba(90,144,255,0.60) 54%, rgba(139,112,255,0.60) 100%)",
+              boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.70), 0 3px 8px 0 rgba(180,196,244,0.42)",
               fontFamily: "'Pretendard Variable', sans-serif",
             }}
           >
