@@ -47,8 +47,6 @@ const interests = [
 
 const defaultPokachips = ["유리", "파랑", "임시조각"];
 
-const cardSpacing = ["mb-3", "mb-4", "mb-3.5", "mb-5", "mb-4", "mb-3"];
-
 const sourceIconColor = "rgba(120,112,100,0.65)";
 
 const getColorWithAlpha = (color: string, alpha: number): string => {
@@ -92,7 +90,7 @@ const getFragmentSourceIcon = (fragment: Fragment): LucideIcon => {
   return Globe;
 };
 
-const FragmentCard = ({ fragment, index }: { fragment: Fragment; index: number }) => {
+const FragmentCard = ({ fragment }: { fragment: Fragment }) => {
   const SourceIcon = getFragmentSourceIcon(fragment);
   const primaryChip = fragment.pokachips[0] ? normalizePokachipName(fragment.pokachips[0]) : "";
   const hasTitle = Boolean(fragment.title.trim());
@@ -101,7 +99,7 @@ const FragmentCard = ({ fragment, index }: { fragment: Fragment; index: number }
   const metaTopSpacing = hasTitle || hasMemo ? "mt-1" : primaryChip ? "mt-2" : "";
 
   return (
-    <div className={`${cardSpacing[index % cardSpacing.length]} break-inside-avoid`}>
+    <div>
       <Link href={`/fragment/${fragment.id}`}>
         <motion.div
           whileTap={{ scale: 0.97 }}
@@ -225,6 +223,8 @@ export const Home = (): JSX.Element => {
         )
       )
     : fragments;
+  const leftColumnFragments = visibleFragments.filter((_, index) => index % 2 === 0);
+  const rightColumnFragments = visibleFragments.filter((_, index) => index % 2 === 1);
   const normalizedSearchQuery = searchQuery.trim().toLocaleLowerCase("ko-KR");
   const searchResults = normalizedSearchQuery
     ? fragments.filter((fragment) => {
@@ -484,7 +484,7 @@ export const Home = (): JSX.Element => {
           {/* 오늘 모은 조각들 헤더 */}
           <div className="px-4 mb-3 flex items-center justify-between gap-3">
             <div className="flex items-center gap-1.5">
-              <img src="/figmaAssets/glass.svg" alt="" className="w-3 h-4 opacity-50" />
+              <img src="/figmaAssets/glass.svg" alt="" className="h-[14px] w-[10px]" />
               <span
                 className="text-sm font-semibold text-[#787064bf]"
                 style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
@@ -504,12 +504,19 @@ export const Home = (): JSX.Element => {
             )}
           </div>
 
-          {/* 2열 카드 그리드 */}
+          {/* 2열 카드 목록 */}
           <div className="px-4 pb-[120px]">
-            <div className="columns-2 gap-3">
-              {visibleFragments.map((fragment, index) => (
-                <FragmentCard key={fragment.id} fragment={fragment} index={index} />
-              ))}
+            <div className="flex gap-3">
+              <div className="flex min-w-0 flex-1 flex-col gap-3">
+                {leftColumnFragments.map((fragment) => (
+                  <FragmentCard key={fragment.id} fragment={fragment} />
+                ))}
+              </div>
+              <div className="flex min-w-0 flex-1 flex-col gap-3">
+                {rightColumnFragments.map((fragment) => (
+                  <FragmentCard key={fragment.id} fragment={fragment} />
+                ))}
+              </div>
             </div>
           </div>
         </section>
