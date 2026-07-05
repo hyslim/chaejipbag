@@ -187,14 +187,14 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
         <div className="flex-1 px-5 pt-4 flex flex-col gap-5 pb-36">
 
           {/* 출처 + 날짜 */}
-          <div className="mb-1 flex items-center gap-3">
-            {fragment.source && (
-              <div className="flex items-center gap-1.5 text-[rgba(54,58,105,0.7)]">
-                <div className="w-3.5 h-3.5 rounded-sm bg-[#e8e4dc] flex items-center justify-center">
-                  <div className="w-2 h-1.5 rounded-[1px] bg-[#c8c0b4]" />
+          <div className="mb-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]">
+            {metaLabel && (
+              <div className="inline-flex h-7 max-w-[160px] items-center gap-1.5 rounded-[999px] border border-[rgba(120,112,100,0.16)] bg-transparent px-3">
+                <div className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm border border-[rgba(120,112,100,0.16)]">
+                  <div className="h-1.5 w-2 rounded-[1px] bg-[rgba(120,112,100,0.45)]" />
                 </div>
-                <span className="text-[12px] text-[#a0988cb0]" style={{ fontFamily: "Inter, sans-serif" }}>
-                  {fragment.source}
+                <span className="truncate text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]" style={{ fontFamily: "Inter, sans-serif" }}>
+                  {metaLabel}
                 </span>
               </div>
             )}
@@ -248,7 +248,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
           {/* 기억 조각 */}
           <div className="flex flex-col gap-2.5">
             <label
-              className="text-[14px] font-semibold leading-[22px] text-[rgba(50,44,34,0.8)]"
+              className="text-[12px] font-medium leading-[17px] text-[rgba(120,112,100,0.75)]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
               기억 조각
@@ -258,7 +258,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
             {selectedChips.length > 0 && (
               <div className="flex flex-col gap-2 pt-1">
                 <span
-                  className="text-[12px] font-medium leading-[17px] text-[rgba(120,112,100,0.75)]"
+                  className="text-[12px] font-medium leading-[17px] text-[rgba(120,112,100,0.62)]"
                   style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
                 >
                   선택한 조각
@@ -267,14 +267,14 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
                   {selectedChips.map((label) => (
                     <div
                       key={label}
-                      className="flex items-center gap-1 rounded-full border border-white/70 px-3 py-1"
+                      className="flex h-[30px] items-center gap-1 rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3 py-1"
                       style={{
                         backgroundColor: getPokachipColor(label),
-                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.8)",
+                        boxShadow: "0 2px 4px 0 rgba(180,196,244,0.28), inset 0 1px 0 0 rgba(255,255,255,0.58)",
                       }}
                     >
                       <span
-                        className="text-[12px] font-medium text-[#5a5248b0]"
+                        className="text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
                         style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
                       >
                         {label}
@@ -282,7 +282,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
                       <button
                         type="button"
                         onClick={() => removeChip(label)}
-                        className="-mr-1 flex h-4 w-4 items-center justify-center rounded-full text-[#8c8478]"
+                        className="-mr-1 flex h-4 w-4 items-center justify-center rounded-full text-[rgba(120,112,100,0.75)]"
                         aria-label={`${label} 삭제`}
                       >
                         <X size={10} className="mt-[1px]" strokeWidth={2.5} />
@@ -293,9 +293,9 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
               </div>
             )}
 
-            <div className="flex flex-col gap-2 pt-1">
+            <div className="-mb-0.5 flex flex-col gap-2 pt-1">
               <span
-                className="text-[12px] font-medium leading-[17px] text-[rgba(120,112,100,0.75)]"
+                className="text-[12px] font-medium leading-[17px] text-[rgba(120,112,100,0.62)]"
                 style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
               >
                 최근 사용
@@ -307,13 +307,18 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
                       key={chip.label}
                       type="button"
                       onClick={() => toggleChip(chip.label)}
-                      className="h-[30px] rounded-full border border-white/70 px-3 text-[12px] font-medium text-[#5a5248b0]"
+                      className="h-[30px] rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3 text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
                       style={{
                         backgroundColor: getPokachipColor(chip.label),
-                        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.7)",
+                        boxShadow: "0 2px 4px 0 rgba(180,196,244,0.24), inset 0 1px 0 0 rgba(255,255,255,0.58)",
                       }}
                     >
-                      {chip.label}
+                      <span
+                        className="text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
+                        style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+                      >
+                        {chip.label}
+                      </span>
                     </button>
                   ))}
                 </div>
