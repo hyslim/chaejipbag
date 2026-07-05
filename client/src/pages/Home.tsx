@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { Globe, Instagram, Pencil, Sparkles, Youtube, type LucideIcon } from "lucide-react";
+import { Globe, Instagram, Pencil, Plus, Sparkles, Youtube, type LucideIcon } from "lucide-react";
 import { Link } from "wouter";
 import { getPokachipColor, normalizePokachipName, type Fragment } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
@@ -10,38 +10,38 @@ const interests = [
   {
     id: "webapp",
     label: "웹앱",
-    gradient: "linear-gradient(145deg, #dce7ef 0%, #d2dcec 48%, #ddd3e7 100%)",
-    shadow: "0 5px 14px rgba(112,126,153,0.10)",
+    gradient: "linear-gradient(145deg, #c9d9f4 0%, #c5c5ef 48%, #d7c8ed 100%)",
+    shadow: "0 8px 18px rgba(112,126,153,0.18)",
   },
   {
     id: "interior",
     label: "인테리어",
-    gradient: "linear-gradient(140deg, #ded4e7 0%, #e5d3df 50%, #efd9c9 100%)",
-    shadow: "0 5px 14px rgba(142,113,128,0.09)",
+    gradient: "linear-gradient(140deg, #d5bff0 0%, #dec1e8 50%, #edcfc2 100%)",
+    shadow: "0 8px 18px rgba(142,113,128,0.18)",
   },
   {
     id: "aquarium",
     label: "수조",
-    gradient: "linear-gradient(145deg, #d5e9df 0%, #cfe4e2 50%, #d2e3ed 100%)",
-    shadow: "0 5px 14px rgba(91,135,137,0.09)",
+    gradient: "linear-gradient(145deg, #bfe4db 0%, #b3ddd9 50%, #bddfeb 100%)",
+    shadow: "0 8px 18px rgba(91,135,137,0.18)",
   },
   {
     id: "routine",
     label: "루틴",
-    gradient: "linear-gradient(140deg, #d2e5da 0%, #dce7d5 50%, #eee7cf 100%)",
-    shadow: "0 5px 14px rgba(119,132,103,0.09)",
+    gradient: "linear-gradient(140deg, #b8ddce 0%, #c9dfc7 50%, #eadfae 100%)",
+    shadow: "0 8px 18px rgba(119,132,103,0.18)",
   },
   {
     id: "lighting",
     label: "조명",
-    gradient: "linear-gradient(145deg, #f1ead7 0%, #eee1bd 52%, #ead7a8 100%)",
-    shadow: "0 5px 14px rgba(151,126,73,0.09)",
+    gradient: "linear-gradient(145deg, #f3e4b8 0%, #efd28c 52%, #e9c472 100%)",
+    shadow: "0 8px 18px rgba(151,126,73,0.18)",
   },
   {
     id: "cooking",
     label: "요리",
-    gradient: "linear-gradient(140deg, #efd5d9 0%, #efd0cf 50%, #f0d7c2 100%)",
-    shadow: "0 5px 14px rgba(148,99,96,0.09)",
+    gradient: "linear-gradient(140deg, #f0bdc4 0%, #eeaebb 50%, #efc2b3 100%)",
+    shadow: "0 8px 18px rgba(148,99,96,0.18)",
   },
 ];
 
@@ -51,6 +51,24 @@ const cardSpacing = ["mb-3", "mb-4", "mb-3.5", "mb-5", "mb-4", "mb-3"];
 
 const sourceIconColor = "rgba(120,112,100,0.65)";
 
+const getColorWithAlpha = (color: string, alpha: number): string => {
+  const rgbaMatch = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if (rgbaMatch) {
+    const [, red, green, blue] = rgbaMatch;
+    return `rgba(${red},${green},${blue},${alpha})`;
+  }
+
+  const hexMatch = color.match(/^#([0-9a-f]{6})$/i);
+  if (hexMatch) {
+    const hex = hexMatch[1];
+    const red = parseInt(hex.slice(0, 2), 16);
+    const green = parseInt(hex.slice(2, 4), 16);
+    const blue = parseInt(hex.slice(4, 6), 16);
+    return `rgba(${red},${green},${blue},${alpha})`;
+  }
+
+  return color;
+};
 const getFragmentSourceIcon = (fragment: Fragment): LucideIcon => {
   const sourceText = `${fragment.source ?? ""} ${fragment.url ?? ""}`.toLocaleLowerCase("en-US");
 
@@ -252,7 +270,7 @@ export const Home = (): JSX.Element => {
                   onClick={closeSearchMode}
                   className="flex h-7 w-7 items-center justify-center rounded-full text-[18px] font-light leading-none text-[rgba(120,112,100,0.5)]"
                   aria-label="검색 닫기"
-                >
+                  >
                   ×
                 </button>
               </div>
@@ -356,7 +374,7 @@ export const Home = (): JSX.Element => {
                 onClick={openSearchMode}
                 className="text-[#78706480]"
                 aria-label="조각 찾기"
-              >
+                  >
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
                   <circle cx="8" cy="8" r="5.25" stroke="currentColor" strokeWidth="1.3" />
                   <path d="M12 12L15 15" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
@@ -372,14 +390,14 @@ export const Home = (): JSX.Element => {
                     key={interest.id}
                     type="button"
                     onClick={() => setSelectedChip(interest.label)}
-                    className="flex h-20 items-center justify-center rounded-[20px] border border-white/15 px-2"
+                    className="flex h-20 items-center justify-center rounded-[20px] px-2"
                     style={{
                       background: interest.gradient,
                       boxShadow: interest.shadow,
                     }}
                   >
                     <span
-                      className="text-[13px] font-medium text-[#554d48b8]"
+                      className="text-[13px] font-medium text-[rgba(255,255,255,0.82)]"
                       style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
                     >
                       {interest.label}
@@ -391,16 +409,16 @@ export const Home = (): JSX.Element => {
 
             {/* 포카칩 영역 — 가로 드래그 가능, 우측에 + 버튼 */}
             <div className="overflow-visible px-4 pb-2">
-              <div className="flex items-center gap-2.5 overflow-visible">
+              <div className="relative flex items-center gap-2 overflow-visible py-[3px] pr-0">
                 <div
-                  className="flex min-w-0 flex-1 gap-2 overflow-x-auto pb-1.5"
+                  className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto pt-0.5 pb-1.5"
                   style={{
                     scrollbarWidth: "none",
                     msOverflowStyle: "none",
                     WebkitOverflowScrolling: "touch",
-                    maskImage: "linear-gradient(to right, black 82%, transparent 100%)",
-                    WebkitMaskImage: "linear-gradient(to right, black 82%, transparent 100%)",
-                    paddingRight: "16px",
+                    maskImage: "linear-gradient(to right, black calc(100% - 36px), transparent 100%)",
+                    WebkitMaskImage: "linear-gradient(to right, black calc(100% - 36px), transparent 100%)",
+                    paddingRight: "44px",
                   }}
                 >
                   {topPokachips.map((chip) => {
@@ -411,10 +429,10 @@ export const Home = (): JSX.Element => {
                         onClick={() => setSelectedChip(chip)}
                         whileTap={{ scale: 0.9 }}
                         transition={{ type: "spring", stiffness: 500, damping: 20 }}
-                        className="h-[29px] shrink-0 rounded-full border border-[rgba(255,255,255,0.55)] px-3.5 py-0 text-[11px] font-medium text-[rgba(50,44,34,0.7)]"
+                        className="box-border inline-flex h-[29px] shrink-0 items-center justify-center gap-2.5 rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3.5 py-[6px] text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
                         style={{
-                          backgroundColor,
-                          boxShadow: "0 1px 4px rgba(200,196,188,0.28), inset 0 1px 1px rgba(255,255,255,0.45)",
+                          backgroundColor: getColorWithAlpha(backgroundColor, 0.5),
+                          boxShadow: "0 2px 4px 0 rgba(180,196,244,0.30), inset 0 1px 0 0 rgba(255,255,255,0.58)",
                           fontFamily: "'Pretendard Variable', sans-serif",
                         }}
                       >
@@ -425,19 +443,20 @@ export const Home = (): JSX.Element => {
                 </div>
 
                 {/* 포카칩 추가 버튼 */}
-                <motion.button
-                  whileTap={{ scale: 0.88 }}
-                  whileHover={{ scale: 1.1 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 18 }}
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/70"
-                  style={{
-                    background: "linear-gradient(135deg, rgba(205,221,255,0.82), rgba(191,182,242,0.76))",
-                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.75), 0 2px 7px rgba(116,130,210,0.16)",
-                  }}
-                  aria-label="포카칩 추가"
-                >
-                  <span className="text-[12px] font-light leading-none text-[#6f74a8]">+</span>
-                </motion.button>
+                <div className="relative z-20 flex h-11 w-11 shrink-0 items-center justify-center overflow-visible">
+                  <motion.button
+                    whileTap={{ scale: 0.88 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 18 }}
+                    className="box-border inline-flex aspect-square h-[30px] min-h-[30px] w-[30px] min-w-[30px] shrink-0 items-center justify-center rounded-[71px] border-0 p-0 leading-none"
+                    style={{
+                      background: "linear-gradient(133deg, rgba(130,207,255,0.60) 25.42%, rgba(90,144,255,0.60) 52.42%, rgba(139,112,255,0.60) 82.29%)",
+                      boxShadow: "inset 0 0 0 2px rgba(255,255,255,0.60), 0 3px 8px 0 rgba(180,196,244,0.50)",
+                    }}
+                    aria-label="포카칩 추가"
+                  >
+                    <Plus size={16} strokeWidth={2.5} color="rgba(255,255,255,0.9)" className="block" aria-hidden="true" />
+                  </motion.button>
+                </div>
               </div>
             </div>
           </div>
