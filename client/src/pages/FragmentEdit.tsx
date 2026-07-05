@@ -370,7 +370,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
             )}
 
             {autocompleteCandidates.length > 0 && (
-              <div className="mt-2 overflow-hidden rounded-xl border border-[#0000000a] bg-[rgba(120,112,100,0.05)] shadow-[0px_2px_8px_#0000000a]">
+              <div className="-mt-0.5 overflow-hidden rounded-xl border border-[#0000000a] bg-[rgba(120,112,100,0.05)] shadow-[0px_2px_8px_#0000000a]">
                 {autocompleteCandidates.map((label, index) => (
                   <button
                     key={label}
