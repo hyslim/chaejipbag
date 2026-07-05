@@ -364,7 +364,7 @@ export const Home = (): JSX.Element => {
           <div className="relative z-10">
             <header className="flex items-center justify-between px-4 pt-5 pb-3">
               <h1
-                className="text-[18px] font-medium leading-[1.45] text-[#353a69b2]"
+                className="text-[18px] font-semibold leading-[1.45] text-[#353a69b2]"
                 style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
               >
                 내 기억
