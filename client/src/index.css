@@ -197,9 +197,14 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background: #343230;
     font-feature-settings:
       "rlig" 1,
       "calt" 1;
+  }
+
+  #root > main {
+    background-color: #343230;
   }
 }

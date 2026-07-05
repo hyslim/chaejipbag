@@ -30,7 +30,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
 
   if (!fragment) {
     return (
-      <main className="flex min-h-screen w-full justify-center bg-[#343230]">
+      <main className="flex min-h-screen w-full justify-center bg-[#FAF8F4]">
         <section className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FAF8F4]">
           <header className="border-b border-[#F5F2ED] bg-[#FFFFFB] px-5 pt-6 pb-4">
             <button
@@ -56,7 +56,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   const metaLabel = getSourceMetaLabel(fragment.sourceType, fragment.source, fragment.url);
 
   return (
-    <main className="flex min-h-screen w-full justify-center bg-[#343230]">
+    <main className="flex min-h-screen w-full justify-center bg-[#FAF8F4]">
       <motion.section
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}

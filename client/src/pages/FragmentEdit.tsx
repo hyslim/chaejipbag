@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, X } from "lucide-react";
+import { ChevronLeft, X } from "lucide-react";
 import { getPokachipColor, normalizePokachipName } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 
@@ -26,6 +26,18 @@ const getKoreanInitials = (value: string) =>
     })
     .join("");
 
+const getSourceMetaLabel = (sourceType?: string, source?: string, url?: string): string => {
+  const sourceText = `${source ?? ""} ${url ?? ""}`.toLocaleLowerCase("en-US");
+
+  if (sourceType === "text") return "\uC9C1\uC811 \uC785\uB825";
+  if (sourceType === "youtube" || sourceText.includes("youtube") || sourceText.includes("youtu.be")) return "YouTube";
+  if (sourceText.includes("instagram")) return "Instagram";
+  if (sourceText.includes("pinterest")) return "Pinterest";
+  if (sourceType === "link" || url) return "\uC6F9\uC0AC\uC774\uD2B8";
+
+  return source || "\uAE30\uB85D";
+};
+
 export const FragmentEdit = ({ params }: { params: { id: string } }) => {
   const [, navigate] = useLocation();
   const { fragments, getFragment, updateFragment } = useFragments();
@@ -46,9 +58,9 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
   if (!fragment) {
     return (
       <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
-        <section className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#faf8f4] px-5 pt-12">
+        <section className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FAF8F4] px-5 pt-12">
           <button onClick={() => navigate("/")} className="flex items-center gap-1.5 text-[#787064b2]">
-            <ArrowLeft size={16} />
+            <ChevronLeft size={16} />
             <span className="text-sm" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>돌아가기</span>
           </button>
           <p className="mt-8 text-sm text-[#a0988c]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
@@ -134,6 +146,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
     : [];
 
   const canSave = Boolean(memo.trim() || url.trim());
+  const metaLabel = getSourceMetaLabel(fragment.sourceType, fragment.source, fragment.url);
 
   const handleConfirm = () => {
     if (!canSave) return;
@@ -152,18 +165,18 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
 
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
-      <section className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#faf8f4]">
+      <section className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FAF8F4]">
 
         {/* 헤더 */}
-        <header className="flex items-center border-b border-[#FAF7F2] bg-[#FFFEFB] px-4 pt-5 pb-4">
+        <header className="flex items-center border-b border-[#F5F2ED] bg-[#FFFFFB] px-4 pt-5 pb-4">
           <button
             onClick={() => navigate(`/fragment/${fragment.id}`)}
-            className="flex items-center gap-1.5"
+            className="flex items-center gap-1.5 text-[rgba(54,58,105,0.7)]"
             aria-label="뒤로 가기"
           >
-            <ArrowLeft size={16} strokeWidth={2} className="text-[#787064b2]" />
+            <ChevronLeft size={22} strokeWidth={2.2} />
             <span
-              className="text-[15px] font-medium text-[#353a69b2]"
+              className="text-[18px] font-semibold leading-[24px] text-[rgba(54,58,105,0.7)]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
               조각 정리 중
@@ -176,7 +189,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
           {/* 출처 + 날짜 */}
           <div className="mb-1 flex items-center gap-3">
             {fragment.source && (
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 text-[rgba(54,58,105,0.7)]">
                 <div className="w-3.5 h-3.5 rounded-sm bg-[#e8e4dc] flex items-center justify-center">
                   <div className="w-2 h-1.5 rounded-[1px] bg-[#c8c0b4]" />
                 </div>
@@ -190,7 +203,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
                 <circle cx="6" cy="6" r="5" stroke="#c0b8b0" strokeWidth="1.2" />
                 <path d="M6 3.5V6l1.5 1.5" stroke="#c0b8b0" strokeWidth="1.2" strokeLinecap="round" />
               </svg>
-              <span className="text-[12px] text-[#a0988c80]" style={{ fontFamily: "Inter, sans-serif" }}>
+              <span className="text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]" style={{ fontFamily: "Inter, sans-serif" }}>
                 {fragment.date}
               </span>
             </div>
@@ -199,7 +212,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
           {/* 제목 입력 */}
           <div className="flex flex-col gap-2">
             <label
-              className="text-[13px] font-medium tracking-[0.6px] text-[#787064bf]"
+              className="text-[12px] font-medium leading-[17px] text-[rgba(120,112,100,0.75)]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
               제목
@@ -209,7 +222,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="제목을 적어주세요"
-              className="w-full rounded-xl border border-[#0000000a] bg-white px-4 py-3 text-[13.5px] leading-relaxed text-[#4a4540] placeholder-[#c0b8b080] outline-none shadow-[0px_1px_4px_#0000000a]"
+              className="w-full rounded-xl border border-[#0000000a] bg-white px-4 py-3 text-[18px] font-medium leading-[26px] text-[rgba(50,44,34,0.8)] placeholder:text-[rgba(120,112,100,0.6)] outline-none shadow-[0px_1px_4px_#0000000a]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             />
           </div>
@@ -217,7 +230,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
           {/* 내 메모 */}
           <div className="flex flex-col gap-2">
             <label
-              className="text-[13px] font-medium tracking-[0.6px] text-[#787064bf]"
+              className="text-[12px] font-medium leading-[17px] text-[rgba(120,112,100,0.75)]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
               내 메모
@@ -227,7 +240,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
               onChange={(e) => setMemo(e.target.value)}
               placeholder="지금 이 순간의 발견을 담아두세요"
               rows={4}
-              className="w-full rounded-xl border border-[#0000000a] bg-white px-4 py-3 text-[13.5px] leading-relaxed text-[#4a4540] placeholder-[#c0b8b080] outline-none resize-none shadow-[0px_1px_4px_#0000000a]"
+              className="w-full rounded-xl border border-[#0000000a] bg-white px-4 py-3 text-[13.5px] leading-relaxed text-[rgba(50,44,34,0.8)] placeholder:text-[rgba(120,112,100,0.6)] outline-none resize-none shadow-[0px_1px_4px_#0000000a]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             />
           </div>
@@ -235,7 +248,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
           {/* 기억 조각 */}
           <div className="flex flex-col gap-2.5">
             <label
-              className="text-[13px] font-medium tracking-[0.6px] text-[#787064bf]"
+              className="text-[14px] font-semibold leading-[22px] text-[rgba(50,44,34,0.8)]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
               기억 조각
@@ -245,7 +258,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
             {selectedChips.length > 0 && (
               <div className="flex flex-col gap-2 pt-1">
                 <span
-                  className="text-[12px] font-medium tracking-[0.5px] text-[#78706480]"
+                  className="text-[12px] font-medium leading-[17px] text-[rgba(120,112,100,0.75)]"
                   style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
                 >
                   선택한 조각
@@ -282,7 +295,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
 
             <div className="flex flex-col gap-2 pt-1">
               <span
-                className="text-[12px] font-medium tracking-[0.5px] text-[#78706480]"
+                className="text-[12px] font-medium leading-[17px] text-[rgba(120,112,100,0.75)]"
                 style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
               >
                 최근 사용
@@ -326,7 +339,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
                     }}
                     autoComplete="off"
                     placeholder="새 조각 이름..."
-                    className="min-w-0 flex-1 bg-transparent text-[13px] text-[#4a4540] placeholder-[#c0b8b080] outline-none"
+                    className="min-w-0 flex-1 bg-transparent text-[13px] text-[rgba(50,44,34,0.8)] placeholder:text-[rgba(120,112,100,0.6)] outline-none"
                     style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
                   />
                   {newChipInput.trim() && (
@@ -347,7 +360,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
                 className="flex w-full items-center gap-2 rounded-xl border border-[#0000000a] bg-white px-4 py-3 text-left shadow-[0px_1px_4px_#0000000a]"
               >
                 <span className="text-[12px] text-[#b8b0a8]">+</span>
-                <span className="text-[13px] text-[#c0b8b080]">새로운 조각이름 달기</span>
+                <span className="text-[13px] text-[rgba(120,112,100,0.6)]">새로운 조각이름 달기</span>
               </button>
             )}
 
@@ -375,9 +388,9 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
           </div>
 
           {/* 원본 링크 */}
-          <div className="mt-2 flex flex-col gap-2">
+          <div className="mt-2 flex flex-col gap-2 border-t border-[rgba(120,112,100,0.16)] pt-5">
             <label
-              className="text-[13px] font-medium tracking-[0.6px] text-[#787064bf]"
+              className="text-[12px] font-medium leading-[17px] text-[rgba(120,112,100,0.75)]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
               원본 링크
@@ -392,7 +405,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="youtube.com/watch?v="
-                className="flex-1 bg-transparent text-[12px] text-[#787064b0] placeholder-[#c0b8b060] outline-none"
+                className="flex-1 bg-transparent text-[12px] font-normal leading-[17px] text-[rgba(50,44,34,0.8)] placeholder:text-[rgba(120,112,100,0.6)] outline-none"
                 style={{ fontFamily: "Inter, sans-serif" }}
               />
             </div>
@@ -402,16 +415,16 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
 
         {/* 확인 버튼 */}
         <div
-          className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[390px] px-5 pb-8 pt-4"
-          style={{ background: "linear-gradient(to top, #faf8f4 65%, transparent)" }}
+          className="fixed bottom-0 left-1/2 flex w-full max-w-[390px] -translate-x-1/2 justify-center px-5 pb-8 pt-4"
+          style={{ background: "linear-gradient(to top, #FAF8F4 65%, transparent)" }}
         >
           <button
             onClick={handleConfirm}
             disabled={!canSave}
-            className="w-full rounded-full py-4 text-white text-[15px] font-medium disabled:cursor-not-allowed disabled:opacity-40"
+            className="h-[51px] w-[180px] rounded-full border-0 px-[50px] py-[14px] text-[15px] font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
             style={{
-              background: "linear-gradient(135deg, #b0b8e8 0%, #9898d0 100%)",
-              boxShadow: "0px 4px 20px rgba(153,152,208,0.35)",
+              background: "linear-gradient(135deg, rgba(130,207,255,0.60) 12%, rgba(90,144,255,0.60) 54%, rgba(139,112,255,0.60) 100%)",
+              boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.70), 0 3px 8px 0 rgba(180,196,244,0.42)",
               fontFamily: "'Pretendard Variable', sans-serif",
             }}
           >
