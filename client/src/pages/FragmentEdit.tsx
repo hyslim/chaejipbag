@@ -258,12 +258,12 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
             >
               제목
             </label>
-            <input
-              type="text"
+            <textarea
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="제목을 적어주세요"
-              className="w-full rounded-xl border border-[#0000000a] bg-white px-4 py-3 text-[18px] font-medium leading-[26px] text-[rgba(50,44,34,0.8)] placeholder:text-[rgba(120,112,100,0.6)] outline-none shadow-[0px_1px_4px_#0000000a]"
+              rows={2}
+              className="w-full resize-none rounded-xl border border-[#0000000a] bg-white px-4 py-3 text-[17px] font-medium leading-[24px] text-[rgba(50,44,34,0.8)] placeholder:text-[rgba(120,112,100,0.6)] outline-none shadow-[0px_1px_4px_#0000000a]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             />
           </div>
