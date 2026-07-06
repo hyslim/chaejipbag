@@ -12,7 +12,7 @@ export const BottomNav = ({ activeTab, onHomeClick }: BottomNavProps) => {
   const isHomeActive = activeTab === "home";
   const isHistoryActive = activeTab === "history";
   const itemBaseClass =
-    "flex h-12 w-full min-w-0 items-center justify-center gap-2 rounded-full px-4 whitespace-nowrap";
+    "relative z-10 flex h-12 w-full min-w-0 items-center justify-center gap-2 rounded-full px-4 whitespace-nowrap";
   const itemStyle = (active: boolean) => ({
     background: active ? "rgba(255,255,255,0.96)" : "rgba(255,255,255,0.88)",
     boxShadow: active
@@ -24,11 +24,12 @@ export const BottomNav = ({ activeTab, onHomeClick }: BottomNavProps) => {
     <footer
       className="fixed bottom-0 left-1/2 z-40 w-full max-w-[390px] -translate-x-1/2 px-4 pb-6 pt-5"
       style={{
-        background: "linear-gradient(to top, #faf8f4 68%, rgba(250,248,244,0.78) 84%, transparent)",
+        background:
+          "linear-gradient(to top, rgba(250,248,244,0.82) 0%, rgba(250,248,244,0.36) 45%, transparent 72%)",
       }}
     >
       <nav
-        className="grid min-h-[72px] grid-cols-[1fr_auto_1fr] items-center gap-3 overflow-visible rounded-full bg-[rgba(255,255,255,0.78)] px-2.5 py-2.5 backdrop-blur-[20px]"
+        className="relative grid min-h-[72px] grid-cols-2 items-center gap-[58px] overflow-visible rounded-full bg-[rgba(255,255,255,0.78)] px-2.5 py-2.5 backdrop-blur-[20px]"
         style={{
           boxShadow:
             "inset 0 0 0 1px rgba(255,255,255,0.54), inset 0 1px 0 rgba(255,255,255,0.64), 0 12px 26px rgba(80,70,50,0.085), 0 3px 9px rgba(80,70,50,0.035)",
@@ -54,22 +55,24 @@ export const BottomNav = ({ activeTab, onHomeClick }: BottomNavProps) => {
           </span>
         </button>
 
-        <motion.button
-          type="button"
-          onClick={() => navigate("/fragment/new")}
-          whileTap={{ scale: 0.88 }}
-          whileHover={{ scale: 1.03 }}
-          transition={{ type: "spring", stiffness: 500, damping: 18, mass: 0.6 }}
-          className="flex h-[46px] w-[46px] items-center justify-center rounded-full"
-          style={{
-            background: "linear-gradient(133deg, rgba(130,207,255,0.70) 25.42%, rgba(90,144,255,0.70) 52.42%, rgba(139,112,255,0.70) 82.29%)",
-            boxShadow:
-              "inset 0 0 0 1.5px rgba(255,255,255,0.60), inset 0 1px 0 rgba(255,255,255,0.42), 0 4px 10px rgba(180,196,244,0.38)",
-          }}
-          aria-label="새 조각 담기"
-        >
-          <Plus size={20} strokeWidth={2.5} color="rgba(255,255,255,0.92)" className="block" aria-hidden="true" />
-        </motion.button>
+        <div className="pointer-events-none absolute left-1/2 top-1/2 z-20 flex h-[46px] w-[46px] -translate-x-1/2 -translate-y-1/2 items-center justify-center">
+          <motion.button
+            type="button"
+            onClick={() => navigate("/fragment/new")}
+            whileTap={{ scale: 0.88 }}
+            whileHover={{ scale: 1.03 }}
+            transition={{ type: "spring", stiffness: 500, damping: 18, mass: 0.6 }}
+            className="pointer-events-auto flex h-full w-full origin-center items-center justify-center rounded-full"
+            style={{
+              background: "linear-gradient(133deg, rgba(130,207,255,0.70) 25.42%, rgba(90,144,255,0.70) 52.42%, rgba(139,112,255,0.70) 82.29%)",
+              boxShadow:
+                "inset 0 0 0 1.5px rgba(255,255,255,0.60), inset 0 1px 0 rgba(255,255,255,0.42), 0 4px 10px rgba(180,196,244,0.38)",
+            }}
+            aria-label="새 조각 담기"
+          >
+            <Plus size={20} strokeWidth={2.5} color="rgba(255,255,255,0.92)" className="block" aria-hidden="true" />
+          </motion.button>
+        </div>
 
         <button
           type="button"
