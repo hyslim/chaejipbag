@@ -1,4 +1,4 @@
-import { ArrowUp, Link2, RotateCcw, Sparkles } from "lucide-react";
+import { ArrowRight, ArrowUp, Link2, RotateCcw, Sparkles, type LucideIcon } from "lucide-react";
 import { Link } from "wouter";
 import { getPokachipColor, normalizePokachipName, type Fragment } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
@@ -13,8 +13,43 @@ const HISTORY_FILTERS = [
 const HISTORY_SECTIONS = ["오늘", "이번 주", "이번 달", "더 이전"] as const;
 
 type HistorySectionLabel = (typeof HISTORY_SECTIONS)[number];
+type HistoryEventKind = "first" | "together" | "frequent" | "again";
 
-const HistoryCard = ({ fragment }: { fragment: Fragment }) => {
+const HISTORY_EVENT_ICONS: Record<HistoryEventKind, LucideIcon> = {
+  first: Sparkles,
+  together: Link2,
+  frequent: ArrowUp,
+  again: RotateCcw,
+};
+
+function getHistoryEventKind(fragment: Fragment, fragments: Fragment[]): HistoryEventKind {
+  const chips = fragment.pokachips.map((chip) => normalizePokachipName(chip)).filter(Boolean);
+  const primaryChip = chips[0];
+
+  if (chips.length > 1) {
+    return "together";
+  }
+
+  if (!primaryChip) {
+    return "again";
+  }
+
+  const sameChipCount = fragments.filter((item) =>
+    item.pokachips.some((chip) => normalizePokachipName(chip) === primaryChip)
+  ).length;
+
+  if (sameChipCount >= 3) {
+    return "frequent";
+  }
+
+  if (sameChipCount > 1) {
+    return "again";
+  }
+
+  return "first";
+}
+
+const HistoryCard = ({ fragment, eventIcon: EventIcon }: { fragment: Fragment; eventIcon: LucideIcon }) => {
   const chips = fragment.pokachips.map((chip) => normalizePokachipName(chip));
   const primaryChip = chips[0];
   const historyText = primaryChip
@@ -23,34 +58,46 @@ const HistoryCard = ({ fragment }: { fragment: Fragment }) => {
 
   return (
     <Link href={`/fragment/${fragment.id}`}>
-      <div className="rounded-2xl border border-[rgba(255,255,255,0.7)] bg-[rgba(255,255,255,0.72)] px-4 py-3.5 shadow-[0_2px_8px_rgba(80,65,45,0.025)]">
-        <div className="flex items-center justify-between gap-4">
-          <div className="min-w-0 flex-1">
+      <div className="rounded-[18px] border border-white/85 bg-white/90 px-4 py-3.5 shadow-[0_6px_18px_rgba(74,63,48,0.08)]">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <EventIcon
+              size={13}
+              className="shrink-0 text-[rgba(120,112,100,0.55)]"
+              strokeWidth={1.8}
+              aria-hidden="true"
+            />
             <p
-              className="line-clamp-2 text-[14px] font-medium leading-snug text-[rgba(50,44,34,0.8)]"
+              className="min-w-0 flex-1 line-clamp-2 text-[14px] font-medium leading-snug text-[rgba(50,44,34,0.8)]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
               {historyText}
             </p>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {chips.length > 0 ? (
-                chips.map((chip) => (
-                  <span
-                    key={chip}
-                    className="inline-flex min-h-6 items-center rounded-full px-2.5 text-[10px] font-medium text-[#5a5248b0]"
-                    style={{ backgroundColor: getPokachipColor(chip) }}
-                  >
-                    {chip}
-                  </span>
-                ))
-              ) : (
-                <span className="text-[11px] text-[rgba(120,112,100,0.75)]">{fragment.date}</span>
-              )}
-            </div>
+            <ArrowRight
+              size={14}
+              className="shrink-0 text-[rgba(120,112,100,0.55)]"
+              strokeWidth={1.8}
+              aria-hidden="true"
+            />
           </div>
-          <span className="shrink-0 text-[18px] leading-none text-[rgba(54,58,105,0.38)]">
-            &rsaquo;
-          </span>
+          <div className="mt-2 flex flex-wrap gap-1.5 pl-[21px]">
+            {chips.length > 0 ? (
+              chips.map((chip) => (
+                <span
+                  key={chip}
+                  className="inline-flex h-[22px] items-center rounded-full px-2.5 text-[11px] font-medium leading-4 text-[rgba(50,44,34,0.68)]"
+                  style={{
+                    backgroundColor: getPokachipColor(chip),
+                    fontFamily: "'Pretendard Variable', sans-serif",
+                  }}
+                >
+                  {chip}
+                </span>
+              ))
+            ) : (
+              <span className="text-[11px] text-[rgba(120,112,100,0.75)]">{fragment.date}</span>
+            )}
+          </div>
         </div>
       </div>
     </Link>
@@ -133,9 +180,11 @@ function getHistorySection(fragment: Fragment, now = new Date()): HistorySection
 const HistorySection = ({
   label,
   fragments,
+  allFragments,
 }: {
   label: HistorySectionLabel;
   fragments: Fragment[];
+  allFragments: Fragment[];
 }) => {
   return (
     <section className="flex flex-col">
@@ -147,7 +196,11 @@ const HistorySection = ({
       </div>
       <div className="flex flex-col gap-2.5">
         {fragments.map((fragment) => (
-          <HistoryCard key={fragment.id} fragment={fragment} />
+          <HistoryCard
+            key={fragment.id}
+            fragment={fragment}
+            eventIcon={HISTORY_EVENT_ICONS[getHistoryEventKind(fragment, allFragments)]}
+          />
         ))}
       </div>
     </section>
@@ -155,7 +208,7 @@ const HistorySection = ({
 };
 
 const EmptyHistory = () => (
-  <div className="mt-10 rounded-2xl border border-[rgba(255,255,255,0.7)] bg-[rgba(255,255,255,0.55)] px-5 py-10 text-center">
+  <div className="mt-10 rounded-[18px] border border-white/85 bg-white/90 px-5 py-10 text-center shadow-[0_6px_18px_rgba(74,63,48,0.06)]">
     <p className="text-[14px] font-medium text-[rgba(50,44,34,0.8)]">아직 담아둔 조각이 없어요</p>
     <p className="mt-2 text-[12px] leading-relaxed text-[rgba(120,112,100,0.75)]">
       떠오른 생각이나 링크를 먼저 하나 담아보세요.
@@ -178,11 +231,11 @@ export const History = () => {
 
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
-      <section className="min-h-screen w-full max-w-[390px] bg-[#FAF8F4] pb-[120px]">
-        <header className="bg-[#FCFBF8] px-5 pb-[12px] pt-[20px]">
-          <p className="text-[12px] font-medium text-[rgba(54,58,105,0.7)]">조각의 역사</p>
+      <section className="min-h-screen w-full max-w-[390px] bg-[#FFFEFB] pb-[220px]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
+        <header className="flex flex-col border-b border-[rgba(250,247,242,0.5)] bg-[#FCFBF8] px-5 pt-6 pb-3">
+          <p className="mb-1 text-[13px] font-[550] text-[rgba(120,112,100,0.7)]">다시 꺼내보는 조각들</p>
           <h1
-            className="mt-1 text-[28px] font-medium text-[rgba(54,58,105,0.7)]"
+            className="text-[22px] font-medium leading-[1.4] text-[#353a69b2]"
             style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
           >
             기록
@@ -204,13 +257,13 @@ export const History = () => {
         </div>
 
         {sortedFragments.length > 0 ? (
-          <div className="flex flex-col gap-5 bg-[#FAF8F4] px-5 pt-5">
+          <div className="flex flex-col gap-5 bg-[#FAF8F4] px-5 pt-5 pb-4">
             {groupedFragments.map(({ label, fragments }) => (
-              <HistorySection key={label} label={label} fragments={fragments} />
+              <HistorySection key={label} label={label} fragments={fragments} allFragments={sortedFragments} />
             ))}
           </div>
         ) : (
-          <div className="bg-[#FAF8F4] px-5 pt-5">
+          <div className="bg-[#FAF8F4] px-5 pt-5 pb-4">
             <EmptyHistory />
           </div>
         )}
