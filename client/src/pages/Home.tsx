@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from "react";
 import { Globe, Instagram, Pencil, Plus, Sparkles, Youtube, type LucideIcon } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { getPokachipColor, normalizePokachipName, type Fragment } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { BottomNav } from "@/components/BottomNav";
@@ -90,7 +90,24 @@ const getFragmentSourceIcon = (fragment: Fragment): LucideIcon => {
   return Globe;
 };
 
-const FragmentCard = ({ fragment }: { fragment: Fragment }) => {
+const FragmentCard = ({
+  fragment,
+  isMenuOpen,
+  onOpenMenu,
+  onCloseMenu,
+  onDelete,
+}: {
+  fragment: Fragment;
+  isMenuOpen: boolean;
+  onOpenMenu: () => void;
+  onCloseMenu: () => void;
+  onDelete: () => void;
+}) => {
+  const [, navigate] = useLocation();
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const longPressTimerRef = useRef<number | null>(null);
+  const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
+  const didLongPressRef = useRef(false);
   const SourceIcon = getFragmentSourceIcon(fragment);
   const primaryChip = fragment.pokachips[0] ? normalizePokachipName(fragment.pokachips[0]) : "";
   const hasTitle = Boolean(fragment.title.trim());
@@ -98,62 +115,193 @@ const FragmentCard = ({ fragment }: { fragment: Fragment }) => {
   const chipBottomSpacing = hasTitle || hasMemo ? "mb-2" : "mb-0";
   const metaTopSpacing = hasTitle || hasMemo ? "mt-1" : primaryChip ? "mt-2" : "";
 
+  const clearLongPressTimer = () => {
+    if (longPressTimerRef.current) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  useEffect(() => clearLongPressTimer, []);
+
+  useEffect(() => {
+    if (!isMenuOpen) return;
+
+    const handleOutsidePointerDown = (event: globalThis.PointerEvent) => {
+      const target = event.target;
+      if (target instanceof Node && rootRef.current?.contains(target)) return;
+
+      onCloseMenu();
+    };
+
+    document.addEventListener("pointerdown", handleOutsidePointerDown, true);
+    return () => document.removeEventListener("pointerdown", handleOutsidePointerDown, true);
+  }, [isMenuOpen, onCloseMenu]);
+
+  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+
+    didLongPressRef.current = false;
+    pointerStartRef.current = { x: event.clientX, y: event.clientY };
+    clearLongPressTimer();
+    longPressTimerRef.current = window.setTimeout(() => {
+      didLongPressRef.current = true;
+      onOpenMenu();
+    }, 520);
+  };
+
+  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    const pointerStart = pointerStartRef.current;
+    if (!pointerStart) return;
+
+    const movedX = Math.abs(event.clientX - pointerStart.x);
+    const movedY = Math.abs(event.clientY - pointerStart.y);
+    if (movedX > 8 || movedY > 8) {
+      clearLongPressTimer();
+    }
+  };
+
+  const handlePointerEnd = () => {
+    pointerStartRef.current = null;
+    clearLongPressTimer();
+  };
+
+  const handleCardClick = (event: MouseEvent<HTMLDivElement>) => {
+    if (didLongPressRef.current || isMenuOpen) {
+      event.preventDefault();
+      event.stopPropagation();
+      didLongPressRef.current = false;
+      return;
+    }
+
+    navigate(`/fragment/${fragment.id}`);
+  };
+
+  const handleSend = () => {
+    console.log("send fragment", fragment.id);
+    onCloseMenu();
+  };
+
+  const handleDelete = () => {
+    if (window.confirm("이 조각을 지울까요?")) {
+      onDelete();
+    }
+    onCloseMenu();
+  };
+
   return (
-    <div>
-      <Link href={`/fragment/${fragment.id}`}>
-        <motion.div
-          whileTap={{ scale: 0.97 }}
-          transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          className="overflow-hidden rounded-[18px] border border-white/90 bg-white/90 shadow-[0px_8px_24px_rgba(74,63,48,0.08)] cursor-pointer"
+    <div ref={rootRef} className="relative">
+      <motion.div
+        role="menu"
+        aria-hidden={!isMenuOpen}
+        animate={isMenuOpen ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.9, y: 6 }}
+        transition={{ type: "spring", stiffness: 560, damping: 25, mass: 0.5 }}
+        className={`${isMenuOpen ? "pointer-events-auto" : "pointer-events-none"} absolute right-[-10px] top-[-16px] z-50 flex w-[92px] origin-top-right flex-col gap-1 overflow-hidden rounded-[22px] bg-[rgba(255,255,255,0.20)] p-1.5 text-left backdrop-blur-[20px]`}
+        style={{
+          boxShadow:
+            "inset 0 0 0 1px rgba(255,255,255,0.54), inset 0 1px 0 rgba(255,255,255,0.64), 0 3px 8px rgba(180,196,244,0.50)",
+          backdropFilter: "blur(20px) saturate(116%)",
+          WebkitBackdropFilter: "blur(20px) saturate(116%)",
+        }}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          role="menuitem"
+          tabIndex={isMenuOpen ? 0 : -1}
+          className="flex h-11 min-h-11 items-center justify-center rounded-full text-[11px] font-semibold text-white/70 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.60),inset_0_1px_0_rgba(255,255,255,0.22)] outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+          style={{
+            background: "linear-gradient(135deg, rgba(130,207,255,0.58), rgba(116,137,255,0.58), rgba(139,112,255,0.54))",
+            fontFamily: "'Pretendard Variable', sans-serif",
+          }}
+          onClick={handleSend}
         >
-          {fragment.imageDataUrl && (
-            <img
-              src={fragment.imageDataUrl}
-              alt=""
-              className="h-[140px] w-full object-cover"
-            />
+          보내기
+        </button>
+        <button
+          type="button"
+          role="menuitem"
+          tabIndex={isMenuOpen ? 0 : -1}
+          className="flex h-11 min-h-11 items-center justify-center rounded-full text-[11px] font-semibold text-[rgba(50,44,34,0.68)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.60),inset_0_1px_0_rgba(255,255,255,0.24)] outline-none focus-visible:ring-2 focus-visible:ring-white/65"
+          style={{
+            background: "linear-gradient(135deg, rgba(244,224,216,0.54), rgba(224,196,190,0.42))",
+            fontFamily: "'Pretendard Variable', sans-serif",
+          }}
+          onClick={handleDelete}
+        >
+          지우기
+        </button>
+      </motion.div>
+      <motion.div
+        animate={isMenuOpen
+          ? {
+              scale: 1.012,
+              y: -2,
+              boxShadow: "0px 14px 30px rgba(130,207,255,0.13), 0px 8px 22px rgba(139,112,255,0.09), 0px 0px 24px rgba(139,112,255,0.08)",
+            }
+          : {
+              scale: 1,
+              y: 0,
+              boxShadow: "0px 8px 24px rgba(74,63,48,0.08)",
+            }}
+        whileTap={{ scale: isMenuOpen ? 1.01 : 0.97 }}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        className="overflow-hidden rounded-[18px] bg-white/90 outline-none cursor-pointer"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerEnd}
+        onPointerCancel={handlePointerEnd}
+        onPointerLeave={handlePointerEnd}
+        onContextMenu={(event) => event.preventDefault()}
+        onClick={handleCardClick}
+      >
+        {fragment.imageDataUrl && (
+          <img
+            src={fragment.imageDataUrl}
+            alt=""
+            className="h-[140px] w-full object-cover"
+          />
+        )}
+
+        <div className="flex flex-col p-3">
+          {primaryChip && (
+            <span
+              className={`${chipBottomSpacing} flex h-6 items-center self-start rounded-[999px] px-2.5 py-1 text-[11px] font-medium leading-4 text-[rgba(50,44,34,0.68)]`}
+              style={{
+                backgroundColor: getPokachipColor(primaryChip),
+                fontFamily: "'Pretendard Variable', sans-serif",
+              }}
+            >
+              {primaryChip}
+            </span>
           )}
 
-          <div className="flex flex-col p-3">
-            {primaryChip && (
-              <span
-                className={`${chipBottomSpacing} flex h-6 items-center self-start rounded-[999px] px-2.5 py-1 text-[11px] font-medium leading-4 text-[rgba(50,44,34,0.68)]`}
-                style={{
-                  backgroundColor: getPokachipColor(primaryChip),
-                  fontFamily: "'Pretendard Variable', sans-serif",
-                }}
-              >
-                {primaryChip}
-              </span>
-            )}
+          {hasTitle && (
+            <p
+              className="line-clamp-2 text-[14px] font-medium leading-[20px] text-[rgba(50,44,34,0.8)]"
+              style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+            >
+              {fragment.title}
+            </p>
+          )}
 
-            {hasTitle && (
-              <p
-                className="line-clamp-2 text-[14px] font-medium leading-[20px] text-[rgba(50,44,34,0.8)]"
-                style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
-              >
-                {fragment.title}
-              </p>
-            )}
+          {hasMemo && (
+            <p
+              className="mt-1 line-clamp-1 text-[12px] font-normal leading-[17px] text-[rgba(50,44,34,0.65)]"
+              style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+            >
+              {fragment.memo}
+            </p>
+          )}
 
-            {hasMemo && (
-              <p
-                className="mt-1 line-clamp-1 text-[12px] font-normal leading-[17px] text-[rgba(50,44,34,0.65)]"
-                style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
-              >
-                {fragment.memo}
-              </p>
-            )}
-
-            <div className={`${metaTopSpacing} flex items-center gap-1.5 text-[12px] leading-[17px] text-[rgba(120,112,100,0.65)]`}>
-              <SourceIcon size={12} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
-              <span className="truncate" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
-                {fragment.time || fragment.date}
-              </span>
-            </div>
+          <div className={`${metaTopSpacing} flex items-center gap-1.5 text-[12px] leading-[17px] text-[rgba(120,112,100,0.65)]`}>
+            <SourceIcon size={12} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
+            <span className="truncate" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
+              {fragment.time || fragment.date}
+            </span>
           </div>
-        </motion.div>
-      </Link>
+        </div>
+      </motion.div>
     </div>
   );
 };
@@ -203,10 +351,11 @@ const SearchResultCard = ({ fragment }: { fragment: Fragment }) => {
 };
 
 export const Home = (): JSX.Element => {
-  const { fragments } = useFragments();
+  const { fragments, deleteFragment } = useFragments();
   const [selectedChip, setSelectedChip] = useState<string | null>(null);
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [openMenuFragmentId, setOpenMenuFragmentId] = useState<string | null>(null);
   const storedPokachips = Array.from(
     new Set(
       fragments
@@ -244,6 +393,7 @@ export const Home = (): JSX.Element => {
     : [];
 
   const openSearchMode = () => {
+    setOpenMenuFragmentId(null);
     setSelectedChip(null);
     setIsSearchMode(true);
   };
@@ -254,9 +404,24 @@ export const Home = (): JSX.Element => {
   };
 
   const resetHomeView = () => {
+    setOpenMenuFragmentId(null);
     setSelectedChip(null);
     closeSearchMode();
   };
+
+  const handleDeleteFragment = (id: string) => {
+    deleteFragment(id);
+    setOpenMenuFragmentId(null);
+  };
+
+  useEffect(() => {
+    if (!openMenuFragmentId) return;
+
+    const closeMenuOnScroll = () => setOpenMenuFragmentId(null);
+
+    document.addEventListener("scroll", closeMenuOnScroll, true);
+    return () => document.removeEventListener("scroll", closeMenuOnScroll, true);
+  }, [openMenuFragmentId]);
 
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
@@ -509,12 +674,26 @@ export const Home = (): JSX.Element => {
             <div className="flex gap-3">
               <div className="flex min-w-0 flex-1 flex-col gap-3">
                 {leftColumnFragments.map((fragment) => (
-                  <FragmentCard key={fragment.id} fragment={fragment} />
+                  <FragmentCard
+                    key={fragment.id}
+                    fragment={fragment}
+                    isMenuOpen={openMenuFragmentId === fragment.id}
+                    onOpenMenu={() => setOpenMenuFragmentId(fragment.id)}
+                    onCloseMenu={() => setOpenMenuFragmentId(null)}
+                    onDelete={() => handleDeleteFragment(fragment.id)}
+                  />
                 ))}
               </div>
               <div className="flex min-w-0 flex-1 flex-col gap-3">
                 {rightColumnFragments.map((fragment) => (
-                  <FragmentCard key={fragment.id} fragment={fragment} />
+                  <FragmentCard
+                    key={fragment.id}
+                    fragment={fragment}
+                    isMenuOpen={openMenuFragmentId === fragment.id}
+                    onOpenMenu={() => setOpenMenuFragmentId(fragment.id)}
+                    onCloseMenu={() => setOpenMenuFragmentId(null)}
+                    onDelete={() => handleDeleteFragment(fragment.id)}
+                  />
                 ))}
               </div>
             </div>
