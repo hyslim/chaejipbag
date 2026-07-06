@@ -262,7 +262,7 @@ export const Home = (): JSX.Element => {
     <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
       <section className="relative flex min-h-screen w-full max-w-[390px] flex-col bg-[#faf8f4]">
         {isSearchMode ? (
-          <section className="flex min-h-screen flex-1 flex-col bg-[#faf8f4] pb-[118px]">
+          <section className="flex min-h-screen flex-1 flex-col bg-[#faf8f4] pb-[220px]">
             <header className="border-b border-[#FAF7F2] bg-[#FFFEFB] px-4 py-3">
               <div className="flex h-[42px] items-center gap-2 rounded-[14px] bg-[rgba(120,112,100,0.05)] px-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
                 <span aria-hidden="true" className="text-[15px] text-[rgba(120,112,100,0.5)]">
@@ -505,7 +505,7 @@ export const Home = (): JSX.Element => {
           </div>
 
           {/* 2열 카드 목록 */}
-          <div className="px-4 pb-[120px]">
+          <div className="px-4 pb-[260px]">
             <div className="flex gap-3">
               <div className="flex min-w-0 flex-1 flex-col gap-3">
                 {leftColumnFragments.map((fragment) => (
