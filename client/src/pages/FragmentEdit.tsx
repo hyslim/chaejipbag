@@ -305,19 +305,19 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
                 <div className="flex items-center justify-between gap-2 border-t border-[#FAF7F2] px-3 py-2.5">
                   <button
                     type="button"
-                    onClick={() => imageInputRef.current?.click()}
-                    className="flex h-9 flex-1 items-center justify-center rounded-xl bg-[#FAF8F4] text-[12px] font-medium text-[rgba(120,112,100,0.7)]"
-                    style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
-                  >
-                    이미지 바꾸기
-                  </button>
-                  <button
-                    type="button"
                     onClick={handleRemoveImage}
                     className="flex h-9 w-[74px] items-center justify-center rounded-xl bg-[rgba(255,238,238,0.65)] text-[12px] font-medium text-[rgba(170,90,90,0.78)]"
                     style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
                   >
                     삭제
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => imageInputRef.current?.click()}
+                    className="flex h-9 flex-1 items-center justify-center rounded-xl bg-[#FAF8F4] text-[12px] font-medium text-[rgba(120,112,100,0.7)]"
+                    style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+                  >
+                    이미지 바꾸기
                   </button>
                 </div>
               </div>
