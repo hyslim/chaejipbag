@@ -86,11 +86,12 @@ export const QuickSave = () => {
   const sharedHostname = sharedUrl ? getUrlHostname(sharedUrl) : "";
   const sourceLabel = getSourceLabel(sharedHostname);
   const sharedTextTitle = cleanSharedText.split(/\r?\n/)[0].trim();
-  const displayTitle = (
+  const fallbackTitle = (
     cleanSharedTitle ||
     sharedTextTitle ||
     sourceLabel
   ).slice(0, 30);
+  const [title, setTitle] = useState(fallbackTitle);
 
   const getCleanChipName = (value: string) => {
     const normalized = normalizePokachipName(value);
@@ -158,8 +159,8 @@ export const QuickSave = () => {
     const pokachips = Array.from(new Set([...selectedChips, ...inputChips]));
     const now = new Date();
 
-    const newFragment = addFragment({
-      title: displayTitle,
+    addFragment({
+      title: title.trim() || fallbackTitle,
       memo: trimmedMemo || undefined,
       url: sharedUrl || undefined,
       source: sharedHostname || undefined,
@@ -169,7 +170,8 @@ export const QuickSave = () => {
       pokachips: pokachips.length > 0 ? pokachips : ["임시조각"],
       thumbnailColor: "#dce8f8",
     });
-    navigate(`/fragment/${newFragment.id}`);
+    sessionStorage.setItem("chaejip-save-toast", "1");
+    navigate("/");
   };
 
   return (
@@ -193,14 +195,18 @@ export const QuickSave = () => {
 
           <div className="mt-5 rounded-[24px] border border-white/80 bg-[#FFFEFB] px-4 pb-5 pt-4 shadow-[0_14px_42px_rgba(80,70,55,0.13)]">
             <p className="text-[12px] font-medium text-[rgba(120,112,100,0.72)]">외부에서 주운 조각</p>
-            <div className="mt-3 rounded-[18px] bg-[#FAF8F4] px-4 py-3">
+            <div className="mt-3 rounded-[18px] bg-[#FAF8F4] px-4 pb-1.5 pt-2.5">
               <span className="block text-[11px] font-medium text-[rgba(120,112,100,0.52)]">제목</span>
-              <h1 className="mt-1 line-clamp-2 text-[20px] font-medium leading-snug text-[rgba(54,58,105,0.72)]">
-                {displayTitle}
-              </h1>
+              <textarea
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                rows={1}
+                placeholder="제목"
+                className="mt-0.5 max-h-[46px] min-h-[23px] w-full resize-none overflow-y-auto bg-transparent text-[18px] font-medium leading-[23px] text-[rgba(54,58,105,0.72)] outline-none placeholder:text-[rgba(54,58,105,0.36)]"
+              />
             </div>
 
-            <div className="mt-2.5 rounded-[18px] border border-[#FAF7F2] bg-white px-4 py-3">
+            <div className="mt-2.5 rounded-[18px] border border-[#FAF7F2] bg-white px-4 pb-2.5 pt-2.5">
               <span className="block text-[11px] font-medium text-[rgba(120,112,100,0.52)]">URL</span>
               <p className="mt-1 truncate text-[13px] text-[rgba(74,69,64,0.72)]">
                 {sharedUrl || "원본 링크 없음"}
@@ -216,7 +222,7 @@ export const QuickSave = () => {
               onChange={(event) => setMemo(event.target.value)}
               rows={3}
               placeholder="나중에 떠올릴 힌트를 짧게 남겨두세요"
-              className="mt-2 w-full resize-none rounded-[18px] border border-[#FAF7F2] bg-white px-4 py-3 text-[14px] leading-relaxed text-[rgba(50,44,34,0.82)] outline-none placeholder:text-[rgba(120,112,100,0.42)]"
+              className="mt-2 w-full resize-none rounded-[18px] border border-[#FAF7F2] bg-white px-4 pb-2.5 pt-2 text-[14px] leading-[21px] text-[rgba(50,44,34,0.82)] outline-none placeholder:text-[rgba(120,112,100,0.42)]"
             />
 
             <div className="mt-5 flex flex-col gap-2.5">

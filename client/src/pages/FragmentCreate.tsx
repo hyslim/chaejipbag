@@ -231,7 +231,7 @@ export const FragmentCreate = () => {
     const enteredTags = Array.from(new Set([...selectedChipsRef.current, ...parseChipInput(tagInput)]));
     const pokachips = enteredTags.length > 0 ? [...enteredTags] : ["임시조각"];
     const now = new Date();
-    const newFragment = addFragment({
+    addFragment({
       title: parsedInput.title,
       memo: parsedInput.memo,
       url: parsedInput.url,
@@ -248,7 +248,8 @@ export const FragmentCreate = () => {
       ...(imageDataUrl ? { imageDataUrl } : {}),
     });
 
-    navigate(`/fragment/${newFragment.id}`);
+    sessionStorage.setItem("chaejip-save-toast", "1");
+    navigate("/");
   };
 
   return (
@@ -287,28 +288,46 @@ export const FragmentCreate = () => {
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             />
             <div className="border-t border-[#FAF7F2] p-2.5">
-              <button
-                type="button"
-                onClick={() => imageInputRef.current?.click()}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#FAF8F4] py-3 text-[13px] font-medium text-[rgba(120,112,100,0.6)]"
-              >
-                {imageDataUrl ? (
+              {imageDataUrl ? (
+                <div className="overflow-hidden rounded-[16px] border border-white/70 bg-[#FFFEFB] shadow-[0_6px_18px_rgba(80,70,55,0.06)]">
                   <img
                     src={imageDataUrl}
                     alt=""
-                    className="h-[148px] w-full rounded-[14px] object-cover"
+                    className="h-[148px] w-full object-cover"
                   />
-                ) : (
-                  <>
-                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
-                      <rect x="2" y="2.5" width="11" height="10" rx="2" stroke="currentColor" strokeWidth="1.2" />
-                      <circle cx="5" cy="5.5" r="1" fill="currentColor" />
-                      <path d="m3.8 10 2.3-2.3 1.7 1.6 1.4-1.2 2 1.9" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    이미지
-                  </>
-                )}
-              </button>
+                  <div className="flex items-center justify-between gap-2 border-t border-[rgba(120,112,100,0.08)] bg-[#FAF8F4]/70 px-2.5 py-2">
+                    <button
+                      type="button"
+                      onClick={() => setImageDataUrl(undefined)}
+                      className="flex h-9 w-[74px] items-center justify-center rounded-xl text-[12px] font-semibold text-[rgba(50,44,34,0.68)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.60),inset_0_1px_0_rgba(255,255,255,0.24)]"
+                      style={{ background: "linear-gradient(135deg, rgba(244,224,216,0.54), rgba(224,196,190,0.42))", fontFamily: "'Pretendard Variable', sans-serif" }}
+                    >
+                      삭제
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => imageInputRef.current?.click()}
+                      className="flex h-9 flex-1 items-center justify-center rounded-xl border border-[rgba(120,112,100,0.16)] bg-[#FAF8F4] text-[12px] font-medium text-[rgba(120,112,100,0.75)]"
+                      style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+                    >
+                      이미지 바꾸기
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => imageInputRef.current?.click()}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#FAF8F4] py-3 text-[13px] font-medium text-[rgba(120,112,100,0.6)]"
+                >
+                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+                    <rect x="2" y="2.5" width="11" height="10" rx="2" stroke="currentColor" strokeWidth="1.2" />
+                    <circle cx="5" cy="5.5" r="1" fill="currentColor" />
+                    <path d="m3.8 10 2.3-2.3 1.7 1.6 1.4-1.2 2 1.9" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  이미지
+                </button>
+              )}
               <input
                 ref={imageInputRef}
                 type="file"

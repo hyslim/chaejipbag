@@ -46,6 +46,7 @@ const interests = [
 ];
 
 const defaultPokachips = ["유리", "파랑", "임시조각"];
+const saveToastStorageKey = "chaejip-save-toast";
 
 const sourceIconColor = "rgba(120,112,100,0.65)";
 
@@ -356,6 +357,7 @@ export const Home = (): JSX.Element => {
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [openMenuFragmentId, setOpenMenuFragmentId] = useState<string | null>(null);
+  const [showSaveToast, setShowSaveToast] = useState(false);
   const storedPokachips = Array.from(
     new Set(
       fragments
@@ -415,6 +417,16 @@ export const Home = (): JSX.Element => {
   };
 
   useEffect(() => {
+    const shouldShowSaveToast = sessionStorage.getItem(saveToastStorageKey) === "1";
+    if (!shouldShowSaveToast) return;
+
+    sessionStorage.removeItem(saveToastStorageKey);
+    setShowSaveToast(true);
+
+    const toastTimer = window.setTimeout(() => setShowSaveToast(false), 2000);
+    return () => window.clearTimeout(toastTimer);
+  }, []);
+  useEffect(() => {
     if (!openMenuFragmentId) return;
 
     const closeMenuOnScroll = () => setOpenMenuFragmentId(null);
@@ -426,6 +438,18 @@ export const Home = (): JSX.Element => {
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
       <section className="relative flex min-h-screen w-full max-w-[390px] flex-col bg-[#faf8f4]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
+        <div className="pointer-events-none absolute inset-x-0 top-[31px] z-[70] flex justify-center px-4">
+          <motion.div
+            aria-live="polite"
+            initial={false}
+            animate={showSaveToast ? { opacity: 1, y: 0 } : { opacity: 0, y: -6 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className={`${showSaveToast ? "pointer-events-auto" : "pointer-events-none"} flex h-9 min-w-[164px] items-center justify-center rounded-[8px] border border-[rgba(255,255,255,0.78)] bg-[#FFFEFB]/95 px-6 text-[13px] font-semibold text-[rgba(54,58,105,0.66)] shadow-[0_4px_14px_rgba(74,63,48,0.09),inset_0_1px_0_rgba(255,255,255,0.72)] backdrop-blur-[12px]`}
+            style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+          >
+            가방에 담았어요
+          </motion.div>
+        </div>
         {isSearchMode ? (
           <section className="flex min-h-screen flex-1 flex-col bg-[#faf8f4] pb-[220px]">
             <header className="border-b border-[#FAF7F2] bg-[#FFFEFB] px-4 py-3">

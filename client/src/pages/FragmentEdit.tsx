@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useLocation } from "wouter";
-import { ChevronLeft, X } from "lucide-react";
+import { ChevronLeft, Globe, Instagram, Pencil, Sparkles, Youtube, X, type LucideIcon } from "lucide-react";
 import { getPokachipColor, normalizePokachipName } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 
@@ -28,6 +28,18 @@ const getKoreanInitials = (value: string) =>
     })
     .join("");
 
+const sourceIconColor = "rgba(120,112,100,0.65)";
+
+const getSourceMetaIcon = (sourceType?: string, source?: string, url?: string): LucideIcon => {
+  const sourceText = `${source ?? ""} ${url ?? ""}`.toLocaleLowerCase("en-US");
+
+  if (sourceType === "text") return Pencil;
+  if (sourceType === "youtube" || sourceText.includes("youtube") || sourceText.includes("youtu.be")) return Youtube;
+  if (sourceText.includes("instagram")) return Instagram;
+  if (sourceText.includes("chatgpt") || sourceText.includes("chat.openai")) return Sparkles;
+
+  return Globe;
+};
 const getSourceMetaLabel = (sourceType?: string, source?: string, url?: string): string => {
   const sourceText = `${source ?? ""} ${url ?? ""}`.toLocaleLowerCase("en-US");
 
@@ -190,6 +202,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
     || hasChipChanges;
   const canSave = hasChanges && Boolean(title.trim() || memo.trim() || trimmedUrl || imageDataUrl);
   const metaLabel = getSourceMetaLabel(fragment.sourceType, fragment.source, fragment.url);
+  const SourceIcon = getSourceMetaIcon(fragment.sourceType, fragment.source, fragment.url);
 
   const handleConfirm = () => {
     if (!canSave) return;
@@ -231,9 +244,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
           <div className="mb-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]">
             {metaLabel && (
               <div className="inline-flex h-7 max-w-[160px] items-center gap-1.5 rounded-[999px] border border-[rgba(120,112,100,0.16)] bg-transparent px-3">
-                <div className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm border border-[rgba(120,112,100,0.16)]">
-                  <div className="h-1.5 w-2 rounded-[1px] bg-[rgba(120,112,100,0.45)]" />
-                </div>
+                <SourceIcon size={14} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
                 <span className="truncate text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
                   {metaLabel}
                 </span>
@@ -296,25 +307,25 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
             </label>
 
             {imageDataUrl ? (
-              <div className="overflow-hidden rounded-2xl border border-[#0000000a] bg-white shadow-[0px_1px_4px_#0000000a]">
+              <div className="overflow-hidden rounded-2xl border border-white/70 bg-[#FFFEFB] shadow-[0_6px_18px_rgba(80,70,55,0.06)]">
                 <img
                   src={imageDataUrl}
                   alt="선택된 이미지 미리보기"
                   className="h-[168px] w-full object-cover"
                 />
-                <div className="flex items-center justify-between gap-2 border-t border-[#FAF7F2] px-3 py-2.5">
+                <div className="flex items-center justify-between gap-2 border-t border-[rgba(120,112,100,0.08)] bg-[#FAF8F4]/70 px-3 py-2.5">
                   <button
                     type="button"
                     onClick={handleRemoveImage}
-                    className="flex h-9 w-[74px] items-center justify-center rounded-xl bg-[rgba(255,238,238,0.65)] text-[12px] font-medium text-[rgba(170,90,90,0.78)]"
-                    style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+                    className="flex h-9 w-[74px] items-center justify-center rounded-xl text-[12px] font-semibold text-[rgba(50,44,34,0.68)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.60),inset_0_1px_0_rgba(255,255,255,0.24)]"
+                    style={{ background: "linear-gradient(135deg, rgba(244,224,216,0.54), rgba(224,196,190,0.42))", fontFamily: "'Pretendard Variable', sans-serif" }}
                   >
                     삭제
                   </button>
                   <button
                     type="button"
                     onClick={() => imageInputRef.current?.click()}
-                    className="flex h-9 flex-1 items-center justify-center rounded-xl bg-[#FAF8F4] text-[12px] font-medium text-[rgba(120,112,100,0.7)]"
+                    className="flex h-9 flex-1 items-center justify-center rounded-xl border border-[rgba(120,112,100,0.16)] bg-[#FAF8F4] text-[12px] font-medium text-[rgba(120,112,100,0.75)]"
                     style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
                   >
                     이미지 바꾸기

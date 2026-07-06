@@ -1,10 +1,22 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { ChevronLeft, Pencil, Trash2, ExternalLink } from "lucide-react";
+import { ChevronLeft, Pencil, Trash2, ExternalLink, Globe, Instagram, Sparkles, Youtube, X, type LucideIcon } from "lucide-react";
 import { getPokachipColor, normalizePokachipName } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 
+const sourceIconColor = "rgba(120,112,100,0.65)";
+
+const getSourceMetaIcon = (sourceType?: string, source?: string, url?: string): LucideIcon => {
+  const sourceText = `${source ?? ""} ${url ?? ""}`.toLocaleLowerCase("en-US");
+
+  if (sourceType === "text") return Pencil;
+  if (sourceType === "youtube" || sourceText.includes("youtube") || sourceText.includes("youtu.be")) return Youtube;
+  if (sourceText.includes("instagram")) return Instagram;
+  if (sourceText.includes("chatgpt") || sourceText.includes("chat.openai")) return Sparkles;
+
+  return Globe;
+};
 const getSourceMetaLabel = (sourceType?: string, source?: string, url?: string): string => {
   const sourceText = `${source ?? ""} ${url ?? ""}`.toLocaleLowerCase("en-US");
 
@@ -21,6 +33,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   const [, navigate] = useLocation();
   const { getFragment, deleteFragment } = useFragments();
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
   const fragment = getFragment(params.id);
 
   const handleDelete = () => {
@@ -54,6 +67,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   }
 
   const metaLabel = getSourceMetaLabel(fragment.sourceType, fragment.source, fragment.url);
+  const SourceIcon = getSourceMetaIcon(fragment.sourceType, fragment.source, fragment.url);
   const trimmedTitle = fragment.title.trim();
   const trimmedMemo = fragment.memo?.trim() ?? "";
   const shouldShowMemo = Boolean(trimmedMemo && trimmedMemo !== trimmedTitle);
@@ -104,9 +118,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]">
             {metaLabel && (
               <div className="inline-flex h-7 max-w-[160px] items-center gap-1.5 rounded-[999px] border border-[rgba(120,112,100,0.16)] bg-transparent px-3">
-                <div className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm border border-[rgba(120,112,100,0.16)]">
-                  <div className="h-1.5 w-2 rounded-[1px] bg-[rgba(120,112,100,0.45)]" />
-                </div>
+                <SourceIcon size={14} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
                 <span className="truncate text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>{metaLabel}</span>
               </div>
             )}
@@ -119,15 +131,6 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
             </div>
           </div>
 
-          {fragment.imageDataUrl && (
-            <section className="mt-5 overflow-hidden rounded-[18px] border border-white/70 bg-[#FFFFFF]">
-              <img
-                src={fragment.imageDataUrl}
-                alt=""
-                className="h-[220px] w-full object-cover"
-              />
-            </section>
-          )}
 
           <section className="mt-7">
             <h1
@@ -152,6 +155,22 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
               >
                 {trimmedMemo}
               </p>
+            </section>
+          )}
+          {fragment.imageDataUrl && (
+            <section className="mt-8">
+              <button
+                type="button"
+                onClick={() => setIsImageViewerOpen(true)}
+                className="group block w-full overflow-hidden rounded-[18px] border border-[rgba(120,112,100,0.08)] bg-transparent"
+                aria-label="이미지 전체보기 열기"
+              >
+                <img
+                  src={fragment.imageDataUrl}
+                  alt=""
+                  className="h-[236px] w-full object-cover transition-transform duration-200 group-active:scale-[0.99]"
+                />
+              </button>
             </section>
           )}
 
@@ -234,6 +253,32 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
             공유하기
           </button>
         </div>
+        {isImageViewerOpen && fragment.imageDataUrl && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(32,28,24,0.72)] px-4 py-8 backdrop-blur-[2px]"
+            role="dialog"
+            aria-modal="true"
+            aria-label="이미지 전체보기"
+            onClick={() => setIsImageViewerOpen(false)}
+          >
+            <div className="relative flex h-full w-full max-w-[390px] items-center justify-center" onClick={(event) => event.stopPropagation()}>
+              <button
+                type="button"
+                onClick={() => setIsImageViewerOpen(false)}
+                className="absolute right-0 top-0 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-[#FFFEFB]/90 text-[rgba(50,44,34,0.72)] shadow-[0_6px_18px_rgba(0,0,0,0.18)] backdrop-blur-[8px]"
+                aria-label="전체보기 닫기"
+              >
+                <X size={18} strokeWidth={2} />
+              </button>
+              {/* TODO: When imageDataUrl expands to images[], add n/n counter and prev/next controls here. */}
+              <img
+                src={fragment.imageDataUrl}
+                alt=""
+                className="max-h-full max-w-full rounded-[18px] object-contain shadow-[0_18px_60px_rgba(0,0,0,0.28)]"
+              />
+            </div>
+          </div>
+        )}
 
         {isDeleteOpen && (
           <div
