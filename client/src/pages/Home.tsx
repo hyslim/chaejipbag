@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from "react";
-import { Globe, Instagram, Pencil, Plus, Sparkles, Youtube, type LucideIcon } from "lucide-react";
+import { Globe, Instagram, Pencil, Sparkles, Youtube, type LucideIcon } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { getPokachipColor, normalizePokachipName, type Fragment } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
@@ -593,9 +593,6 @@ export const Home = (): JSX.Element => {
                     scrollbarWidth: "none",
                     msOverflowStyle: "none",
                     WebkitOverflowScrolling: "touch",
-                    maskImage: "linear-gradient(to right, black calc(100% - 36px), transparent 100%)",
-                    WebkitMaskImage: "linear-gradient(to right, black calc(100% - 36px), transparent 100%)",
-                    paddingRight: "44px",
                   }}
                 >
                   {topPokachips.map((chip) => {
@@ -618,22 +615,7 @@ export const Home = (): JSX.Element => {
                     );
                   })}
                 </div>
-
-                {/* 포카칩 추가 버튼 */}
-                <div className="relative z-20 flex h-11 w-11 shrink-0 items-center justify-center overflow-visible">
-                  <motion.button
-                    whileTap={{ scale: 0.88 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 18 }}
-                    className="box-border inline-flex aspect-square h-[30px] min-h-[30px] w-[30px] min-w-[30px] shrink-0 items-center justify-center rounded-[71px] border-0 p-0 leading-none"
-                    style={{
-                      background: "linear-gradient(133deg, rgba(130,207,255,0.60) 25.42%, rgba(90,144,255,0.60) 52.42%, rgba(139,112,255,0.60) 82.29%)",
-                      boxShadow: "inset 0 0 0 2px rgba(255,255,255,0.60), 0 3px 8px 0 rgba(180,196,244,0.50)",
-                    }}
-                    aria-label="포카칩 추가"
-                  >
-                    <Plus size={16} strokeWidth={2.5} color="rgba(255,255,255,0.9)" className="block" aria-hidden="true" />
-                  </motion.button>
-                </div>
+                {/* TODO: MVP 이후 새 기억묶음/포카칩 생성 기능으로 재검토 */}
               </div>
             </div>
           </div>
