@@ -17,6 +17,8 @@ const koreanInitials = [
   "ㅆ", "ㅇ", "ㅈ", "ㅉ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ",
 ];
 
+const MAX_IMAGE_SIZE_BYTES = 2 * 1024 * 1024;
+
 const getKoreanInitials = (value: string) =>
   Array.from(value)
     .map((character) => {
@@ -29,13 +31,13 @@ const getKoreanInitials = (value: string) =>
 const getSourceMetaLabel = (sourceType?: string, source?: string, url?: string): string => {
   const sourceText = `${source ?? ""} ${url ?? ""}`.toLocaleLowerCase("en-US");
 
-  if (sourceType === "text") return "\uC9C1\uC811 \uC785\uB825";
+  if (sourceType === "text") return "직접 입력";
   if (sourceType === "youtube" || sourceText.includes("youtube") || sourceText.includes("youtu.be")) return "YouTube";
   if (sourceText.includes("instagram")) return "Instagram";
   if (sourceText.includes("pinterest")) return "Pinterest";
-  if (sourceType === "link" || url) return "\uC6F9\uC0AC\uC774\uD2B8";
+  if (sourceType === "link" || url) return "웹사이트";
 
-  return source || "\uAE30\uB85D";
+  return source || "기록";
 };
 
 export const FragmentEdit = ({ params }: { params: { id: string } }) => {
@@ -46,6 +48,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
   const [title, setTitle] = useState(fragment?.title ?? "");
   const [memo, setMemo] = useState(fragment?.memo ?? "");
   const [url, setUrl] = useState(fragment?.url ?? "");
+  const [imageDataUrl, setImageDataUrl] = useState<string | undefined>(fragment?.imageDataUrl);
   const [selectedChips, setSelectedChips] = useState<string[]>(
     Array.from(
       new Set((fragment?.pokachips ?? []).map(normalizePokachipName).filter(Boolean))
@@ -54,6 +57,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
   const [newChipInput, setNewChipInput] = useState("");
   const [isInputActive, setIsInputActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   if (!fragment) {
     return (
@@ -125,6 +129,31 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
     setTimeout(() => inputRef.current?.focus(), 0);
   };
 
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      alert("이미지는 2MB 이하로 선택해주세요.");
+      event.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setImageDataUrl(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  };
+
+  const handleRemoveImage = () => {
+    setImageDataUrl(undefined);
+    if (imageInputRef.current) imageInputRef.current.value = "";
+  };
+
   const visibleRecent = recentPokachips.filter(
     (chip) => !selectedChips.includes(getCleanChipName(chip.label))
   );
@@ -145,19 +174,31 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
         .slice(0, 5)
     : [];
 
-  const canSave = Boolean(memo.trim() || url.trim());
+  const initialChips = Array.from(
+    new Set((fragment.pokachips ?? []).map(getCleanChipName).filter(Boolean))
+  );
+  const nextChips = Array.from(
+    new Set(selectedChips.map(getCleanChipName).filter(Boolean))
+  );
+  const hasChipChanges = initialChips.length !== nextChips.length
+    || initialChips.some((chip, index) => chip !== nextChips[index]);
+  const trimmedUrl = url.trim();
+  const hasChanges = title !== fragment.title
+    || memo !== (fragment.memo ?? "")
+    || trimmedUrl !== (fragment.url ?? "")
+    || imageDataUrl !== fragment.imageDataUrl
+    || hasChipChanges;
+  const canSave = hasChanges && Boolean(title.trim() || memo.trim() || trimmedUrl || imageDataUrl);
   const metaLabel = getSourceMetaLabel(fragment.sourceType, fragment.source, fragment.url);
 
   const handleConfirm = () => {
     if (!canSave) return;
-    const nextChips = Array.from(
-      new Set(selectedChips.map(getCleanChipName).filter(Boolean))
-    );
 
     updateFragment(fragment.id, {
       title,
       memo,
-      url: url || undefined,
+      url: trimmedUrl || undefined,
+      imageDataUrl: imageDataUrl || undefined,
       pokachips: nextChips.length > 0 ? nextChips : ["임시조각"],
     });
     navigate(`/fragment/${fragment.id}`);
@@ -242,6 +283,66 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
               rows={4}
               className="w-full rounded-xl border border-[#0000000a] bg-white px-4 py-3 text-[13.5px] leading-relaxed text-[rgba(50,44,34,0.8)] placeholder:text-[rgba(120,112,100,0.6)] outline-none resize-none shadow-[0px_1px_4px_#0000000a]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+            />
+          </div>
+
+          {/* 이미지 */}
+          <div className="flex flex-col gap-2">
+            <label
+              className="text-[12px] font-medium leading-[17px] text-[rgba(120,112,100,0.75)]"
+              style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+            >
+              이미지
+            </label>
+
+            {imageDataUrl ? (
+              <div className="overflow-hidden rounded-2xl border border-[#0000000a] bg-white shadow-[0px_1px_4px_#0000000a]">
+                <img
+                  src={imageDataUrl}
+                  alt="선택된 이미지 미리보기"
+                  className="h-[168px] w-full object-cover"
+                />
+                <div className="flex items-center justify-between gap-2 border-t border-[#FAF7F2] px-3 py-2.5">
+                  <button
+                    type="button"
+                    onClick={() => imageInputRef.current?.click()}
+                    className="flex h-9 flex-1 items-center justify-center rounded-xl bg-[#FAF8F4] text-[12px] font-medium text-[rgba(120,112,100,0.7)]"
+                    style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+                  >
+                    이미지 바꾸기
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="flex h-9 w-[74px] items-center justify-center rounded-xl bg-[rgba(255,238,238,0.65)] text-[12px] font-medium text-[rgba(170,90,90,0.78)]"
+                    style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+                  >
+                    삭제
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => imageInputRef.current?.click()}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#0000000a] bg-white px-4 py-3 text-[13px] font-medium text-[rgba(120,112,100,0.6)] shadow-[0px_1px_4px_#0000000a]"
+                style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+              >
+                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+                  <rect x="2" y="2.5" width="11" height="10" rx="2" stroke="currentColor" strokeWidth="1.2" />
+                  <circle cx="5" cy="5.5" r="1" fill="currentColor" />
+                  <path d="m3.8 10 2.3-2.3 1.7 1.6 1.4-1.2 2 1.9" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                이미지 추가
+              </button>
+            )}
+
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageChange}
             />
           </div>
 
