@@ -62,7 +62,7 @@ export const Search = () => {
 
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
-      <section className="min-h-screen w-full max-w-[390px] bg-[#FFFEFB] px-4 pb-12 pt-6">
+      <section className="min-h-screen w-full max-w-[390px] bg-[#FFFEFB] px-4 pb-12 pt-6" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
         <button type="button" onClick={() => navigate("/")} className="mb-6 text-[13px] text-[#787064b2]">
           ‹ 홈
         </button>

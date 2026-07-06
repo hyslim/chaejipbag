@@ -40,12 +40,12 @@ export const Element = (): JSX.Element => {
 
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#f3f3f3] px-4 py-12">
-      <section className="flex min-h-[844px] w-full max-w-[390px] flex-col overflow-hidden bg-[#faf8f4] shadow-[0px_4px_16px_#0000000f,0px_16px_64px_#0000001f]">
+      <section className="flex min-h-[844px] w-full max-w-[390px] flex-col overflow-hidden bg-[#faf8f4] shadow-[0px_4px_16px_#0000000f,0px_16px_64px_#0000001f]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
         <header className="border-b border-[#faf7f20d] bg-[#fcfbf8] px-5 pb-4 pt-6">
-          <p className="[font-family:'Pretendard_Variable-SemiBold',Helvetica] text-sm font-semibold leading-[15px] tracking-[0.80px] text-[#787064b2]">
+          <p className="[font-family:'Pretendard_Variable',Helvetica] text-sm font-semibold leading-[15px] tracking-[0.80px] text-[#787064b2]">
             조각 담기
           </p>
-          <h1 className="pt-1 [font-family:'Pretendard_Variable-Medium',Helvetica] text-[22px] font-medium leading-[30.8px] text-[#353a69b2]">
+          <h1 className="pt-1 [font-family:'Pretendard_Variable',Helvetica] text-[22px] font-medium leading-[30.8px] text-[#353a69b2]">
             어떤 조각을 주웠나요?
           </h1>
         </header>
@@ -54,7 +54,7 @@ export const Element = (): JSX.Element => {
             <Card className="rounded-[18px] border border-[#ffffffe6] bg-white shadow-[0px_2px_10px_#0000000f]">
               <CardContent className="p-0">
                 <section className="px-4 pb-2 pt-3.5">
-                  <p className="[font-family:'Inter',Helvetica] text-sm font-normal leading-[22.4px] text-[#99a1af]">
+                  <p className="[font-family:'Pretendard_Variable',Helvetica] text-sm font-normal leading-[22.4px] text-[#99a1af]">
                     링크, 텍스트, 짧은 생각
                     <br />
                     지금 이 순간의 발견을 담아두세요
@@ -71,7 +71,7 @@ export const Element = (): JSX.Element => {
                       alt="Icon"
                       src="/figmaAssets/icon.svg"
                     />
-                    <span className="[font-family:'Inter',Helvetica] text-xs font-medium leading-[18px] text-[#8c8478b8]">
+                    <span className="[font-family:'Pretendard_Variable',Helvetica] text-xs font-medium leading-[18px] text-[#8c8478b8]">
                       이미지
                     </span>
                   </Button>
@@ -87,11 +87,11 @@ export const Element = (): JSX.Element => {
                       alt="Glass"
                       src="/figmaAssets/glass.svg"
                     />
-                    <h2 className="[font-family:'Pretendard_Variable-SemiBold',Helvetica] text-sm font-semibold leading-[18px] text-[#787064bf]">
+                    <h2 className="[font-family:'Pretendard_Variable',Helvetica] text-sm font-semibold leading-[18px] text-[#787064bf]">
                       기억 조각
                     </h2>
                   </div>
-                  <p className="pt-0.5 [font-family:'Pretendard_Variable-Regular',Helvetica] text-xs font-normal leading-[16.5px] text-[#a0988c99]">
+                  <p className="pt-0.5 [font-family:'Pretendard_Variable',Helvetica] text-xs font-normal leading-[16.5px] text-[#a0988c99]">
                     지금 남기지 않아도 괜찮아요.
                   </p>
                 </header>
@@ -100,15 +100,15 @@ export const Element = (): JSX.Element => {
                   variant="outline"
                   className="h-auto w-full justify-start gap-2 rounded-[14px] border-[#0000000f] bg-white px-3 py-[9px] shadow-[0px_1px_4px_#0000000a] hover:bg-white"
                 >
-                  <span className="[font-family:'Inter',Helvetica] text-[13px] font-normal leading-[19.5px] text-[#a0988cb2]">
+                  <span className="[font-family:'Pretendard_Variable',Helvetica] text-[13px] font-normal leading-[19.5px] text-[#a0988cb2]">
                     +
                   </span>
-                  <span className="[font-family:'Inter',Helvetica] text-[13px] font-normal leading-normal text-[#99a1af]">
+                  <span className="[font-family:'Pretendard_Variable',Helvetica] text-[13px] font-normal leading-normal text-[#99a1af]">
                     새로운 조각이름 달기
                   </span>
                 </Button>
                 <div className="flex flex-col gap-2">
-                  <p className="pt-1 [font-family:'Pretendard_Variable-Medium',Helvetica] text-xs font-medium leading-[15px] tracking-[0.80px] text-[#a0988c8c]">
+                  <p className="pt-1 [font-family:'Pretendard_Variable',Helvetica] text-xs font-medium leading-[15px] tracking-[0.80px] text-[#a0988c8c]">
                     최근 사용
                   </p>
                   <div className="flex flex-wrap gap-x-1 gap-y-2">
@@ -120,7 +120,7 @@ export const Element = (): JSX.Element => {
                           key={tag.label}
                           type="button"
                           onClick={() => toggleTag(tag.label)}
-                          className={`h-[30px] rounded-[71px] border border-[#ffffff8c] px-3.5 py-1.5 [font-family:'Pretendard-Medium',Helvetica] text-xs font-medium leading-[16.5px] text-[#322c22b2] shadow-[inset_0px_1px_0px_#ffffff94,0px_1px_4px_#eec4d059] ${tag.color} ${
+                          className={`h-[30px] rounded-[71px] border border-[#ffffff8c] px-3.5 py-1.5 [font-family:'Pretendard_Variable',Helvetica] text-xs font-medium leading-[16.5px] text-[#322c22b2] shadow-[inset_0px_1px_0px_#ffffff94,0px_1px_4px_#eec4d059] ${tag.color} ${
                             selected ? "ring-1 ring-[#8c84784d]" : ""
                           }`}
                         >
@@ -136,7 +136,7 @@ export const Element = (): JSX.Element => {
               <Button
                 type="button"
                 disabled
-                className="h-auto w-full rounded-[999px] border border-[#ffffffb2] bg-[#c8c4bc80] px-6 py-4 [font-family:'Pretendard_Variable-Medium',Helvetica] text-base font-medium leading-[22.5px] text-[#a0988c99] opacity-100 hover:bg-[#c8c4bc80]"
+                className="h-auto w-full rounded-[999px] border border-[#ffffffb2] bg-[#c8c4bc80] px-6 py-4 [font-family:'Pretendard_Variable',Helvetica] text-base font-medium leading-[22.5px] text-[#a0988c99] opacity-100 hover:bg-[#c8c4bc80]"
               >
                 기억 남기기
               </Button>
@@ -160,7 +160,7 @@ export const Element = (): JSX.Element => {
                   alt={item.label}
                   src={item.icon}
                 />
-                <span className="px-2.5 [font-family:'Pretendard-Medium',Helvetica] text-sm font-medium leading-[13.5px] tracking-[0.72px] text-[#645e54a6]">
+                <span className="px-2.5 [font-family:'Pretendard_Variable',Helvetica] text-sm font-medium leading-[13.5px] tracking-[0.72px] text-[#645e54a6]">
                   {item.label}
                 </span>
               </Button>

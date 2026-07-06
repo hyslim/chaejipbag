@@ -62,7 +62,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
   if (!fragment) {
     return (
       <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
-        <section className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FAF8F4] px-5 pt-12">
+        <section className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FAF8F4] px-5 pt-12" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
           <button onClick={() => navigate("/")} className="flex items-center gap-1.5 text-[#787064b2]">
             <ChevronLeft size={16} />
             <span className="text-sm" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>돌아가기</span>
@@ -206,7 +206,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
 
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
-      <section className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FAF8F4]">
+      <section className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FAF8F4]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
 
         {/* 헤더 */}
         <header className="flex items-center border-b border-[#F5F2ED] bg-[#FFFFFB] px-4 pt-5 pb-4">
@@ -234,7 +234,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
                 <div className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm border border-[rgba(120,112,100,0.16)]">
                   <div className="h-1.5 w-2 rounded-[1px] bg-[rgba(120,112,100,0.45)]" />
                 </div>
-                <span className="truncate text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]" style={{ fontFamily: "Inter, sans-serif" }}>
+                <span className="truncate text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
                   {metaLabel}
                 </span>
               </div>
@@ -244,7 +244,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
                 <circle cx="6" cy="6" r="5" stroke="#c0b8b0" strokeWidth="1.2" />
                 <path d="M6 3.5V6l1.5 1.5" stroke="#c0b8b0" strokeWidth="1.2" strokeLinecap="round" />
               </svg>
-              <span className="text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]" style={{ fontFamily: "Inter, sans-serif" }}>
+              <span className="text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
                 {fragment.date}
               </span>
             </div>
@@ -512,7 +512,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="youtube.com/watch?v="
                 className="flex-1 bg-transparent text-[12px] font-normal leading-[17px] text-[rgba(50,44,34,0.8)] placeholder:text-[rgba(120,112,100,0.6)] outline-none"
-                style={{ fontFamily: "Inter, sans-serif" }}
+                style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
               />
             </div>
           </div>

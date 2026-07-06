@@ -119,7 +119,7 @@ export const QuickSave = () => {
 
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
-      <section className="min-h-screen w-full max-w-[390px] bg-[#FAF8F4] px-4 pb-28 pt-6">
+      <section className="min-h-screen w-full max-w-[390px] bg-[#FAF8F4] px-4 pb-28 pt-6" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
         <button type="button" onClick={() => navigate("/")} className="text-[13px] text-[rgba(120,112,100,0.75)]">닫기</button>
         <p className="mt-6 text-[12px] font-medium text-[rgba(120,112,100,0.75)]">외부 공유에서 주운 조각</p>
         <h1 className="mt-1 text-[22px] font-medium leading-snug text-[rgba(54,58,105,0.7)]">{displayTitle}</h1>

@@ -147,7 +147,7 @@ const FragmentCard = ({ fragment }: { fragment: Fragment }) => {
 
             <div className={`${metaTopSpacing} flex items-center gap-1.5 text-[12px] leading-[17px] text-[rgba(120,112,100,0.65)]`}>
               <SourceIcon size={12} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
-              <span className="truncate" style={{ fontFamily: "Inter, sans-serif" }}>
+              <span className="truncate" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
                 {fragment.time || fragment.date}
               </span>
             </div>
@@ -195,7 +195,7 @@ const SearchResultCard = ({ fragment }: { fragment: Fragment }) => {
         )}
         <div className="mt-2 flex items-center gap-1.5 text-[10px] text-[rgba(120,112,100,0.65)]">
           <SourceIcon size={12} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
-          <span className="truncate" style={{ fontFamily: "Inter, sans-serif" }}>{fragment.time || fragment.date}</span>
+          <span className="truncate" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>{fragment.time || fragment.date}</span>
         </div>
       </motion.div>
     </Link>
@@ -260,7 +260,7 @@ export const Home = (): JSX.Element => {
 
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
-      <section className="relative flex min-h-screen w-full max-w-[390px] flex-col bg-[#faf8f4]">
+      <section className="relative flex min-h-screen w-full max-w-[390px] flex-col bg-[#faf8f4]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
         {isSearchMode ? (
           <section className="flex min-h-screen flex-1 flex-col bg-[#faf8f4] pb-[220px]">
             <header className="border-b border-[#FAF7F2] bg-[#FFFEFB] px-4 py-3">

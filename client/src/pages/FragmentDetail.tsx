@@ -31,7 +31,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   if (!fragment) {
     return (
       <main className="flex min-h-screen w-full justify-center bg-[#FAF8F4]">
-        <section className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FAF8F4]">
+        <section className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FAF8F4]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
           <header className="border-b border-[#F5F2ED] bg-[#FFFFFB] px-5 pt-6 pb-4">
             <button
               onClick={() => navigate("/")}
@@ -65,6 +65,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FAF8F4]"
+        style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
       >
         {/* 헤더 */}
         <header className="flex items-center justify-between border-b border-[#F5F2ED] bg-[#FFFFFB] px-5 pt-6 pb-4">
@@ -106,7 +107,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
                 <div className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm border border-[rgba(120,112,100,0.16)]">
                   <div className="h-1.5 w-2 rounded-[1px] bg-[rgba(120,112,100,0.45)]" />
                 </div>
-                <span className="truncate text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]" style={{ fontFamily: "Inter, sans-serif" }}>{metaLabel}</span>
+                <span className="truncate text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>{metaLabel}</span>
               </div>
             )}
             <div className="flex items-center gap-1">
@@ -114,7 +115,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
                 <circle cx="6" cy="6" r="5" stroke="#c0b8b0" strokeWidth="1.2" />
                 <path d="M6 3.5V6l1.5 1.5" stroke="#c0b8b0" strokeWidth="1.2" strokeLinecap="round" />
               </svg>
-              <span style={{ fontFamily: "Inter, sans-serif" }}>{fragment.date}</span>
+              <span style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>{fragment.date}</span>
             </div>
           </div>
 
@@ -205,7 +206,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
                   <ExternalLink size={13} className="shrink-0 text-[rgba(160,152,140,0.65)]" strokeWidth={1.8} />
                   <span
                     className="truncate text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]"
-                    style={{ fontFamily: "Inter, sans-serif" }}
+                    style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
                   >
                     {fragment.url.replace(/^https?:\/\//, "")}
                   </span>

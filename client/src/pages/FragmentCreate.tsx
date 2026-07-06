@@ -253,7 +253,7 @@ export const FragmentCreate = () => {
 
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
-      <section className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FFFEFB]">
+      <section className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FFFEFB]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
         <header className="flex flex-col border-b border-[rgba(250,247,242,0.5)] bg-[#FCFBF8] px-5 pt-6 pb-3">
           <button
             type="button"
