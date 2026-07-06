@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from "react";
 import { Globe, Instagram, Pencil, Sparkles, Youtube, type LucideIcon } from "lucide-react";
+import { flushSync } from "react-dom";
 import { Link, useLocation } from "wouter";
 import { getPokachipColor, normalizePokachipName, type Fragment } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
@@ -126,6 +127,13 @@ const FragmentCard = ({
   useEffect(() => clearLongPressTimer, []);
 
   useEffect(() => {
+    if (isMenuOpen) return;
+
+    didLongPressRef.current = false;
+    clearLongPressTimer();
+  }, [isMenuOpen]);
+
+  useEffect(() => {
     if (!isMenuOpen) return;
 
     const handleOutsidePointerDown = (event: globalThis.PointerEvent) => {
@@ -192,6 +200,7 @@ const FragmentCard = ({
 
   return (
     <div ref={rootRef} className="relative">
+      {isMenuOpen && (
       <motion.div
         role="menu"
         aria-hidden={!isMenuOpen}
@@ -233,6 +242,7 @@ const FragmentCard = ({
           지우기
         </button>
       </motion.div>
+      )}
       <motion.div
         animate={isMenuOpen
           ? {
@@ -353,6 +363,13 @@ const SearchResultCard = ({ fragment }: { fragment: Fragment }) => {
 
 export const Home = (): JSX.Element => {
   const { fragments, deleteFragment } = useFragments();
+  const topPokachipScrollRef = useRef<HTMLDivElement | null>(null);
+  const topPokachipDragRef = useRef<{ isDragging: boolean; startX: number; scrollLeft: number }>({
+    isDragging: false,
+    startX: 0,
+    scrollLeft: 0,
+  });
+  const topPokachipSnapTimerRef = useRef<number | null>(null);
   const [selectedChip, setSelectedChip] = useState<string | null>(null);
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -365,8 +382,9 @@ export const Home = (): JSX.Element => {
         .map(normalizePokachipName)
         .filter(Boolean)
     )
-  ).slice(0, 5);
+  );
   const topPokachips = storedPokachips.length > 0 ? storedPokachips : defaultPokachips;
+  const topPokachipKey = topPokachips.join("|");
   const visibleFragments = selectedChip
     ? fragments.filter((fragment) =>
         (fragment.pokachips ?? []).some(
@@ -394,8 +412,108 @@ export const Home = (): JSX.Element => {
       })
     : [];
 
+  const closeLongPressMenu = () => setOpenMenuFragmentId(null);
+
+  const closeLongPressMenuImmediately = () => {
+    if (!openMenuFragmentId) return;
+    flushSync(() => setOpenMenuFragmentId(null));
+  };
+
+  const selectHomeFilter = (chip: string | null) => {
+    closeLongPressMenuImmediately();
+    setSelectedChip(chip);
+  };
+
+  const snapTopPokachipRowToNearest = () => {
+    const scrollContainer = topPokachipScrollRef.current;
+    if (!scrollContainer) return;
+
+    const chips = Array.from(scrollContainer.querySelectorAll<HTMLButtonElement>("button"));
+    if (chips.length === 0) return;
+
+    const containerLeft = scrollContainer.getBoundingClientRect().left;
+    const currentScrollLeft = scrollContainer.scrollLeft;
+    const maxScrollLeft = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+    const snapTarget = chips.reduce((nearest, chip, index) => {
+      const chipLeft = chip.getBoundingClientRect().left;
+      const chipScrollLeft = index === 0 ? 0 : currentScrollLeft + chipLeft - containerLeft;
+      const clampedScrollLeft = Math.min(maxScrollLeft, Math.max(0, chipScrollLeft));
+      const distance = Math.abs(clampedScrollLeft - currentScrollLeft);
+
+      return distance < nearest.distance
+        ? { scrollLeft: clampedScrollLeft, distance }
+        : nearest;
+    }, { scrollLeft: currentScrollLeft, distance: Number.POSITIVE_INFINITY });
+
+    scrollContainer.scrollTo({ left: snapTarget.scrollLeft, behavior: "smooth" });
+  };
+
+  const scheduleTopPokachipSnap = () => {
+    if (topPokachipSnapTimerRef.current) {
+      window.clearTimeout(topPokachipSnapTimerRef.current);
+    }
+
+    topPokachipSnapTimerRef.current = window.setTimeout(() => {
+      topPokachipSnapTimerRef.current = null;
+      snapTopPokachipRowToNearest();
+    }, 120);
+  };
+
+  const scrollTopPokachipRow = (delta: number): boolean => {
+    const scrollContainer = topPokachipScrollRef.current;
+    if (!scrollContainer) return false;
+
+    const maxScrollLeft = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+    if (maxScrollLeft <= 0 || delta === 0) return false;
+
+    const currentScrollLeft = scrollContainer.scrollLeft;
+    const nextScrollLeft = Math.min(
+      maxScrollLeft,
+      Math.max(0, currentScrollLeft + delta)
+    );
+    if (nextScrollLeft === currentScrollLeft) return false;
+
+    scrollContainer.scrollLeft = nextScrollLeft;
+    scheduleTopPokachipSnap();
+    return true;
+  };
+
+  const handleTopPokachipPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== "mouse" || event.button !== 0) return;
+
+    if (topPokachipSnapTimerRef.current) {
+      window.clearTimeout(topPokachipSnapTimerRef.current);
+      topPokachipSnapTimerRef.current = null;
+    }
+
+    topPokachipDragRef.current = {
+      isDragging: true,
+      startX: event.clientX,
+      scrollLeft: event.currentTarget.scrollLeft,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handleTopPokachipPointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    const dragState = topPokachipDragRef.current;
+    if (!dragState.isDragging) return;
+
+    event.preventDefault();
+    event.currentTarget.scrollLeft = dragState.scrollLeft - (event.clientX - dragState.startX);
+  };
+
+  const stopTopPokachipDrag = (event: PointerEvent<HTMLDivElement>) => {
+    if (!topPokachipDragRef.current.isDragging) return;
+
+    topPokachipDragRef.current.isDragging = false;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    snapTopPokachipRowToNearest();
+  };
+
   const openSearchMode = () => {
-    setOpenMenuFragmentId(null);
+    closeLongPressMenu();
     setSelectedChip(null);
     setIsSearchMode(true);
   };
@@ -406,7 +524,7 @@ export const Home = (): JSX.Element => {
   };
 
   const resetHomeView = () => {
-    setOpenMenuFragmentId(null);
+    closeLongPressMenu();
     setSelectedChip(null);
     closeSearchMode();
   };
@@ -427,6 +545,38 @@ export const Home = (): JSX.Element => {
     return () => window.clearTimeout(toastTimer);
   }, []);
   useEffect(() => {
+    const scrollContainer = topPokachipScrollRef.current;
+    if (!scrollContainer) return;
+
+    scrollContainer.scrollLeft = 0;
+  }, [topPokachipKey]);
+
+  useEffect(() => {
+    closeLongPressMenu();
+  }, [selectedChip]);
+
+  useEffect(() => {
+    const scrollContainer = topPokachipScrollRef.current;
+    if (!scrollContainer) return;
+
+    const handleWheel = (event: globalThis.WheelEvent) => {
+      const delta = event.deltaX !== 0 ? event.deltaX : event.deltaY;
+      if (scrollTopPokachipRow(delta)) {
+        event.preventDefault();
+      }
+    };
+
+    scrollContainer.addEventListener("wheel", handleWheel, { passive: false });
+    return () => {
+      scrollContainer.removeEventListener("wheel", handleWheel);
+      if (topPokachipSnapTimerRef.current) {
+        window.clearTimeout(topPokachipSnapTimerRef.current);
+        topPokachipSnapTimerRef.current = null;
+      }
+    };
+  }, [topPokachipKey]);
+
+  useEffect(() => {
     if (!openMenuFragmentId) return;
 
     const closeMenuOnScroll = () => setOpenMenuFragmentId(null);
@@ -434,6 +584,17 @@ export const Home = (): JSX.Element => {
     document.addEventListener("scroll", closeMenuOnScroll, true);
     return () => document.removeEventListener("scroll", closeMenuOnScroll, true);
   }, [openMenuFragmentId]);
+
+  useEffect(() => {
+    if (!openMenuFragmentId) return;
+
+    const isOpenMenuFragmentVisible = visibleFragments.some(
+      (fragment) => fragment.id === openMenuFragmentId
+    );
+    if (!isOpenMenuFragmentVisible) {
+      closeLongPressMenu();
+    }
+  }, [openMenuFragmentId, visibleFragments]);
 
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
@@ -590,7 +751,7 @@ export const Home = (): JSX.Element => {
                   <button
                     key={interest.id}
                     type="button"
-                    onClick={() => setSelectedChip(interest.label)}
+                    onClick={() => selectHomeFilter(interest.label)}
                     className="flex h-20 items-center justify-center rounded-[20px] px-2"
                     style={{
                       background: interest.gradient,
@@ -609,25 +770,32 @@ export const Home = (): JSX.Element => {
             </div>
 
             {/* 포카칩 영역 — 가로 드래그 가능, 우측에 + 버튼 */}
-            <div className="overflow-visible px-4 pb-2">
-              <div className="relative flex items-center gap-2 overflow-visible py-[3px] pr-0">
+            <div className="w-full overflow-hidden pb-2">
+              <div className="relative flex w-full min-w-0 items-center gap-2 overflow-hidden py-[3px]">
                 <div
-                  className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto pt-0.5 pb-1.5"
+                  ref={topPokachipScrollRef}
+                  onPointerDown={handleTopPokachipPointerDown}
+                  onPointerMove={handleTopPokachipPointerMove}
+                  onPointerUp={stopTopPokachipDrag}
+                  onPointerCancel={stopTopPokachipDrag}
+                  onPointerLeave={stopTopPokachipDrag}
+                  className="flex w-full min-w-0 snap-x snap-proximity cursor-grab touch-pan-x flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap overscroll-x-contain pr-6 pt-0.5 pb-1.5 select-none active:cursor-grabbing [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                   style={{
                     scrollbarWidth: "none",
                     msOverflowStyle: "none",
                     WebkitOverflowScrolling: "touch",
                   }}
                 >
+                  <span aria-hidden="true" className="w-2 shrink-0 snap-start" />
                   {topPokachips.map((chip) => {
                     const backgroundColor = getPokachipColor(chip);
                     return (
                       <motion.button
                         key={chip}
-                        onClick={() => setSelectedChip(chip)}
+                        onClick={() => selectHomeFilter(chip)}
                         whileTap={{ scale: 0.9 }}
                         transition={{ type: "spring", stiffness: 500, damping: 20 }}
-                        className="box-border inline-flex h-[29px] shrink-0 items-center justify-center gap-2.5 rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3.5 py-[6px] text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
+                        className="box-border inline-flex h-[29px] shrink-0 snap-start items-center justify-center gap-2.5 rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3.5 py-[6px] text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
                         style={{
                           backgroundColor: getColorWithAlpha(backgroundColor, 0.5),
                           boxShadow: "0 2px 4px 0 rgba(180,196,244,0.30), inset 0 1px 0 0 rgba(255,255,255,0.58)",
@@ -638,6 +806,7 @@ export const Home = (): JSX.Element => {
                       </motion.button>
                     );
                   })}
+                  <span aria-hidden="true" className="w-[calc(100%-64px)] shrink-0" />
                 </div>
                 {/* TODO: MVP 이후 새 기억묶음/포카칩 생성 기능으로 재검토 */}
               </div>
@@ -666,7 +835,7 @@ export const Home = (): JSX.Element => {
             {selectedChip && (
               <button
                 type="button"
-                onClick={() => setSelectedChip(null)}
+                onClick={() => selectHomeFilter(null)}
                 className="shrink-0 text-[12px] font-medium text-[#78706480]"
                 style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
               >
