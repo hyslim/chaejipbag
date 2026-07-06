@@ -44,6 +44,17 @@ const getUrlHostname = (url: string) => {
   }
 };
 
+const getSourceLabel = (hostname: string) => {
+  const lowerHostname = hostname.toLocaleLowerCase("en-US");
+
+  if (lowerHostname.includes("instagram.com")) return "인스타그램 조각";
+  if (lowerHostname.includes("youtube.com") || lowerHostname.includes("youtu.be")) return "YouTube 조각";
+  if (lowerHostname.includes("pinterest.com")) return "Pinterest 조각";
+  if (hostname) return `${hostname} 조각`;
+
+  return "링크 조각";
+};
+
 export const QuickSave = () => {
   const [, navigate] = useLocation();
   const { fragments, addFragment } = useFragments();
@@ -51,26 +62,34 @@ export const QuickSave = () => {
   const sharedTitle = params.get("title")?.trim() ?? "";
   const sharedText = params.get("text")?.trim() ?? "";
   const urlParam = params.get("url")?.trim() ?? "";
+  const titleUrl = getFirstUrl(sharedTitle);
   const textUrl = getFirstUrl(sharedText);
-  const sharedUrl = urlParam ? normalizeSharedUrl(urlParam) : textUrl?.normalized ?? "";
-  const initialMemo = removeRepeatedUrl(
-    sharedText,
-    [sharedUrl, urlParam, textUrl?.raw ?? "", textUrl?.normalized ?? ""]
-  );
+  const sharedUrl = urlParam ? normalizeSharedUrl(urlParam) : textUrl?.normalized ?? titleUrl?.normalized ?? "";
+  const urlCandidates = [
+    sharedUrl,
+    urlParam,
+    titleUrl?.raw ?? "",
+    titleUrl?.normalized ?? "",
+    textUrl?.raw ?? "",
+    textUrl?.normalized ?? "",
+  ];
+  const cleanSharedTitle = removeRepeatedUrl(sharedTitle, urlCandidates);
+  const cleanSharedText = removeRepeatedUrl(sharedText, urlCandidates);
+  const initialMemo = cleanSharedText;
   const [memo, setMemo] = useState(initialMemo);
   const [chipInput, setChipInput] = useState("");
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
   const [isInputActive, setIsInputActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const trimmedMemo = memo.trim();
-  const canSave = Boolean(sharedUrl || trimmedMemo || sharedTitle || sharedText);
+  const canSave = Boolean(sharedUrl || trimmedMemo || cleanSharedTitle || cleanSharedText);
   const sharedHostname = sharedUrl ? getUrlHostname(sharedUrl) : "";
-  const fallbackTitleSource = trimmedMemo || initialMemo || sharedText;
+  const sourceLabel = getSourceLabel(sharedHostname);
+  const sharedTextTitle = cleanSharedText.split(/\r?\n/)[0].trim();
   const displayTitle = (
-    sharedTitle ||
-    fallbackTitleSource.split(/\r?\n/)[0].trim() ||
-    sharedHostname ||
-    "링크 조각"
+    cleanSharedTitle ||
+    sharedTextTitle ||
+    sourceLabel
   ).slice(0, 30);
 
   const getCleanChipName = (value: string) => {
