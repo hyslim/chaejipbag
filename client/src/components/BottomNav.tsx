@@ -12,27 +12,26 @@ export const BottomNav = ({ activeTab, onHomeClick }: BottomNavProps) => {
   const isHomeActive = activeTab === "home";
   const isHistoryActive = activeTab === "history";
   const itemBaseClass =
-    "relative z-10 flex h-12 w-full min-w-0 items-center justify-center gap-2 rounded-full px-4 whitespace-nowrap";
+    "relative z-10 flex h-[58px] w-full min-w-0 items-center justify-center rounded-full px-4 whitespace-nowrap";
   const itemStyle = (active: boolean) => ({
-    background: active ? "rgba(255,255,255,0.96)" : "rgba(255,255,255,0.88)",
+    background: active ? "rgba(255,255,255,0.62)" : "rgba(255,255,255,0.52)",
     boxShadow: active
-      ? "inset 0 1px 0 rgba(255,255,255,0.92), 0 5px 14px rgba(62,55,44,0.08)"
-      : "inset 0 1px 0 rgba(255,255,255,0.82), 0 3px 10px rgba(62,55,44,0.045)",
+      ? "inset 0 0 0 1px rgba(120,112,100,0.08), inset 0 1px 0 rgba(255,255,255,0.92), 0 4px 10px rgba(80,70,50,0.09)"
+      : "inset 0 0 0 1px rgba(120,112,100,0.07), inset 0 1px 0 rgba(255,255,255,0.82), 0 4px 10px rgba(80,70,50,0.075)",
   });
 
   return (
     <footer
       className="fixed bottom-0 left-1/2 z-40 w-full max-w-[390px] -translate-x-1/2 px-4 pb-6 pt-5"
       style={{
-        background:
-          "linear-gradient(to top, rgba(250,248,244,0.82) 0%, rgba(250,248,244,0.36) 45%, transparent 72%)",
+        background: "transparent",
       }}
     >
       <nav
-        className="relative grid min-h-[72px] grid-cols-2 items-center gap-[58px] overflow-visible rounded-full bg-[rgba(255,255,255,0.78)] px-2.5 py-2.5 backdrop-blur-[20px]"
+        className="relative grid min-h-[72px] grid-cols-2 items-center gap-[58px] overflow-visible rounded-full bg-[rgba(255,255,255,0.20)] px-2.5 py-2.5 backdrop-blur-[20px]"
         style={{
           boxShadow:
-            "inset 0 0 0 1px rgba(255,255,255,0.54), inset 0 1px 0 rgba(255,255,255,0.64), 0 12px 26px rgba(80,70,50,0.085), 0 3px 9px rgba(80,70,50,0.035)",
+            "inset 0 0 0 1px rgba(255,255,255,0.54), inset 0 1px 0 rgba(255,255,255,0.64), 0 3px 8px rgba(180,196,244,0.50)",
           backdropFilter: "blur(20px) saturate(116%)",
           WebkitBackdropFilter: "blur(20px) saturate(116%)",
         }}
@@ -43,7 +42,7 @@ export const BottomNav = ({ activeTab, onHomeClick }: BottomNavProps) => {
             onHomeClick?.();
             navigate("/");
           }}
-          className={itemBaseClass}
+          className={`${itemBaseClass} gap-2.5`}
           style={itemStyle(isHomeActive)}
         >
           <img src="/figmaAssets/chart-pie-portfolio-no-coral.svg" alt="가방" className="h-5 w-5" />
@@ -77,10 +76,10 @@ export const BottomNav = ({ activeTab, onHomeClick }: BottomNavProps) => {
         <button
           type="button"
           onClick={() => navigate("/history")}
-          className={itemBaseClass}
+          className={`${itemBaseClass} gap-1.5`}
           style={itemStyle(isHistoryActive)}
         >
-          <img src="/figmaAssets/heart.png" alt="기록" className="h-[26px] w-[26px]" />
+          <img src="/figmaAssets/heart.png" alt="기록" className="h-[30px] w-[30px]" />
           <span
             className={`text-[14px] font-medium leading-5 ${isHistoryActive ? "text-[#353a69d9]" : "text-[#787064b5]"}`}
             style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
