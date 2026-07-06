@@ -1,11 +1,10 @@
 import { useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { X } from "lucide-react";
-import { getPokachipColor, normalizePokachipName } from "@/data/fragments";
+import { getCleanPokachipName, getPokachipColor, getPokachipCandidates, getPokachipKey, getRecentPokachips, mergePokachips, normalizePokachipName, parsePokachipInput } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 
 const thumbnailColors = ["#f0e8d0", "#f0dce4", "#d4eef4", "#d8eef8", "#dce8f8"];
-const recentPokachips = ["글쓰기", "수조", "조명", "웹앱", "블렌더"];
 const MAX_IMAGE_SIZE_BYTES = 2 * 1024 * 1024;
 
 const getPokachipShadowColor = (label: string) => {
@@ -29,12 +28,6 @@ const getPokachipShadowColor = (label: string) => {
 
   return color;
 };
-
-const parseChipInput = (value: string) =>
-  value
-    .split(",")
-    .map(normalizePokachipName)
-    .filter((tag) => tag && tag !== "추가");
 
 type ParsedFragmentInput = {
   title: string;
@@ -132,22 +125,23 @@ export const FragmentCreate = () => {
 
   const toggleChip = (label: string) => {
     const currentChips = selectedChipsRef.current;
-    const nextChips = currentChips.includes(label)
-      ? currentChips.filter((chip) => chip !== label)
+    const labelKey = getPokachipKey(label);
+    const nextChips = currentChips.some((chip) => getPokachipKey(chip) === labelKey)
+      ? currentChips.filter((chip) => getPokachipKey(chip) !== labelKey)
       : [...currentChips, label];
 
     commitSelectedChips(nextChips);
   };
 
   const removeChip = (label: string) => {
-    commitSelectedChips(selectedChipsRef.current.filter((chip) => chip !== label));
+    commitSelectedChips(selectedChipsRef.current.filter((chip) => getPokachipKey(chip) !== getPokachipKey(label)));
   };
 
   const addInputChips = () => {
-    const enteredTags = parseChipInput(tagInput);
+    const enteredTags = parsePokachipInput(tagInput);
     if (enteredTags.length === 0) return;
 
-    const nextChips = Array.from(new Set([...selectedChipsRef.current, ...enteredTags]));
+    const nextChips = mergePokachips(selectedChipsRef.current, enteredTags);
     commitSelectedChips(nextChips);
     setTagInput("");
     setIsInputActive(false);
@@ -165,38 +159,28 @@ export const FragmentCreate = () => {
     setTimeout(() => inputRef.current?.focus(), 0);
   };
 
-  const visibleRecentChips = recentPokachips
-    .map(normalizePokachipName)
-    .filter((chip) => chip && chip !== "추가" && !selectedChips.includes(chip));
+  const visibleRecentChips = getRecentPokachips(fragments, {
+    limit: 5,
+    exclude: selectedChips,
+  });
 
-  const normalizedQuery = normalizePokachipName(tagInput).toLocaleLowerCase("ko-KR");
   const autocompleteCandidates = useMemo(() => {
+    const normalizedQuery = getPokachipKey(tagInput);
     if (!isInputActive || !normalizedQuery) return [];
 
-    const selectedChipSet = new Set(
-      selectedChips.map(normalizePokachipName).filter(Boolean)
-    );
-
-    return Array.from(
-      new Set([
-        ...recentPokachips.map(normalizePokachipName).filter(Boolean),
-        ...fragments
-          .flatMap((fragment) => fragment.pokachips ?? [])
-          .map(normalizePokachipName)
-          .filter(Boolean),
-      ])
-    )
+    const selectedChipKeys = new Set(selectedChips.map(getPokachipKey).filter(Boolean));
+    return getPokachipCandidates(fragments, { exclude: selectedChips })
       .filter((label) => {
-        if (selectedChipSet.has(label) || label === "추가") return false;
-        return label.toLocaleLowerCase("ko-KR").includes(normalizedQuery);
+        const chipKey = getPokachipKey(label);
+        return chipKey.includes(normalizedQuery) && !selectedChipKeys.has(chipKey);
       })
       .slice(0, 5);
-  }, [fragments, isInputActive, normalizedQuery, selectedChips]);
+  }, [fragments, isInputActive, selectedChips, tagInput]);
 
   const selectAutocompleteCandidate = (label: string) => {
-    const normalized = normalizePokachipName(label);
-    if (normalized && normalized !== "추가" && !selectedChipsRef.current.includes(normalized)) {
-      commitSelectedChips([...selectedChipsRef.current, normalized]);
+    const normalized = getCleanPokachipName(label);
+    if (normalized && !selectedChipsRef.current.includes(normalized)) {
+      commitSelectedChips(mergePokachips(selectedChipsRef.current, [normalized]));
     }
     setTagInput("");
     setIsInputActive(false);
@@ -228,7 +212,7 @@ export const FragmentCreate = () => {
     if (!canSave) return;
 
     const parsedInput = parseFragmentInput(memo, Boolean(imageDataUrl));
-    const enteredTags = Array.from(new Set([...selectedChipsRef.current, ...parseChipInput(tagInput)]));
+    const enteredTags = mergePokachips(selectedChipsRef.current, parsePokachipInput(tagInput));
     const pokachips = enteredTags.length > 0 ? [...enteredTags] : ["임시조각"];
     const now = new Date();
     addFragment({

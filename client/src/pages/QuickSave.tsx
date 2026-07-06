@@ -1,10 +1,9 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { X } from "lucide-react";
-import { getPokachipColor, normalizePokachipName } from "@/data/fragments";
+import { getCleanPokachipName, getPokachipColor, getPokachipCandidates, getPokachipKey, getRecentPokachips, mergePokachips, parsePokachipInput } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 
-const defaultQuickChips = ["글쓰기", "수조", "조명", "웹앱", "블렌더"];
 const urlPattern = /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/i;
 const trailingUrlPunctuationPattern = /[),.;!?]+$/;
 
@@ -93,49 +92,44 @@ export const QuickSave = () => {
   ).slice(0, 30);
   const [title, setTitle] = useState(fallbackTitle);
 
-  const getCleanChipName = (value: string) => {
-    const normalized = normalizePokachipName(value);
-    return normalized && normalized !== "추가" ? normalized : "";
-  };
+  const visibleRecentChips = getRecentPokachips(fragments, {
+    limit: 5,
+    exclude: selectedChips,
+  });
+  const chipInputCandidates = useMemo(() => {
+    const normalizedQuery = getPokachipKey(chipInput);
+    if (!isInputActive || !normalizedQuery) return [];
 
-  const parseChipInput = (value: string) =>
-    value
-      .split(",")
-      .map(getCleanChipName)
-      .filter(Boolean);
-
-  const recentChips = Array.from(
-    new Set(
-      fragments
-        .flatMap((fragment) => fragment.pokachips ?? [])
-        .map(getCleanChipName)
-        .filter(Boolean)
-    )
-  ).slice(0, 5);
-  const visibleRecentChips = Array.from(
-    new Set((recentChips.length > 0 ? recentChips : defaultQuickChips).map(getCleanChipName).filter(Boolean))
-  ).filter((chip) => !selectedChips.includes(chip));
+    const selectedChipKeys = new Set(selectedChips.map(getPokachipKey).filter(Boolean));
+    return getPokachipCandidates(fragments, { exclude: selectedChips })
+      .filter((chip) => {
+        const chipKey = getPokachipKey(chip);
+        return chipKey.includes(normalizedQuery) && !selectedChipKeys.has(chipKey);
+      })
+      .slice(0, 5);
+  }, [chipInput, fragments, isInputActive, selectedChips]);
 
   const toggleChip = (chip: string) => {
-    const normalized = getCleanChipName(chip);
+    const normalized = getCleanPokachipName(chip);
     if (!normalized) return;
 
-    setSelectedChips((current) =>
-      current.includes(normalized)
-        ? current.filter((item) => item !== normalized)
-        : [...current, normalized]
-    );
+    setSelectedChips((current) => {
+      const normalizedKey = getPokachipKey(normalized);
+      return current.some((item) => getPokachipKey(item) === normalizedKey)
+        ? current.filter((item) => getPokachipKey(item) !== normalizedKey)
+        : [...current, normalized];
+    });
   };
 
   const removeChip = (chip: string) => {
-    setSelectedChips((current) => current.filter((item) => item !== chip));
+    setSelectedChips((current) => current.filter((item) => getPokachipKey(item) !== getPokachipKey(chip)));
   };
 
   const addInputChips = () => {
-    const inputChips = parseChipInput(chipInput);
+    const inputChips = parsePokachipInput(chipInput);
     if (inputChips.length === 0) return;
 
-    setSelectedChips((current) => Array.from(new Set([...current, ...inputChips])));
+    setSelectedChips((current) => mergePokachips(current, inputChips));
     setChipInput("");
     setIsInputActive(false);
   };
@@ -155,8 +149,8 @@ export const QuickSave = () => {
   const handleSave = () => {
     if (!canSave) return;
 
-    const inputChips = parseChipInput(chipInput);
-    const pokachips = Array.from(new Set([...selectedChips, ...inputChips]));
+    const inputChips = parsePokachipInput(chipInput);
+    const pokachips = mergePokachips(selectedChips, inputChips);
     const now = new Date();
 
     addFragment({
@@ -280,6 +274,7 @@ export const QuickSave = () => {
               </div>
 
               {isInputActive ? (
+                <>
                 <div className="flex items-center gap-2 rounded-[16px] border border-[#FAF7F2] bg-white px-4 py-3">
                   <span className="shrink-0 text-[12px] text-[rgba(120,112,100,0.55)]">+</span>
                   <input
@@ -307,6 +302,26 @@ export const QuickSave = () => {
                     </button>
                   )}
                 </div>
+                {chipInputCandidates.length > 0 && (
+                  <div className="-mt-1 overflow-hidden rounded-[14px] border border-[#FAF7F2] bg-white shadow-[0_2px_8px_rgba(80,70,55,0.05)]">
+                    {chipInputCandidates.map((chip, index) => (
+                      <button
+                        key={chip}
+                        type="button"
+                        onMouseDown={(event) => {
+                          event.preventDefault();
+                          setSelectedChips((current) => mergePokachips(current, [chip]));
+                          setChipInput("");
+                          setIsInputActive(false);
+                        }}
+                        className={"flex w-full items-center px-4 py-2.5 text-left text-[13px] text-[#5a5248] " + (index > 0 ? "border-t border-[#00000008]" : "")}
+                      >
+                        {chip}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                </>
               ) : (
                 <button
                   type="button"

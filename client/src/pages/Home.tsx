@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from 
 import { Globe, Instagram, Pencil, Sparkles, Youtube, type LucideIcon } from "lucide-react";
 import { flushSync } from "react-dom";
 import { Link, useLocation } from "wouter";
-import { getPokachipColor, normalizePokachipName, type Fragment } from "@/data/fragments";
+import { getPokachipColor, getRecentPokachips, normalizePokachipName, type Fragment } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { BottomNav } from "@/components/BottomNav";
 
@@ -375,15 +375,8 @@ export const Home = (): JSX.Element => {
   const [searchQuery, setSearchQuery] = useState("");
   const [openMenuFragmentId, setOpenMenuFragmentId] = useState<string | null>(null);
   const [showSaveToast, setShowSaveToast] = useState(false);
-  const storedPokachips = Array.from(
-    new Set(
-      fragments
-        .flatMap((fragment) => fragment.pokachips ?? [])
-        .map(normalizePokachipName)
-        .filter(Boolean)
-    )
-  );
-  const topPokachips = storedPokachips.length > 0 ? storedPokachips : defaultPokachips;
+  const storedPokachips = getRecentPokachips(fragments, { includeFallback: false });
+  const topPokachips = getRecentPokachips(fragments);
   const topPokachipKey = topPokachips.join("|");
   const visibleFragments = selectedChip
     ? fragments.filter((fragment) =>

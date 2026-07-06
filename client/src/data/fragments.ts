@@ -56,6 +56,94 @@ export function getPokachipColor(value: string): string {
   return generatedPokachipPalette[hash % generatedPokachipPalette.length];
 }
 
+export const homeInterestPokachips = ["웹앱", "인테리어", "수조", "루틴", "조명", "요리"];
+export const fallbackRecentPokachips = ["글쓰기", "수조", "조명", "웹앱", "블렌더"];
+
+export function getCleanPokachipName(value: string): string {
+  const normalized = normalizePokachipName(value);
+  return normalized && normalized !== "추가" ? normalized : "";
+}
+
+export function getPokachipKey(value: string): string {
+  return getCleanPokachipName(value).toLocaleLowerCase("ko-KR");
+}
+
+export function parsePokachipInput(value: string): string[] {
+  return value
+    .split(",")
+    .map(getCleanPokachipName)
+    .filter(Boolean);
+}
+
+export function getUniquePokachips(values: string[]): string[] {
+  const keys = new Set<string>();
+  const chips: string[] = [];
+
+  for (const value of values) {
+    const normalized = getCleanPokachipName(value);
+    const key = getPokachipKey(normalized);
+    if (key && !keys.has(key)) {
+      keys.add(key);
+      chips.push(normalized);
+    }
+  }
+
+  return chips;
+}
+
+export function mergePokachips(current: string[], additions: string[]): string[] {
+  return getUniquePokachips([...current, ...additions]);
+}
+
+function collectPokachips(values: string[], excludeSet: Set<string>, chipKeys: Set<string>, chips: string[]) {
+  for (const chip of values) {
+    const normalized = getCleanPokachipName(chip);
+    const key = getPokachipKey(normalized);
+    if (key && !excludeSet.has(key) && !chipKeys.has(key)) {
+      chipKeys.add(key);
+      chips.push(normalized);
+    }
+  }
+}
+
+export function getRecentPokachips(
+  fragments: Fragment[],
+  options: { limit?: number; exclude?: string[]; includeFallback?: boolean } = {}
+): string[] {
+  const excludeSet = new Set((options.exclude ?? []).map(getPokachipKey).filter(Boolean));
+  const chipKeys = new Set<string>();
+  const chips: string[] = [];
+  const sortedFragments = [...fragments].sort((a, b) => {
+    const aTime = Date.parse(a.updatedAt ?? a.createdAt ?? "") || 0;
+    const bTime = Date.parse(b.updatedAt ?? b.createdAt ?? "") || 0;
+    return bTime - aTime;
+  });
+
+  for (const fragment of sortedFragments) {
+    collectPokachips(fragment.pokachips ?? [], excludeSet, chipKeys, chips);
+  }
+
+  if (options.includeFallback !== false) {
+    collectPokachips(fallbackRecentPokachips, excludeSet, chipKeys, chips);
+  }
+
+  return typeof options.limit === "number" ? chips.slice(0, options.limit) : chips;
+}
+
+export function getPokachipCandidates(
+  fragments: Fragment[],
+  options: { limit?: number; exclude?: string[] } = {}
+): string[] {
+  const excludeSet = new Set((options.exclude ?? []).map(getPokachipKey).filter(Boolean));
+  const chipKeys = new Set<string>();
+  const chips: string[] = [];
+
+  collectPokachips(getRecentPokachips(fragments, { includeFallback: true }), excludeSet, chipKeys, chips);
+  collectPokachips(homeInterestPokachips, excludeSet, chipKeys, chips);
+
+  return typeof options.limit === "number" ? chips.slice(0, options.limit) : chips;
+}
+
 export const sampleFragments: Fragment[] = [
   {
     id: "1",

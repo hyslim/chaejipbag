@@ -1,16 +1,8 @@
 import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { ChevronLeft, Globe, Instagram, Pencil, Sparkles, Youtube, X, type LucideIcon } from "lucide-react";
-import { getPokachipColor, normalizePokachipName } from "@/data/fragments";
+import { getCleanPokachipName, getPokachipColor, getPokachipCandidates, getPokachipKey, getRecentPokachips, getUniquePokachips, mergePokachips, normalizePokachipName } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
-
-const recentPokachips = [
-  { label: "조명", bg: "rgba(238,216,152,0.45)" },
-  { label: "글쓰기", bg: "rgba(238,196,208,0.45)" },
-  { label: "유리", bg: "rgba(200,220,240,0.45)" },
-  { label: "파랑", bg: "rgba(180,210,255,0.45)" },
-  { label: "수조", bg: "rgba(168,220,232,0.45)" },
-];
 
 const koreanInitials = [
   "ㄱ", "ㄲ", "ㄴ", "ㄷ", "ㄸ", "ㄹ", "ㅁ", "ㅂ", "ㅃ", "ㅅ",
@@ -87,39 +79,35 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
     );
   }
 
-  const getCleanChipName = (value: string) => {
-    const normalized = normalizePokachipName(value);
-    return normalized && normalized !== "추가" ? normalized : "";
-  };
-
   const toggleChip = (label: string) => {
-    const normalized = getCleanChipName(label);
+    const normalized = getCleanPokachipName(label);
     if (!normalized) return;
 
-    setSelectedChips((prev) =>
-      prev.includes(normalized)
-        ? prev.filter((chip) => chip !== normalized)
-        : [...prev, normalized]
-    );
+    setSelectedChips((prev) => {
+      const normalizedKey = getPokachipKey(normalized);
+      return prev.some((chip) => getPokachipKey(chip) === normalizedKey)
+        ? prev.filter((chip) => getPokachipKey(chip) !== normalizedKey)
+        : [...prev, normalized];
+    });
   };
 
   const removeChip = (label: string) => {
-    setSelectedChips((prev) => prev.filter((chip) => chip !== label));
+    setSelectedChips((prev) => prev.filter((chip) => getPokachipKey(chip) !== getPokachipKey(label)));
   };
 
   const addNewChip = () => {
-    const trimmed = getCleanChipName(newChipInput);
-    if (trimmed && !selectedChips.includes(trimmed)) {
-      setSelectedChips((prev) => [...prev, trimmed]);
+    const trimmed = getCleanPokachipName(newChipInput);
+    if (trimmed) {
+      setSelectedChips((prev) => mergePokachips(prev, [trimmed]));
     }
     setNewChipInput("");
     setIsInputActive(false);
   };
 
   const selectCandidate = (label: string) => {
-    const normalized = getCleanChipName(label);
-    if (normalized && !selectedChips.includes(normalized)) {
-      setSelectedChips((prev) => [...prev, normalized]);
+    const normalized = getCleanPokachipName(label);
+    if (normalized) {
+      setSelectedChips((prev) => mergePokachips(prev, [normalized]));
     }
     setNewChipInput("");
     setIsInputActive(false);
@@ -166,31 +154,26 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
     if (imageInputRef.current) imageInputRef.current.value = "";
   };
 
-  const visibleRecent = recentPokachips.filter(
-    (chip) => !selectedChips.includes(getCleanChipName(chip.label))
-  );
-  const normalizedQuery = normalizePokachipName(newChipInput).toLocaleLowerCase("ko-KR");
+  const visibleRecent = getRecentPokachips(fragments, {
+    limit: 5,
+    exclude: selectedChips,
+  });
+  const normalizedQuery = getPokachipKey(newChipInput);
   const autocompleteCandidates = isInputActive && normalizedQuery
-    ? Array.from(
-        new Set([
-          ...recentPokachips.map((chip) => getCleanChipName(chip.label)).filter(Boolean),
-          ...fragments.flatMap((item) => item.pokachips ?? []).map(getCleanChipName).filter(Boolean),
-        ])
-      )
-        .filter((label) => {
-          if (selectedChips.includes(label)) return false;
-          const normalizedLabel = label.toLocaleLowerCase("ko-KR");
-          return normalizedLabel.includes(normalizedQuery)
-            || getKoreanInitials(label).includes(normalizedQuery);
+    ? getPokachipCandidates(fragments, { exclude: selectedChips })
+      .filter((label) => {
+          const chipKey = getPokachipKey(label);
+          return chipKey.includes(normalizedQuery)
+            && !selectedChips.some((chip) => getPokachipKey(chip) === chipKey);
         })
         .slice(0, 5)
     : [];
 
   const initialChips = Array.from(
-    new Set((fragment.pokachips ?? []).map(getCleanChipName).filter(Boolean))
+    getUniquePokachips(fragment.pokachips ?? [])
   );
   const nextChips = Array.from(
-    new Set(selectedChips.map(getCleanChipName).filter(Boolean))
+    getUniquePokachips(selectedChips)
   );
   const hasChipChanges = initialChips.length !== nextChips.length
     || initialChips.some((chip, index) => chip !== nextChips[index]);
@@ -414,14 +397,14 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
               </span>
               {visibleRecent.length > 0 ? (
                 <div className="flex flex-wrap gap-1.5">
-                  {visibleRecent.map((chip) => (
+                  {visibleRecent.map((label) => (
                     <button
-                      key={chip.label}
+                      key={label}
                       type="button"
-                      onClick={() => toggleChip(chip.label)}
+                      onClick={() => toggleChip(label)}
                       className="h-[30px] rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3 text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
                       style={{
-                        backgroundColor: getPokachipColor(chip.label),
+                        backgroundColor: getPokachipColor(label),
                         boxShadow: "0 2px 4px 0 rgba(180,196,244,0.24), inset 0 1px 0 0 rgba(255,255,255,0.58)",
                       }}
                     >
@@ -429,7 +412,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
                         className="text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
                         style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
                       >
-                        {chip.label}
+                        {label}
                       </span>
                     </button>
                   ))}
