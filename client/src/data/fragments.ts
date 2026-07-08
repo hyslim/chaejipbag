@@ -91,25 +91,19 @@ export function getFragmentReferenceAt(fragment: Fragment, index = 0): string {
   return getFallbackCreatedAt(fragment, index);
 }
 
-function getStartOfLocalDay(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
 
 export function getFragmentDisplayTime(fragment: Fragment, now = new Date()): string {
   const referenceAt = new Date(getFragmentReferenceAt(fragment));
   const elapsedMs = Math.max(0, now.getTime() - referenceAt.getTime());
   const elapsedMinutes = Math.floor(elapsedMs / 60000);
+  const elapsedHours = Math.floor(elapsedMs / 3600000);
+  const elapsedDays = Math.floor(elapsedMs / 86400000);
 
   if (elapsedMinutes < 1) return "\uBC29\uAE08";
   if (elapsedMinutes < 60) return `${elapsedMinutes}\uBD84 \uC804`;
-
-  const dayDiff = Math.floor(
-    (getStartOfLocalDay(now).getTime() - getStartOfLocalDay(referenceAt).getTime()) / 86400000
-  );
-
-  if (dayDiff <= 0) return "\uC624\uB298";
-  if (dayDiff === 1) return "\uC5B4\uC81C";
-  if (dayDiff < 7) return `${dayDiff}\uC77C \uC804`;
+  if (elapsedHours < 24) return `${elapsedHours}\uC2DC\uAC04 \uC804`;
+  if (elapsedHours < 48) return "\uC5B4\uC81C";
+  if (elapsedDays < 7) return `${elapsedDays}\uC77C \uC804`;
 
   return new Intl.DateTimeFormat("ko-KR", {
     year: "numeric",
