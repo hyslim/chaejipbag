@@ -13,11 +13,12 @@ function loadFromStorage(): Fragment[] {
   return sampleFragments.map(normalizeFragmentTimestamps);
 }
 
-function saveToStorage(fragments: Fragment[]) {
+function saveToStorage(fragments: Fragment[]): boolean {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(fragments));
+    return true;
   } catch {
-    // ignore storage errors
+    return false;
   }
 }
 
@@ -53,7 +54,7 @@ export function useFragments() {
           fragment.id === id ? { ...fragment, ...patch } : fragment
         );
 
-    saveToStorage(nextFragments);
+    if (!saveToStorage(nextFragments)) return;
     setFragments(nextFragments);
   }, [fragments]);
 
@@ -69,7 +70,7 @@ export function useFragments() {
     };
     const nextFragments = [newFragment, ...fragments];
 
-    saveToStorage(nextFragments);
+    if (!saveToStorage(nextFragments)) return null;
     setFragments(nextFragments);
 
     return newFragment;

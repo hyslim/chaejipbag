@@ -538,18 +538,25 @@ export const Home = (): JSX.Element => {
   const handleShareFragment = async (fragment: Fragment) => {
     const result = await shareFragment(fragment);
     if (result === "copied") {
-      showHomeToast("공유 내용을 복사했어요");
+      showHomeToast("\uacf5\uc720 \ub0b4\uc6a9\uc744 \ubcf5\uc0ac\ud588\uc5b4\uc694");
     } else if (result === "failed") {
-      showHomeToast("공유할 수 없었어요");
+      showHomeToast("\uacf5\uc720\ud560 \uc218 \uc5c6\uc5c8\uc5b4\uc694");
     }
   };
 
   useEffect(() => {
+    const shouldResetHomeView = sessionStorage.getItem("chaejip-home-reset-view") === "1";
     const shouldShowSaveToast = sessionStorage.getItem(saveToastStorageKey) === "1";
+
+    if (shouldResetHomeView) {
+      sessionStorage.removeItem("chaejip-home-reset-view");
+      setSelectedChip(null);
+      closeSearchMode();
+    }
     if (!shouldShowSaveToast) return;
 
     sessionStorage.removeItem(saveToastStorageKey);
-    setToastMessage("가방에 담았어요");
+    setToastMessage("\uAC00\uBC29\uC5D0 \uB2F4\uC558\uC5B4\uC694");
 
     const toastTimer = window.setTimeout(() => setToastMessage(""), 2000);
     return () => window.clearTimeout(toastTimer);

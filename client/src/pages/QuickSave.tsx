@@ -147,6 +147,7 @@ export const QuickSave = () => {
   const [memo, setMemo] = useState(initialShare.initialMemo);
   const [imageDataUrl, setImageDataUrl] = useState("");
   const [imageError, setImageError] = useState("");
+  const [saveError, setSaveError] = useState("");
   const [chipInput, setChipInput] = useState("");
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
   const [isInputActive, setIsInputActive] = useState(false);
@@ -257,19 +258,27 @@ export const QuickSave = () => {
     const pokachips = mergePokachips(selectedChips, inputChips);
     const now = new Date();
 
-    addFragment({
+    setSaveError("");
+    const savedFragment = addFragment({
       title: title.trim() || fallbackTitle,
       memo: trimmedMemo || undefined,
       url: sharedUrl || undefined,
       source: sharedHostname || undefined,
       sourceType: sharedUrl ? "link" : "text",
-      time: "방금",
+      time: "\uBC29\uAE08",
       date: new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "long", day: "numeric" }).format(now),
-      pokachips: pokachips.length > 0 ? pokachips : ["임시조각"],
+      pokachips: pokachips.length > 0 ? pokachips : ["\uC784\uC2DC\uC870\uAC01"],
       thumbnailColor: "#dce8f8",
       ...(imageDataUrl ? { imageDataUrl } : {}),
     });
+
+    if (!savedFragment) {
+      setSaveError("\uc800\uc7a5 \uacf5\uac04\uc774 \ubd80\uc871\ud574 \uc870\uac01\uc744 \ub2f4\uc9c0 \ubabb\ud588\uc5b4\uc694. \ud070 \uc774\ubbf8\uc9c0\ub098 \uc624\ub798\ub41c \uc870\uac01\uc744 \uc815\ub9ac\ud55c \ub4a4 \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694.");
+      return;
+    }
+
     sessionStorage.setItem("chaejip-save-toast", "1");
+    sessionStorage.setItem("chaejip-home-reset-view", "1");
     navigate("/");
   };
 
@@ -339,6 +348,12 @@ export const QuickSave = () => {
               placeholder="나중에 떠올릴 힌트를 짧게 남겨두세요"
               className="mt-2 w-full resize-none rounded-[18px] border border-[#FAF7F2] bg-white px-4 pb-2.5 pt-2 text-[14px] leading-[21px] text-[rgba(50,44,34,0.82)] outline-none placeholder:text-[rgba(120,112,100,0.42)]"
             />
+
+            {saveError && (
+              <p className="mt-2 rounded-[14px] bg-[#FAF8F4] px-3 py-2 text-[12px] leading-[17px] text-[rgba(120,72,72,0.78)]">
+                {saveError}
+              </p>
+            )}
 
             <div className="mt-5 flex flex-col gap-2.5">
               <label className="text-[12px] font-medium text-[rgba(120,112,100,0.75)]">기억 조각</label>
