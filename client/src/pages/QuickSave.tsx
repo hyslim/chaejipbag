@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { X } from "lucide-react";
 import { getCleanPokachipName, getPokachipColor, getPokachipCandidates, getPokachipKey, getRecentPokachips, mergePokachips, parsePokachipInput } from "@/data/fragments";
@@ -43,13 +43,14 @@ const getUrlHostname = (url: string) => {
   }
 };
 
-const getSourceLabel = (hostname: string) => {
+const getSourceLabel = (hostname: string, hasImage = false) => {
   const lowerHostname = hostname.toLocaleLowerCase("en-US");
 
   if (lowerHostname.includes("instagram.com")) return "\uc778\uc2a4\ud0c0\uadf8\ub7a8 \uc870\uac01";
   if (lowerHostname.includes("youtube.com") || lowerHostname.includes("youtu.be")) return "YouTube \uc601\uc0c1";
   if (lowerHostname.includes("pinterest.com")) return "Pinterest \uc870\uac01";
   if (hostname) return "\uacf5\uc720\ubc1b\uc740 \uae00";
+  if (hasImage) return "\uc774\ubbf8\uc9c0 \uc870\uac01";
 
   return "\uacf5\uc720\ubc1b\uc740 \uae00";
 };
@@ -91,13 +92,22 @@ const removeDuplicateTitleLine = (value: string, title: string) => {
     .join("\n");
 };
 
-export const QuickSave = () => {
-  const [, navigate] = useLocation();
-  const { fragments, addFragment } = useFragments();
-  const params = new URLSearchParams(window.location.search);
-  const sharedTitle = params.get("title")?.trim() ?? "";
-  const sharedText = params.get("text")?.trim() ?? "";
-  const urlParam = params.get("url")?.trim() ?? "";
+type SharedTargetPayload = {
+  title?: string;
+  text?: string;
+  url?: string;
+  imageDataUrl?: string;
+  imageError?: string;
+};
+
+type QuickSaveDefaults = {
+  sharedUrl: string;
+  sharedHostname: string;
+  fallbackTitle: string;
+  initialMemo: string;
+};
+
+const getQuickSaveDefaults = (sharedTitle: string, sharedText: string, urlParam: string, hasImage = false): QuickSaveDefaults => {
   const titleUrl = getFirstUrl(sharedTitle);
   const textUrl = getFirstUrl(sharedText);
   const sharedUrl = urlParam ? normalizeSharedUrl(urlParam) : textUrl?.normalized ?? titleUrl?.normalized ?? "";
@@ -112,21 +122,80 @@ export const QuickSave = () => {
   const cleanSharedTitle = removeRepeatedUrl(sharedTitle, urlCandidates);
   const cleanSharedText = removeRepeatedUrl(sharedText, urlCandidates);
   const sharedHostname = sharedUrl ? getUrlHostname(sharedUrl) : "";
-  const sourceLabel = getSourceLabel(sharedHostname);
+  const sourceLabel = getSourceLabel(sharedHostname, hasImage);
   const titleCandidate = cleanSharedTitle && !isUrlLike(cleanSharedTitle)
     ? cleanSharedTitle
     : getMeaningfulLines(cleanSharedText)[0] ?? "";
   const fallbackTitle = getCompactTitle(titleCandidate || sourceLabel);
   const initialMemo = removeDuplicateTitleLine(cleanSharedText, fallbackTitle);
-  const [memo, setMemo] = useState(initialMemo);
+
+  return { sharedUrl, sharedHostname, fallbackTitle, initialMemo };
+};
+
+export const QuickSave = () => {
+  const [, navigate] = useLocation();
+  const { fragments, addFragment } = useFragments();
+  const params = new URLSearchParams(window.location.search);
+  const sharedTitle = params.get("title")?.trim() ?? "";
+  const sharedText = params.get("text")?.trim() ?? "";
+  const urlParam = params.get("url")?.trim() ?? "";
+  const shareId = params.get("shareId")?.trim() ?? "";
+  const initialShare = getQuickSaveDefaults(sharedTitle, sharedText, urlParam);
+  const [sharedUrl, setSharedUrl] = useState(initialShare.sharedUrl);
+  const [sharedHostname, setSharedHostname] = useState(initialShare.sharedHostname);
+  const [fallbackTitle, setFallbackTitle] = useState(initialShare.fallbackTitle);
+  const [memo, setMemo] = useState(initialShare.initialMemo);
+  const [imageDataUrl, setImageDataUrl] = useState("");
+  const [imageError, setImageError] = useState("");
   const [chipInput, setChipInput] = useState("");
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
   const [isInputActive, setIsInputActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const trimmedMemo = memo.trim();
-  const canSave = Boolean(sharedUrl || trimmedMemo || fallbackTitle || cleanSharedText);
+  const canSave = Boolean(sharedUrl || trimmedMemo || fallbackTitle || imageDataUrl);
   const [title, setTitle] = useState(fallbackTitle);
 
+  useEffect(() => {
+    if (!shareId) return;
+
+    let isCanceled = false;
+
+    const loadSharedPayload = async () => {
+      try {
+        const payloadUrl = `/share-target-payloads/${encodeURIComponent(shareId)}`;
+        const response = await fetch(payloadUrl, { cache: "no-store" });
+        if (!response.ok) return;
+
+        const payload = await response.json() as SharedTargetPayload;
+        if (isCanceled) return;
+
+        const nextShare = getQuickSaveDefaults(
+          payload.title?.trim() ?? "",
+          payload.text?.trim() ?? "",
+          payload.url?.trim() ?? "",
+          Boolean(payload.imageDataUrl)
+        );
+
+        setSharedUrl(nextShare.sharedUrl);
+        setSharedHostname(nextShare.sharedHostname);
+        setFallbackTitle(nextShare.fallbackTitle);
+        setTitle(nextShare.fallbackTitle);
+        setMemo(nextShare.initialMemo);
+        setImageDataUrl(payload.imageDataUrl ?? "");
+        setImageError(payload.imageError ?? "");
+
+        void fetch(payloadUrl, { method: "DELETE" });
+      } catch {
+        if (!isCanceled) setImageError("\uacf5\uc720\ubc1b\uc740 \uc774\ubbf8\uc9c0\ub97c \uc77d\uc9c0 \ubabb\ud588\uc5b4\uc694.");
+      }
+    };
+
+    void loadSharedPayload();
+
+    return () => {
+      isCanceled = true;
+    };
+  }, [shareId]);
   const visibleRecentChips = getRecentPokachips(fragments, {
     limit: 5,
     exclude: selectedChips,
@@ -198,6 +267,7 @@ export const QuickSave = () => {
       date: new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "long", day: "numeric" }).format(now),
       pokachips: pokachips.length > 0 ? pokachips : ["임시조각"],
       thumbnailColor: "#dce8f8",
+      ...(imageDataUrl ? { imageDataUrl } : {}),
     });
     sessionStorage.setItem("chaejip-save-toast", "1");
     navigate("/");
@@ -241,6 +311,22 @@ export const QuickSave = () => {
                 {sharedUrl || "원본 링크 없음"}
               </p>
             </div>
+
+
+            {imageDataUrl && (
+              <div className="mt-2.5 overflow-hidden rounded-[18px] border border-white/70 bg-[#FFFEFB] shadow-[0_6px_18px_rgba(80,70,55,0.06)]">
+                <img
+                  src={imageDataUrl}
+                  alt=""
+                  className="h-[142px] w-full object-cover"
+                />
+              </div>
+            )}
+            {imageError && (
+              <p className="mt-2 rounded-[14px] bg-[#FAF8F4] px-3 py-2 text-[12px] leading-[17px] text-[rgba(120,112,100,0.72)]">
+                {imageError}
+              </p>
+            )}
 
             <label className="mt-4 block text-[12px] font-medium text-[rgba(120,112,100,0.75)]" htmlFor="quick-save-memo">
               한 줄 메모
