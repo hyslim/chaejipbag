@@ -6,6 +6,7 @@ import { Link, useLocation } from "wouter";
 import { getFragmentDisplayTime, getPokachipColor, getRecentPokachips, normalizePokachipName, type Fragment } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { BottomNav } from "@/components/BottomNav";
+import { shareFragment } from "@/lib/shareFragment";
 
 const interests = [
   {
@@ -98,12 +99,14 @@ const FragmentCard = ({
   onOpenMenu,
   onCloseMenu,
   onDelete,
+  onShare,
 }: {
   fragment: Fragment;
   isMenuOpen: boolean;
   onOpenMenu: () => void;
   onCloseMenu: () => void;
   onDelete: () => void;
+  onShare: () => void | Promise<void>;
 }) => {
   const [, navigate] = useLocation();
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -187,8 +190,8 @@ const FragmentCard = ({
   };
 
   const handleSend = () => {
-    console.log("send fragment", fragment.id);
     onCloseMenu();
+    void onShare();
   };
 
   const handleDelete = () => {
@@ -374,7 +377,7 @@ export const Home = (): JSX.Element => {
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [openMenuFragmentId, setOpenMenuFragmentId] = useState<string | null>(null);
-  const [showSaveToast, setShowSaveToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
   const storedPokachips = getRecentPokachips(fragments, { includeFallback: false });
   const topPokachips = getRecentPokachips(fragments);
   const topPokachipKey = topPokachips.join("|");
@@ -527,14 +530,28 @@ export const Home = (): JSX.Element => {
     setOpenMenuFragmentId(null);
   };
 
+  const showHomeToast = (message: string) => {
+    setToastMessage(message);
+    window.setTimeout(() => setToastMessage(""), 2000);
+  };
+
+  const handleShareFragment = async (fragment: Fragment) => {
+    const result = await shareFragment(fragment);
+    if (result === "copied") {
+      showHomeToast("공유 내용을 복사했어요");
+    } else if (result === "failed") {
+      showHomeToast("공유할 수 없었어요");
+    }
+  };
+
   useEffect(() => {
     const shouldShowSaveToast = sessionStorage.getItem(saveToastStorageKey) === "1";
     if (!shouldShowSaveToast) return;
 
     sessionStorage.removeItem(saveToastStorageKey);
-    setShowSaveToast(true);
+    setToastMessage("가방에 담았어요");
 
-    const toastTimer = window.setTimeout(() => setShowSaveToast(false), 2000);
+    const toastTimer = window.setTimeout(() => setToastMessage(""), 2000);
     return () => window.clearTimeout(toastTimer);
   }, []);
   useEffect(() => {
@@ -596,12 +613,12 @@ export const Home = (): JSX.Element => {
           <motion.div
             aria-live="polite"
             initial={false}
-            animate={showSaveToast ? { opacity: 1, y: 0 } : { opacity: 0, y: -6 }}
+            animate={toastMessage ? { opacity: 1, y: 0 } : { opacity: 0, y: -6 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className={`${showSaveToast ? "pointer-events-auto" : "pointer-events-none"} flex h-9 min-w-[164px] items-center justify-center rounded-[8px] border border-[rgba(255,255,255,0.78)] bg-[#FFFEFB]/95 px-6 text-[13px] font-semibold text-[rgba(54,58,105,0.66)] shadow-[0_4px_14px_rgba(74,63,48,0.09),inset_0_1px_0_rgba(255,255,255,0.72)] backdrop-blur-[12px]`}
+            className={`${toastMessage ? "pointer-events-auto" : "pointer-events-none"} flex h-9 min-w-[164px] items-center justify-center rounded-[8px] border border-[rgba(255,255,255,0.78)] bg-[#FFFEFB]/95 px-6 text-[13px] font-semibold text-[rgba(54,58,105,0.66)] shadow-[0_4px_14px_rgba(74,63,48,0.09),inset_0_1px_0_rgba(255,255,255,0.72)] backdrop-blur-[12px]`}
             style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
           >
-            가방에 담았어요
+            {toastMessage}
           </motion.div>
         </div>
         {isSearchMode ? (
@@ -848,6 +865,7 @@ export const Home = (): JSX.Element => {
                     onOpenMenu={() => setOpenMenuFragmentId(fragment.id)}
                     onCloseMenu={() => setOpenMenuFragmentId(null)}
                     onDelete={() => handleDeleteFragment(fragment.id)}
+                    onShare={() => handleShareFragment(fragment)}
                   />
                 ))}
               </div>
@@ -860,6 +878,7 @@ export const Home = (): JSX.Element => {
                     onOpenMenu={() => setOpenMenuFragmentId(fragment.id)}
                     onCloseMenu={() => setOpenMenuFragmentId(null)}
                     onDelete={() => handleDeleteFragment(fragment.id)}
+                    onShare={() => handleShareFragment(fragment)}
                   />
                 ))}
               </div>

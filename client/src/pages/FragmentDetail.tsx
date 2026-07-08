@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ChevronLeft, Pencil, Trash2, ExternalLink, Globe, Instagram, Sparkles, Youtube, X, type LucideIcon } from "lucide-react";
 import { getPokachipColor, normalizePokachipName } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
+import { shareFragment } from "@/lib/shareFragment";
 
 const sourceIconColor = "rgba(120,112,100,0.65)";
 
@@ -34,6 +35,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   const { getFragment, deleteFragment } = useFragments();
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
   const fragment = getFragment(params.id);
 
   const handleDelete = () => {
@@ -72,15 +74,41 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   const trimmedMemo = fragment.memo?.trim() ?? "";
   const shouldShowMemo = Boolean(trimmedMemo && trimmedMemo !== trimmedTitle);
 
+  const showDetailToast = (message: string) => {
+    setToastMessage(message);
+    window.setTimeout(() => setToastMessage(""), 2000);
+  };
+
+  const handleShare = async () => {
+    const result = await shareFragment(fragment);
+    if (result === "copied") {
+      showDetailToast("\uacf5\uc720 \ub0b4\uc6a9\uc744 \ubcf5\uc0ac\ud588\uc5b4\uc694");
+    } else if (result === "failed") {
+      showDetailToast("\uacf5\uc720\ud560 \uc218 \uc5c6\uc5c8\uc5b4\uc694");
+    }
+  };
+
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#FAF8F4]">
       <motion.section
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FAF8F4]"
+        className="relative flex min-h-screen w-full max-w-[390px] flex-col bg-[#FAF8F4]"
         style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
       >
+        <div className="pointer-events-none absolute inset-x-0 top-[31px] z-[70] flex justify-center px-4">
+          <motion.div
+            aria-live="polite"
+            initial={false}
+            animate={toastMessage ? { opacity: 1, y: 0 } : { opacity: 0, y: -6 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className={`${toastMessage ? "pointer-events-auto" : "pointer-events-none"} flex h-9 min-w-[164px] items-center justify-center rounded-[8px] border border-[rgba(255,255,255,0.78)] bg-[#FFFEFB]/95 px-6 text-[13px] font-semibold text-[rgba(54,58,105,0.66)] shadow-[0_4px_14px_rgba(74,63,48,0.09),inset_0_1px_0_rgba(255,255,255,0.72)] backdrop-blur-[12px]`}
+            style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+          >
+            {toastMessage}
+          </motion.div>
+        </div>
         {/* 헤더 */}
         <header className="flex items-center justify-between border-b border-[#F5F2ED] bg-[#FFFFFB] px-5 pt-6 pb-4">
           <button
@@ -243,6 +271,8 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
           }}
         >
           <button
+            type="button"
+            onClick={handleShare}
             className="h-[51px] w-[180px] rounded-full border-0 px-[50px] py-[14px] text-[15px] font-medium text-white"
             style={{
               background: "linear-gradient(135deg, rgba(130,207,255,0.60) 12%, rgba(90,144,255,0.60) 54%, rgba(139,112,255,0.60) 100%)",
