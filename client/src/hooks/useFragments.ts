@@ -1,16 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
-import { sampleFragments, type Fragment } from "@/data/fragments";
+import { getFallbackCreatedAt, normalizeFragmentTimestamps, sampleFragments, type Fragment } from "@/data/fragments";
 
 const STORAGE_KEY = "chaejip-fragments";
 
 function loadFromStorage(): Fragment[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as Fragment[];
+    if (raw) return (JSON.parse(raw) as Fragment[]).map(normalizeFragmentTimestamps);
   } catch {
     // ignore parse errors
   }
-  return sampleFragments;
+  return sampleFragments.map(normalizeFragmentTimestamps);
 }
 
 function saveToStorage(fragments: Fragment[]) {
@@ -21,16 +21,7 @@ function saveToStorage(fragments: Fragment[]) {
   }
 }
 
-function getFallbackCreatedAt(fragment: Fragment, index: number): string {
-  const dateParts = fragment.date.match(/\d+/g)?.map(Number);
 
-  if (dateParts && dateParts.length >= 3) {
-    const [year, month, day] = dateParts;
-    return new Date(Date.UTC(year, month - 1, day) - index).toISOString();
-  }
-
-  return new Date(Date.now() - index).toISOString();
-}
 
 export function useFragments() {
   const [fragments, setFragments] = useState<Fragment[]>(loadFromStorage);

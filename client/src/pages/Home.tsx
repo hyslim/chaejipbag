@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from 
 import { Globe, Instagram, Pencil, Sparkles, Youtube, type LucideIcon } from "lucide-react";
 import { flushSync } from "react-dom";
 import { Link, useLocation } from "wouter";
-import { getPokachipColor, getRecentPokachips, normalizePokachipName, type Fragment } from "@/data/fragments";
+import { getFragmentDisplayTime, getPokachipColor, getRecentPokachips, normalizePokachipName, type Fragment } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { BottomNav } from "@/components/BottomNav";
 
@@ -199,14 +199,14 @@ const FragmentCard = ({
   };
 
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef} className="relative home-select-none select-none">
       {isMenuOpen && (
       <motion.div
         role="menu"
         aria-hidden={!isMenuOpen}
         animate={isMenuOpen ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.9, y: 6 }}
         transition={{ type: "spring", stiffness: 560, damping: 25, mass: 0.5 }}
-        className={`${isMenuOpen ? "pointer-events-auto" : "pointer-events-none"} absolute right-[-10px] top-[-16px] z-50 flex w-[92px] origin-top-right flex-col gap-1 overflow-hidden rounded-[22px] bg-[rgba(255,255,255,0.20)] p-1.5 text-left backdrop-blur-[20px]`}
+        className={`${isMenuOpen ? "pointer-events-auto" : "pointer-events-none"} absolute right-[-10px] top-[-16px] z-50 flex w-[92px] origin-top-right flex-col gap-1 overflow-hidden rounded-[22px] home-select-none select-none bg-[rgba(255,255,255,0.20)] p-1.5 text-left backdrop-blur-[20px]`}
         style={{
           boxShadow:
             "inset 0 0 0 1px rgba(255,255,255,0.54), inset 0 1px 0 rgba(255,255,255,0.64), 0 3px 8px rgba(180,196,244,0.50)",
@@ -219,7 +219,7 @@ const FragmentCard = ({
           type="button"
           role="menuitem"
           tabIndex={isMenuOpen ? 0 : -1}
-          className="flex h-11 min-h-11 items-center justify-center rounded-full text-[11px] font-semibold text-white/70 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.60),inset_0_1px_0_rgba(255,255,255,0.22)] outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+          className="flex h-11 min-h-11 items-center justify-center rounded-full text-[11px] font-semibold text-white/70 home-select-none select-none shadow-[inset_0_0_0_1px_rgba(255,255,255,0.60),inset_0_1px_0_rgba(255,255,255,0.22)] outline-none focus-visible:ring-2 focus-visible:ring-white/70"
           style={{
             background: "linear-gradient(135deg, rgba(130,207,255,0.58), rgba(116,137,255,0.58), rgba(139,112,255,0.54))",
             fontFamily: "'Pretendard Variable', sans-serif",
@@ -232,7 +232,7 @@ const FragmentCard = ({
           type="button"
           role="menuitem"
           tabIndex={isMenuOpen ? 0 : -1}
-          className="flex h-11 min-h-11 items-center justify-center rounded-full text-[11px] font-semibold text-[rgba(50,44,34,0.68)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.60),inset_0_1px_0_rgba(255,255,255,0.24)] outline-none focus-visible:ring-2 focus-visible:ring-white/65"
+          className="flex h-11 min-h-11 items-center justify-center rounded-full text-[11px] font-semibold text-[rgba(50,44,34,0.68)] home-select-none select-none shadow-[inset_0_0_0_1px_rgba(255,255,255,0.60),inset_0_1px_0_rgba(255,255,255,0.24)] outline-none focus-visible:ring-2 focus-visible:ring-white/65"
           style={{
             background: "linear-gradient(135deg, rgba(244,224,216,0.54), rgba(224,196,190,0.42))",
             fontFamily: "'Pretendard Variable', sans-serif",
@@ -257,7 +257,7 @@ const FragmentCard = ({
             }}
         whileTap={{ scale: isMenuOpen ? 1.01 : 0.97 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        className="overflow-hidden rounded-[18px] bg-white/90 outline-none cursor-pointer"
+        className="home-select-none select-none overflow-hidden rounded-[18px] bg-white/90 outline-none cursor-pointer"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerEnd}
@@ -308,7 +308,7 @@ const FragmentCard = ({
           <div className={`${metaTopSpacing} flex items-center gap-1.5 text-[12px] leading-[17px] text-[rgba(120,112,100,0.65)]`}>
             <SourceIcon size={12} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
             <span className="truncate" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
-              {fragment.time || fragment.date}
+              {getFragmentDisplayTime(fragment)}
             </span>
           </div>
         </div>
@@ -325,7 +325,7 @@ const SearchResultCard = ({ fragment }: { fragment: Fragment }) => {
       <motion.div
         whileTap={{ scale: 0.97 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        className="min-h-[104px] rounded-[14px] border border-white/85 bg-white/90 px-3.5 py-3 shadow-[0_6px_18px_rgba(74,63,48,0.08)]"
+        className="home-select-none select-none min-h-[104px] rounded-[14px] border border-white/85 bg-white/90 px-3.5 py-3 shadow-[0_6px_18px_rgba(74,63,48,0.08)]"
       >
         {primaryChip && (
           <span
@@ -354,7 +354,7 @@ const SearchResultCard = ({ fragment }: { fragment: Fragment }) => {
         )}
         <div className="mt-2 flex items-center gap-1.5 text-[10px] text-[rgba(120,112,100,0.65)]">
           <SourceIcon size={12} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
-          <span className="truncate" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>{fragment.time || fragment.date}</span>
+          <span className="truncate" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>{getFragmentDisplayTime(fragment)}</span>
         </div>
       </motion.div>
     </Link>
@@ -646,7 +646,7 @@ export const Home = (): JSX.Element => {
                         key={chip}
                         type="button"
                         onClick={() => setSearchQuery(chip)}
-                        className="h-[29px] rounded-full border border-[rgba(255,255,255,0.55)] px-3.5 py-0 text-[11px] font-medium text-[rgba(50,44,34,0.7)]"
+                        className="home-select-none select-none h-[29px] rounded-full border border-[rgba(255,255,255,0.55)] px-3.5 py-0 text-[11px] font-medium text-[rgba(50,44,34,0.7)]"
                         style={{
                           backgroundColor: getPokachipColor(chip),
                           boxShadow: "0 1px 4px rgba(200,196,188,0.28), inset 0 1px 1px rgba(255,255,255,0.45)",
@@ -745,7 +745,7 @@ export const Home = (): JSX.Element => {
                     key={interest.id}
                     type="button"
                     onClick={() => selectHomeFilter(interest.label)}
-                    className="flex h-20 items-center justify-center rounded-[20px] px-2"
+                    className="home-select-none select-none flex h-20 items-center justify-center rounded-[20px] px-2"
                     style={{
                       background: interest.gradient,
                       boxShadow: interest.shadow,
@@ -772,7 +772,7 @@ export const Home = (): JSX.Element => {
                   onPointerUp={stopTopPokachipDrag}
                   onPointerCancel={stopTopPokachipDrag}
                   onPointerLeave={stopTopPokachipDrag}
-                  className="flex w-full min-w-0 snap-x snap-proximity cursor-grab touch-pan-x flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap overscroll-x-contain pr-6 pt-0.5 pb-1.5 select-none active:cursor-grabbing [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  className="home-select-none flex w-full min-w-0 snap-x snap-proximity cursor-grab touch-pan-x flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap overscroll-x-contain pr-6 pt-0.5 pb-1.5 select-none active:cursor-grabbing [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                   style={{
                     scrollbarWidth: "none",
                     msOverflowStyle: "none",
@@ -788,7 +788,7 @@ export const Home = (): JSX.Element => {
                         onClick={() => selectHomeFilter(chip)}
                         whileTap={{ scale: 0.9 }}
                         transition={{ type: "spring", stiffness: 500, damping: 20 }}
-                        className="box-border inline-flex h-[29px] shrink-0 snap-start items-center justify-center gap-2.5 rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3.5 py-[6px] text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
+                        className="home-select-none select-none box-border inline-flex h-[29px] shrink-0 snap-start items-center justify-center gap-2.5 rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3.5 py-[6px] text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
                         style={{
                           backgroundColor: getColorWithAlpha(backgroundColor, 0.5),
                           boxShadow: "0 2px 4px 0 rgba(180,196,244,0.30), inset 0 1px 0 0 rgba(255,255,255,0.58)",

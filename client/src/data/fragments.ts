@@ -55,6 +55,82 @@ export function getPokachipColor(value: string): string {
 
   return generatedPokachipPalette[hash % generatedPokachipPalette.length];
 }
+const stableFallbackCreatedAtBase = Date.UTC(2026, 0, 1, 9, 0, 0);
+
+function getStableFragmentOffset(fragment: Fragment, index: number): number {
+  const timestampId = fragment.id.match(/^\d{12,}/)?.[0];
+  if (timestampId) return Number(timestampId);
+
+  let hash = 0;
+  for (const character of fragment.id || `${index}`) {
+    hash = (hash * 31 + character.codePointAt(0)!) >>> 0;
+  }
+
+  return hash + index;
+}
+
+export function getFallbackCreatedAt(fragment: Fragment, index = 0): string {
+  const dateParts = fragment.date.match(/\d+/g)?.map(Number);
+
+  if (dateParts && dateParts.length >= 3) {
+    const [year, month, day] = dateParts;
+    return new Date(Date.UTC(year, month - 1, day, 9, 0, 0) - index).toISOString();
+  }
+
+  const stableOffset = getStableFragmentOffset(fragment, index) % (365 * 86400000);
+  return new Date(stableFallbackCreatedAtBase - stableOffset).toISOString();
+}
+
+export function getFragmentReferenceAt(fragment: Fragment, index = 0): string {
+  const updatedAtTime = Date.parse(fragment.updatedAt ?? "");
+  if (Number.isFinite(updatedAtTime)) return new Date(updatedAtTime).toISOString();
+
+  const createdAtTime = Date.parse(fragment.createdAt ?? "");
+  if (Number.isFinite(createdAtTime)) return new Date(createdAtTime).toISOString();
+
+  return getFallbackCreatedAt(fragment, index);
+}
+
+function getStartOfLocalDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+export function getFragmentDisplayTime(fragment: Fragment, now = new Date()): string {
+  const referenceAt = new Date(getFragmentReferenceAt(fragment));
+  const elapsedMs = Math.max(0, now.getTime() - referenceAt.getTime());
+  const elapsedMinutes = Math.floor(elapsedMs / 60000);
+
+  if (elapsedMinutes < 1) return "\uBC29\uAE08";
+  if (elapsedMinutes < 60) return `${elapsedMinutes}\uBD84 \uC804`;
+
+  const dayDiff = Math.floor(
+    (getStartOfLocalDay(now).getTime() - getStartOfLocalDay(referenceAt).getTime()) / 86400000
+  );
+
+  if (dayDiff <= 0) return "\uC624\uB298";
+  if (dayDiff === 1) return "\uC5B4\uC81C";
+  if (dayDiff < 7) return `${dayDiff}\uC77C \uC804`;
+
+  return new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(referenceAt);
+}
+
+export function normalizeFragmentTimestamps(fragment: Fragment, index = 0): Fragment {
+  const createdAtTime = Date.parse(fragment.createdAt ?? "");
+  const updatedAtTime = Date.parse(fragment.updatedAt ?? "");
+  const createdAt = Number.isFinite(createdAtTime)
+    ? new Date(createdAtTime).toISOString()
+    : getFallbackCreatedAt(fragment, index);
+
+  return {
+    ...fragment,
+    createdAt,
+    ...(Number.isFinite(updatedAtTime) ? { updatedAt: new Date(updatedAtTime).toISOString() } : {}),
+  };
+}
 
 export const homeInterestPokachips = ["웹앱", "인테리어", "수조", "루틴", "조명", "요리"];
 export const fallbackRecentPokachips = ["글쓰기", "수조", "조명", "웹앱", "블렌더"];
