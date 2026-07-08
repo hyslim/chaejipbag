@@ -46,12 +46,49 @@ const getUrlHostname = (url: string) => {
 const getSourceLabel = (hostname: string) => {
   const lowerHostname = hostname.toLocaleLowerCase("en-US");
 
-  if (lowerHostname.includes("instagram.com")) return "인스타그램 조각";
-  if (lowerHostname.includes("youtube.com") || lowerHostname.includes("youtu.be")) return "YouTube 조각";
-  if (lowerHostname.includes("pinterest.com")) return "Pinterest 조각";
-  if (hostname) return `${hostname} 조각`;
+  if (lowerHostname.includes("instagram.com")) return "\uc778\uc2a4\ud0c0\uadf8\ub7a8 \uc870\uac01";
+  if (lowerHostname.includes("youtube.com") || lowerHostname.includes("youtu.be")) return "YouTube \uc601\uc0c1";
+  if (lowerHostname.includes("pinterest.com")) return "Pinterest \uc870\uac01";
+  if (hostname) return "\uacf5\uc720\ubc1b\uc740 \uae00";
 
-  return "링크 조각";
+  return "\uacf5\uc720\ubc1b\uc740 \uae00";
+};
+
+const isUrlLike = (value: string) => {
+  const trimmedValue = value.trim();
+  if (!trimmedValue) return false;
+
+  if (urlPattern.test(trimmedValue)) return true;
+  try {
+    new URL(normalizeSharedUrl(trimmedValue));
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const normalizeSharedLine = (value: string) => value.replace(/\s+/g, " ").trim();
+
+const getMeaningfulLines = (value: string) =>
+  value
+    .split(/\r?\n/)
+    .map(normalizeSharedLine)
+    .filter((line) => line && !isUrlLike(line));
+
+const getCompactTitle = (value: string) => {
+  const normalizedTitle = normalizeSharedLine(value);
+  return normalizedTitle.length > 36 ? `${normalizedTitle.slice(0, 35)}\u2026` : normalizedTitle;
+};
+
+const removeDuplicateTitleLine = (value: string, title: string) => {
+  const titleKey = normalizeSharedLine(title);
+  if (!titleKey) return value;
+
+  return value
+    .split(/\r?\n/)
+    .map(normalizeSharedLine)
+    .filter((line) => line && line !== titleKey)
+    .join("\n");
 };
 
 export const QuickSave = () => {
@@ -74,22 +111,20 @@ export const QuickSave = () => {
   ];
   const cleanSharedTitle = removeRepeatedUrl(sharedTitle, urlCandidates);
   const cleanSharedText = removeRepeatedUrl(sharedText, urlCandidates);
-  const initialMemo = cleanSharedText;
+  const sharedHostname = sharedUrl ? getUrlHostname(sharedUrl) : "";
+  const sourceLabel = getSourceLabel(sharedHostname);
+  const titleCandidate = cleanSharedTitle && !isUrlLike(cleanSharedTitle)
+    ? cleanSharedTitle
+    : getMeaningfulLines(cleanSharedText)[0] ?? "";
+  const fallbackTitle = getCompactTitle(titleCandidate || sourceLabel);
+  const initialMemo = removeDuplicateTitleLine(cleanSharedText, fallbackTitle);
   const [memo, setMemo] = useState(initialMemo);
   const [chipInput, setChipInput] = useState("");
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
   const [isInputActive, setIsInputActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const trimmedMemo = memo.trim();
-  const canSave = Boolean(sharedUrl || trimmedMemo || cleanSharedTitle || cleanSharedText);
-  const sharedHostname = sharedUrl ? getUrlHostname(sharedUrl) : "";
-  const sourceLabel = getSourceLabel(sharedHostname);
-  const sharedTextTitle = cleanSharedText.split(/\r?\n/)[0].trim();
-  const fallbackTitle = (
-    cleanSharedTitle ||
-    sharedTextTitle ||
-    sourceLabel
-  ).slice(0, 30);
+  const canSave = Boolean(sharedUrl || trimmedMemo || fallbackTitle || cleanSharedText);
   const [title, setTitle] = useState(fallbackTitle);
 
   const visibleRecentChips = getRecentPokachips(fragments, {
