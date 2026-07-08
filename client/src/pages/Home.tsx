@@ -722,14 +722,14 @@ export const Home = (): JSX.Element => {
                 className="text-[18px] font-semibold leading-[1.45] text-[#353a69b2]"
                 style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
               >
-                내 기억
+                {"\uB0B4 \uAE30\uC5B5"}
               </h1>
               <button
                 type="button"
                 onClick={openSearchMode}
                 className="text-[#78706480]"
                 aria-label="조각 찾기"
-                  >
+              >
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
                   <circle cx="8" cy="8" r="5.25" stroke="currentColor" strokeWidth="1.3" />
                   <path d="M12 12L15 15" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
@@ -737,7 +737,7 @@ export const Home = (): JSX.Element => {
               </button>
             </header>
 
-            {/* 관심사 타일 — 정돈된 3열 × 2행의 기억 조각 */}
+            {/* 관심사 타일 - 정돈된 3열 x 2행의 기억 조각 */}
             <div className="px-4 pb-2">
               <div className="grid grid-cols-3 gap-2">
                 {interests.map((interest) => (
@@ -762,7 +762,7 @@ export const Home = (): JSX.Element => {
               </div>
             </div>
 
-            {/* 포카칩 영역 — 가로 드래그 가능, 우측에 + 버튼 */}
+            {/* 포카칩 영역 - 가로 드래그 가능 */}
             <div className="w-full overflow-hidden pb-2">
               <div className="relative flex w-full min-w-0 items-center gap-2 overflow-hidden py-[3px]">
                 <div
@@ -806,7 +806,6 @@ export const Home = (): JSX.Element => {
             </div>
           </div>
         </section>
-
         {/* 수집된 조각 피드 — 선 대신 따뜻한 배경 톤으로 부드럽게 전환 */}
         <section
           className="relative flex-1 border-t border-[#FAF7F2] pt-3"
