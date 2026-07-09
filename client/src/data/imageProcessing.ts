@@ -12,7 +12,7 @@ const canvasToBlob = (
     canvas.toBlob(
       (blob) => {
         if (blob) resolve(blob);
-        else reject(new Error("이미지를 압축하지 못했어요."));
+        else reject(new Error("이미지를 저장용으로 준비하지 못했어요."));
       },
       type,
       quality
@@ -35,7 +35,7 @@ export const processSelectedImage = async (file: File): Promise<string> => {
     throw new Error("이미지 파일을 선택해주세요.");
   }
   if (file.size > MAX_SOURCE_IMAGE_SIZE_BYTES) {
-    throw new Error("이미지가 너무 커서 처리하지 못했어요.");
+    throw new Error("이미지가 커서 저장용으로 줄일 수 없었어요.");
   }
 
   const bitmap = await createImageBitmap(file);
@@ -52,7 +52,7 @@ export const processSelectedImage = async (file: File): Promise<string> => {
     canvas.height = height;
 
     const context = canvas.getContext("2d");
-    if (!context) throw new Error("이미지를 처리하지 못했어요.");
+    if (!context) throw new Error("이미지를 저장용으로 준비하지 못했어요.");
     context.drawImage(bitmap, 0, 0, width, height);
 
     const keepsTransparency = file.type === "image/png";
@@ -63,7 +63,7 @@ export const processSelectedImage = async (file: File): Promise<string> => {
     );
 
     if (!blob.size || blob.size > MAX_PROCESSED_IMAGE_SIZE_BYTES) {
-      throw new Error("압축한 이미지도 너무 커서 추가하지 못했어요.");
+      throw new Error("이미지가 커서 저장용으로 줄일 수 없었어요.");
     }
 
     return blobToDataUrl(blob);

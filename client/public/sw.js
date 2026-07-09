@@ -1,5 +1,8 @@
 ﻿const SHARE_CACHE = "chaejip-share-target-v1";
-const MAX_IMAGE_SIZE_BYTES = 2 * 1024 * 1024;
+const MAX_IMAGE_DIMENSION = 1200;
+const IMAGE_QUALITY = 0.8;
+const MAX_PROCESSED_IMAGE_SIZE_BYTES = 1.5 * 1024 * 1024;
+const MAX_SOURCE_IMAGE_SIZE_BYTES = 30 * 1024 * 1024;
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
@@ -36,6 +39,51 @@ const fileToDataUrl = async (file) => {
   }
 
   return `data:${file.type || "image/jpeg"};base64,${btoa(binary)}`;
+};
+
+const getProcessedImageType = (sourceType) => {
+  // PNG may contain transparency, so keep it lossless instead of flattening it.
+  if (sourceType === "image/png") return "image/png";
+  return "image/webp";
+};
+
+const resizeImage = async (file) => {
+  if (
+    typeof createImageBitmap !== "function" ||
+    typeof OffscreenCanvas !== "function"
+  ) {
+    throw new Error("Image resizing is not supported");
+  }
+
+  const bitmap = await createImageBitmap(file);
+
+  try {
+    const scale = Math.min(
+      1,
+      MAX_IMAGE_DIMENSION / Math.max(bitmap.width, bitmap.height)
+    );
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = new OffscreenCanvas(width, height);
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Canvas context is not available");
+
+    context.drawImage(bitmap, 0, 0, width, height);
+
+    const type = getProcessedImageType(file.type);
+    const blob = await canvas.convertToBlob({
+      type,
+      ...(type === "image/png" ? {} : { quality: IMAGE_QUALITY }),
+    });
+
+    if (!blob.size || blob.size > MAX_PROCESSED_IMAGE_SIZE_BYTES) {
+      throw new Error("Processed image is too large");
+    }
+
+    return fileToDataUrl(blob);
+  } finally {
+    bitmap.close();
+  }
 };
 
 const cleanupOldPayloads = async (cache) => {
@@ -82,13 +130,13 @@ const handleQuickSavePost = async (request) => {
   };
 
   if (imageFile) {
-    if (imageFile.size > MAX_IMAGE_SIZE_BYTES) {
-      payload.imageError = "이미지가 2MB를 넘어 이미지 없이 열었어요.";
+    if (imageFile.size > MAX_SOURCE_IMAGE_SIZE_BYTES) {
+      payload.imageError = "이미지가 커서 이미지 없이 열었어요.";
     } else {
       try {
-        payload.imageDataUrl = await fileToDataUrl(imageFile);
+        payload.imageDataUrl = await resizeImage(imageFile);
       } catch {
-        payload.imageError = "이미지를 불러오지 못했어요.";
+        payload.imageError = "이미지를 저장용으로 줄일 수 없어 이미지 없이 열었어요.";
       }
     }
   }

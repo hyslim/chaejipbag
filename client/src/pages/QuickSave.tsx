@@ -344,7 +344,7 @@ export const QuickSave = () => {
                   alt=""
                   onError={() => {
                     setImageDataUrl("");
-                    setImageError("공유받은 이미지를 표시하지 못해 이미지 없이 열었어요.");
+                    setImageError("이미지를 표시할 수 없어 이미지 없이 열었어요.");
                   }}
                   className="h-[142px] w-full object-cover"
                 />
