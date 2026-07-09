@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { X } from "lucide-react";
 import { getCleanPokachipName, getPokachipColor, getPokachipCandidates, getPokachipKey, getRecentPokachips, mergePokachips, parsePokachipInput } from "@/data/fragments";
@@ -152,10 +152,15 @@ export const QuickSave = () => {
   const [chipInput, setChipInput] = useState("");
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
   const [isInputActive, setIsInputActive] = useState(false);
+  const titleRef = useRef<HTMLTextAreaElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const trimmedMemo = memo.trim();
   const canSave = Boolean(sharedUrl || trimmedMemo || fallbackTitle || imageDataUrl);
   const [title, setTitle] = useState(fallbackTitle);
+
+  useLayoutEffect(() => {
+    titleRef.current?.blur();
+  }, []);
 
   useEffect(() => {
     if (!shareId) return;
@@ -314,6 +319,8 @@ export const QuickSave = () => {
             <div className="mt-3 rounded-[18px] bg-[#FAF8F4] px-4 pb-1.5 pt-2.5">
               <span className="block text-[11px] font-medium text-[rgba(120,112,100,0.52)]">제목</span>
               <textarea
+                ref={titleRef}
+                autoFocus={false}
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 rows={1}
