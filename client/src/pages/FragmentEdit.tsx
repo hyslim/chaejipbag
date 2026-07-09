@@ -4,13 +4,12 @@ import { ChevronLeft, Globe, Instagram, Pencil, Sparkles, Youtube, X, type Lucid
 import { getCleanPokachipName, getPokachipColor, getPokachipCandidates, getPokachipKey, getRecentPokachips, getUniquePokachips, mergePokachips, normalizePokachipName } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { useFragmentImage } from "@/hooks/useFragmentImage";
+import { processSelectedImage } from "@/data/imageProcessing";
 
 const koreanInitials = [
   "ㄱ", "ㄲ", "ㄴ", "ㄷ", "ㄸ", "ㄹ", "ㅁ", "ㅂ", "ㅃ", "ㅅ",
   "ㅆ", "ㅇ", "ㅈ", "ㅉ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ",
 ];
-
-const MAX_IMAGE_SIZE_BYTES = 2 * 1024 * 1024;
 
 const getKoreanInitials = (value: string) =>
   Array.from(value)
@@ -56,6 +55,8 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
   const storedImageUrl = useFragmentImage(fragment);
   const [pendingImageDataUrl, setPendingImageDataUrl] = useState<string | undefined>();
   const [isImageRemoved, setIsImageRemoved] = useState(false);
+  const [imageError, setImageError] = useState("");
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [selectedChips, setSelectedChips] = useState<string[]>(
@@ -134,30 +135,27 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
     setTimeout(() => inputRef.current?.focus(), 0);
   };
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    event.target.value = "";
     if (!file) return;
 
-    if (file.size > MAX_IMAGE_SIZE_BYTES) {
-      alert("이미지는 2MB 이하로 선택해주세요.");
-      event.target.value = "";
-      return;
+    setImageError("");
+    setIsProcessingImage(true);
+    try {
+      setPendingImageDataUrl(await processSelectedImage(file));
+      setIsImageRemoved(false);
+    } catch (error) {
+      setImageError(error instanceof Error ? error.message : "이미지를 줄이거나 불러오지 못했어요.");
+    } finally {
+      setIsProcessingImage(false);
     }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setPendingImageDataUrl(reader.result);
-        setIsImageRemoved(false);
-      }
-    };
-    reader.readAsDataURL(file);
-    event.target.value = "";
   };
 
   const handleRemoveImage = () => {
     setPendingImageDataUrl(undefined);
     setIsImageRemoved(true);
+    setImageError("");
     if (imageInputRef.current) imageInputRef.current.value = "";
   };
 
@@ -198,7 +196,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
   const SourceIcon = getSourceMetaIcon(fragment.sourceType, fragment.source, fragment.url);
 
   const handleConfirm = async () => {
-    if (!canSave || isSaving) return;
+    if (!canSave || isSaving || isProcessingImage) return;
 
     setSaveError("");
     setIsSaving(true);
@@ -321,6 +319,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
                   <button
                     type="button"
                     onClick={handleRemoveImage}
+                    disabled={isProcessingImage}
                     className="flex h-9 w-[74px] items-center justify-center rounded-xl text-[12px] font-semibold text-[rgba(50,44,34,0.68)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.60),inset_0_1px_0_rgba(255,255,255,0.24)]"
                     style={{ background: "linear-gradient(135deg, rgba(244,224,216,0.54), rgba(224,196,190,0.42))", fontFamily: "'Pretendard Variable', sans-serif" }}
                   >
@@ -329,6 +328,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
                   <button
                     type="button"
                     onClick={() => imageInputRef.current?.click()}
+                    disabled={isProcessingImage}
                     className="flex h-9 flex-1 items-center justify-center rounded-xl border border-[rgba(120,112,100,0.16)] bg-[#FAF8F4] text-[12px] font-medium text-[rgba(120,112,100,0.75)]"
                     style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
                   >
@@ -340,6 +340,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
               <button
                 type="button"
                 onClick={() => imageInputRef.current?.click()}
+                disabled={isProcessingImage}
                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#0000000a] bg-white px-4 py-3 text-[13px] font-medium text-[rgba(120,112,100,0.6)] shadow-[0px_1px_4px_#0000000a]"
                 style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
               >
@@ -354,11 +355,18 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
 
             <input
               ref={imageInputRef}
+              disabled={isProcessingImage}
               type="file"
               accept="image/*"
               className="hidden"
               onChange={handleImageChange}
             />
+            {isProcessingImage && (
+              <p className="px-1 text-[12px] leading-[17px] text-[rgba(120,112,100,0.72)]">이미지를 줄이고 있어요…</p>
+            )}
+            {imageError && (
+              <p className="rounded-[12px] bg-[#FAF8F4] px-3 py-2 text-[12px] leading-[17px] text-[rgba(120,72,72,0.78)]">{imageError}</p>
+            )}
           </div>
 
           {/* 기억 조각 */}
@@ -547,7 +555,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
         >
           <button
             onClick={handleConfirm}
-            disabled={!canSave || isSaving}
+            disabled={!canSave || isSaving || isProcessingImage}
             className="h-[51px] w-[180px] rounded-full border-0 px-[50px] py-[14px] text-[15px] font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
             style={{
               background: "linear-gradient(135deg, rgba(130,207,255,0.60) 12%, rgba(90,144,255,0.60) 54%, rgba(139,112,255,0.60) 100%)",
