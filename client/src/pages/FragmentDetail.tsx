@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ChevronLeft, Pencil, Trash2, ExternalLink, Globe, Instagram, Sparkles, Youtube, X, type LucideIcon } from "lucide-react";
 import { getPokachipColor, normalizePokachipName } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
+import { useFragmentImage } from "@/hooks/useFragmentImage";
 import { shareFragment } from "@/lib/shareFragment";
 
 const sourceIconColor = "rgba(120,112,100,0.65)";
@@ -37,10 +38,10 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const fragment = getFragment(params.id);
+  const imageUrl = useFragmentImage(fragment);
 
   const handleDelete = () => {
-    deleteFragment(params.id);
-    navigate("/");
+    if (deleteFragment(params.id)) navigate("/");
   };
 
   if (!fragment) {
@@ -185,7 +186,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
               </p>
             </section>
           )}
-          {fragment.imageDataUrl && (
+          {imageUrl && (
             <section className="mt-8">
               <button
                 type="button"
@@ -194,7 +195,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
                 aria-label="이미지 전체보기 열기"
               >
                 <img
-                  src={fragment.imageDataUrl}
+                  src={imageUrl}
                   alt=""
                   className="h-[236px] w-full object-cover transition-transform duration-200 group-active:scale-[0.99]"
                 />
@@ -283,7 +284,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
             공유하기
           </button>
         </div>
-        {isImageViewerOpen && fragment.imageDataUrl && (
+        {isImageViewerOpen && imageUrl && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(32,28,24,0.72)] px-4 py-8 backdrop-blur-[2px]"
             role="dialog"
@@ -300,9 +301,9 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
               >
                 <X size={18} strokeWidth={2} />
               </button>
-              {/* TODO: When imageDataUrl expands to images[], add n/n counter and prev/next controls here. */}
+              {/* TODO: If single-image storage expands to images[], add n/n counter and prev/next controls here. */}
               <img
-                src={fragment.imageDataUrl}
+                src={imageUrl}
                 alt=""
                 className="max-h-full max-w-full rounded-[18px] object-contain shadow-[0_18px_60px_rgba(0,0,0,0.28)]"
               />

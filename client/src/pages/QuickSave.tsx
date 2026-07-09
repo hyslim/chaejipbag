@@ -134,7 +134,7 @@ const getQuickSaveDefaults = (sharedTitle: string, sharedText: string, urlParam:
 
 export const QuickSave = () => {
   const [, navigate] = useLocation();
-  const { fragments, addFragment } = useFragments();
+  const { fragments, addFragment, addFragmentWithImage } = useFragments();
   const params = new URLSearchParams(window.location.search);
   const sharedTitle = params.get("title")?.trim() ?? "";
   const sharedText = params.get("text")?.trim() ?? "";
@@ -148,6 +148,7 @@ export const QuickSave = () => {
   const [imageDataUrl, setImageDataUrl] = useState("");
   const [imageError, setImageError] = useState("");
   const [saveError, setSaveError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   const [chipInput, setChipInput] = useState("");
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
   const [isInputActive, setIsInputActive] = useState(false);
@@ -165,7 +166,10 @@ export const QuickSave = () => {
       try {
         const payloadUrl = `/share-target-payloads/${encodeURIComponent(shareId)}`;
         const response = await fetch(payloadUrl, { cache: "no-store" });
-        if (!response.ok) return;
+        if (!response.ok) {
+          setImageError("공유받은 내용을 불러오지 못했어요. 다시 공유해주세요.");
+          return;
+        }
 
         const payload = await response.json() as SharedTargetPayload;
         if (isCanceled) return;
@@ -251,28 +255,32 @@ export const QuickSave = () => {
     setTimeout(() => inputRef.current?.focus(), 0);
   };
 
-  const handleSave = () => {
-    if (!canSave) return;
+  const handleSave = async () => {
+    if (!canSave || isSaving) return;
 
     const inputChips = parsePokachipInput(chipInput);
     const pokachips = mergePokachips(selectedChips, inputChips);
     const now = new Date();
 
     setSaveError("");
-    const savedFragment = addFragment({
+    setIsSaving(true);
+    const fragmentInput = {
       title: title.trim() || fallbackTitle,
       memo: trimmedMemo || undefined,
       url: sharedUrl || undefined,
       source: sharedHostname || undefined,
-      sourceType: sharedUrl ? "link" : "text",
+      sourceType: sharedUrl ? ("link" as const) : ("text" as const),
       time: "\uBC29\uAE08",
       date: new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "long", day: "numeric" }).format(now),
       pokachips: pokachips.length > 0 ? pokachips : ["\uC784\uC2DC\uC870\uAC01"],
       thumbnailColor: "#dce8f8",
-      ...(imageDataUrl ? { imageDataUrl } : {}),
-    });
+    };
+    const savedFragment = imageDataUrl
+      ? await addFragmentWithImage(fragmentInput, imageDataUrl)
+      : addFragment(fragmentInput);
 
     if (!savedFragment) {
+      setIsSaving(false);
       setSaveError("\uc800\uc7a5 \uacf5\uac04\uc774 \ubd80\uc871\ud574 \uc870\uac01\uc744 \ub2f4\uc9c0 \ubabb\ud588\uc5b4\uc694. \ud070 \uc774\ubbf8\uc9c0\ub098 \uc624\ub798\ub41c \uc870\uac01\uc744 \uc815\ub9ac\ud55c \ub4a4 \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694.");
       return;
     }
@@ -327,6 +335,10 @@ export const QuickSave = () => {
                 <img
                   src={imageDataUrl}
                   alt=""
+                  onError={() => {
+                    setImageDataUrl("");
+                    setImageError("공유받은 이미지를 표시하지 못해 이미지 없이 열었어요.");
+                  }}
                   className="h-[142px] w-full object-cover"
                 />
               </div>
@@ -476,8 +488,8 @@ export const QuickSave = () => {
           <button
             type="button"
             onClick={handleSave}
-            disabled={!canSave}
-            aria-disabled={!canSave}
+            disabled={!canSave || isSaving}
+            aria-disabled={!canSave || isSaving}
             className="mx-auto flex h-[52px] w-full max-w-[350px] items-center justify-center rounded-full bg-[#8e88ed] text-[15px] font-semibold text-white shadow-[0_8px_24px_rgba(126,135,220,0.28),inset_0_1px_0_rgba(255,255,255,0.4)] disabled:cursor-not-allowed disabled:opacity-40"
           >
             기억에 담기

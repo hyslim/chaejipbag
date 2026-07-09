@@ -5,6 +5,7 @@ import { flushSync } from "react-dom";
 import { Link, useLocation } from "wouter";
 import { getFragmentDisplayTime, getPokachipColor, getRecentPokachips, normalizePokachipName, type Fragment } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
+import { useFragmentImage } from "@/hooks/useFragmentImage";
 import { BottomNav } from "@/components/BottomNav";
 import { shareFragment } from "@/lib/shareFragment";
 
@@ -109,6 +110,7 @@ const FragmentCard = ({
   onShare: () => void | Promise<void>;
 }) => {
   const [, navigate] = useLocation();
+  const imageUrl = useFragmentImage(fragment);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const longPressTimerRef = useRef<number | null>(null);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -269,9 +271,9 @@ const FragmentCard = ({
         onContextMenu={(event) => event.preventDefault()}
         onClick={handleCardClick}
       >
-        {fragment.imageDataUrl && (
+        {imageUrl && (
           <img
-            src={fragment.imageDataUrl}
+            src={imageUrl}
             alt=""
             className="h-[140px] w-full object-cover"
           />

@@ -108,12 +108,14 @@ const parseFragmentInput = (value: string, hasImage: boolean): ParsedFragmentInp
 };
 export const FragmentCreate = () => {
   const [, navigate] = useLocation();
-  const { addFragment, fragments } = useFragments();
+  const { addFragment, addFragmentWithImage, fragments } = useFragments();
   const [memo, setMemo] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
   const [isInputActive, setIsInputActive] = useState(false);
   const [imageDataUrl, setImageDataUrl] = useState<string | undefined>();
+  const [saveError, setSaveError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   const selectedChipsRef = useRef<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -208,14 +210,16 @@ export const FragmentCreate = () => {
 
   const canSave = Boolean(memo.trim() || imageDataUrl);
 
-  const handleSave = () => {
-    if (!canSave) return;
+  const handleSave = async () => {
+    if (!canSave || isSaving) return;
 
     const parsedInput = parseFragmentInput(memo, Boolean(imageDataUrl));
     const enteredTags = mergePokachips(selectedChipsRef.current, parsePokachipInput(tagInput));
     const pokachips = enteredTags.length > 0 ? [...enteredTags] : ["임시조각"];
     const now = new Date();
-    addFragment({
+    setSaveError("");
+    setIsSaving(true);
+    const fragmentInput = {
       title: parsedInput.title,
       memo: parsedInput.memo,
       url: parsedInput.url,
@@ -229,8 +233,16 @@ export const FragmentCreate = () => {
       }).format(now),
       pokachips,
       thumbnailColor: thumbnailColors[now.getTime() % thumbnailColors.length],
-      ...(imageDataUrl ? { imageDataUrl } : {}),
-    });
+    };
+    const savedFragment = imageDataUrl
+      ? await addFragmentWithImage(fragmentInput, imageDataUrl)
+      : addFragment(fragmentInput);
+
+    if (!savedFragment) {
+      setIsSaving(false);
+      setSaveError("이미지 또는 조각 저장 공간이 부족해 저장하지 못했어요.");
+      return;
+    }
 
     sessionStorage.setItem("chaejip-save-toast", "1");
     navigate("/");
@@ -321,6 +333,12 @@ export const FragmentCreate = () => {
               />
             </div>
           </div>
+
+          {saveError && (
+            <p className="rounded-[14px] bg-[#FAF8F4] px-3 py-2 text-[12px] leading-[17px] text-[rgba(120,72,72,0.78)]">
+              {saveError}
+            </p>
+          )}
 
           <div className="flex flex-col gap-2.5">
             <label
@@ -474,7 +492,7 @@ export const FragmentCreate = () => {
           <button
             type="button"
             onClick={handleSave}
-            disabled={!canSave}
+            disabled={!canSave || isSaving}
             className="mx-auto flex h-[51px] w-[180px] items-center justify-center rounded-[999px] border-0 text-[15px] font-semibold text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
             style={{
               background: "linear-gradient(133deg, rgba(130,207,255,0.60) 12%, rgba(90,144,255,0.60) 54%, rgba(139,112,255,0.60) 100%)",

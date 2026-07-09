@@ -11,6 +11,7 @@ export interface Fragment {
   updatedAt?: string;
   pokachips: string[];
   thumbnailColor: string;
+  imageKey?: string;
   imageDataUrl?: string;
 }
 

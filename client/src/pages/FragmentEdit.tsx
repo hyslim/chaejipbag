@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { ChevronLeft, Globe, Instagram, Pencil, Sparkles, Youtube, X, type LucideIcon } from "lucide-react";
 import { getCleanPokachipName, getPokachipColor, getPokachipCandidates, getPokachipKey, getRecentPokachips, getUniquePokachips, mergePokachips, normalizePokachipName } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
+import { useFragmentImage } from "@/hooks/useFragmentImage";
 
 const koreanInitials = [
   "ㄱ", "ㄲ", "ㄴ", "ㄷ", "ㄸ", "ㄹ", "ㅁ", "ㅂ", "ㅃ", "ㅅ",
@@ -46,13 +47,17 @@ const getSourceMetaLabel = (sourceType?: string, source?: string, url?: string):
 
 export const FragmentEdit = ({ params }: { params: { id: string } }) => {
   const [, navigate] = useLocation();
-  const { fragments, getFragment, updateFragment } = useFragments();
+  const { fragments, getFragment, updateFragment, updateFragmentImage } = useFragments();
   const fragment = getFragment(params.id);
 
   const [title, setTitle] = useState(fragment?.title ?? "");
   const [memo, setMemo] = useState(fragment?.memo ?? "");
   const [url, setUrl] = useState(fragment?.url ?? "");
-  const [imageDataUrl, setImageDataUrl] = useState<string | undefined>(fragment?.imageDataUrl);
+  const storedImageUrl = useFragmentImage(fragment);
+  const [pendingImageDataUrl, setPendingImageDataUrl] = useState<string | undefined>();
+  const [isImageRemoved, setIsImageRemoved] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   const [selectedChips, setSelectedChips] = useState<string[]>(
     Array.from(
       new Set((fragment?.pokachips ?? []).map(normalizePokachipName).filter(Boolean))
@@ -142,7 +147,8 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === "string") {
-        setImageDataUrl(reader.result);
+        setPendingImageDataUrl(reader.result);
+        setIsImageRemoved(false);
       }
     };
     reader.readAsDataURL(file);
@@ -150,7 +156,8 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
   };
 
   const handleRemoveImage = () => {
-    setImageDataUrl(undefined);
+    setPendingImageDataUrl(undefined);
+    setIsImageRemoved(true);
     if (imageInputRef.current) imageInputRef.current.value = "";
   };
 
@@ -178,25 +185,39 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
   const hasChipChanges = initialChips.length !== nextChips.length
     || initialChips.some((chip, index) => chip !== nextChips[index]);
   const trimmedUrl = url.trim();
+  const imageUrl = isImageRemoved ? undefined : pendingImageDataUrl ?? storedImageUrl;
+  const hasImageChanges = isImageRemoved || Boolean(pendingImageDataUrl);
+  const hasImage = !isImageRemoved && Boolean(pendingImageDataUrl || fragment.imageKey || fragment.imageDataUrl);
   const hasChanges = title !== fragment.title
     || memo !== (fragment.memo ?? "")
     || trimmedUrl !== (fragment.url ?? "")
-    || imageDataUrl !== fragment.imageDataUrl
+    || hasImageChanges
     || hasChipChanges;
-  const canSave = hasChanges && Boolean(title.trim() || memo.trim() || trimmedUrl || imageDataUrl);
+  const canSave = hasChanges && Boolean(title.trim() || memo.trim() || trimmedUrl || hasImage);
   const metaLabel = getSourceMetaLabel(fragment.sourceType, fragment.source, fragment.url);
   const SourceIcon = getSourceMetaIcon(fragment.sourceType, fragment.source, fragment.url);
 
-  const handleConfirm = () => {
-    if (!canSave) return;
+  const handleConfirm = async () => {
+    if (!canSave || isSaving) return;
 
-    updateFragment(fragment.id, {
+    setSaveError("");
+    setIsSaving(true);
+    const patch = {
       title,
       memo,
       url: trimmedUrl || undefined,
-      imageDataUrl: imageDataUrl || undefined,
       pokachips: nextChips.length > 0 ? nextChips : ["임시조각"],
-    });
+    };
+    const updatedFragment = hasImageChanges
+      ? await updateFragmentImage(fragment.id, patch, pendingImageDataUrl ?? null)
+      : updateFragment(fragment.id, patch);
+
+    if (!updatedFragment) {
+      setIsSaving(false);
+      setSaveError("이미지 또는 조각 저장 공간이 부족해 저장하지 못했어요.");
+      return;
+    }
+
     navigate(`/fragment/${fragment.id}`);
   };
 
@@ -289,10 +310,10 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
               이미지
             </label>
 
-            {imageDataUrl ? (
+            {imageUrl ? (
               <div className="overflow-hidden rounded-2xl border border-white/70 bg-[#FFFEFB] shadow-[0_6px_18px_rgba(80,70,55,0.06)]">
                 <img
-                  src={imageDataUrl}
+                  src={imageUrl}
                   alt="선택된 이미지 미리보기"
                   className="h-[168px] w-full object-cover"
                 />
@@ -513,6 +534,12 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
 
         </div>
 
+        {saveError && (
+          <p className="mx-5 mb-2 rounded-[14px] bg-[#FAF8F4] px-3 py-2 text-[12px] leading-[17px] text-[rgba(120,72,72,0.78)]">
+            {saveError}
+          </p>
+        )}
+
         {/* 확인 버튼 */}
         <div
           className="fixed bottom-0 left-1/2 flex w-full max-w-[390px] -translate-x-1/2 justify-center px-5 pb-8 pt-4"
@@ -520,7 +547,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
         >
           <button
             onClick={handleConfirm}
-            disabled={!canSave}
+            disabled={!canSave || isSaving}
             className="h-[51px] w-[180px] rounded-full border-0 px-[50px] py-[14px] text-[15px] font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
             style={{
               background: "linear-gradient(135deg, rgba(130,207,255,0.60) 12%, rgba(90,144,255,0.60) 54%, rgba(139,112,255,0.60) 100%)",
