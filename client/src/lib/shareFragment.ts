@@ -1,4 +1,4 @@
-import { normalizePokachipName, type Fragment } from "@/data/fragments";
+import type { Fragment } from "@/data/fragments";
 import { dataUrlToBlob, getImageBlob } from "@/data/imageStore";
 
 export type ShareFragmentResult = "shared" | "shared-and-copied" | "copied" | "canceled" | "failed";
@@ -22,20 +22,13 @@ const canUseNativeShare = (): boolean => {
 
 const getFragmentUrl = (fragment: Fragment): string => fragment.url?.trim() ?? "";
 
-const getFragmentTags = (fragment: Fragment): string =>
-  (fragment.pokachips ?? [])
-    .map(normalizePokachipName)
-    .filter(Boolean)
-    .map((chip) => `#${chip.replace(/\s+/g, "_")}`)
-    .join(" ");
-
 export const getFragmentShareText = (fragment: Fragment): string => {
   const title = fragment.title.trim();
   const memo = fragment.memo?.trim() ?? "";
   const url = getFragmentUrl(fragment);
-  const chips = getFragmentTags(fragment);
+  const originalLink = url ? `원본 링크\n${url}` : "";
 
-  return [title, memo && memo !== title ? memo : "", url, chips]
+  return [title, memo && memo !== title ? memo : "", originalLink]
     .filter(Boolean)
     .join("\n\n");
 };
@@ -97,20 +90,10 @@ const canShareImageFile = (file: File): boolean => {
 
 export const shareFragment = async (fragment: Fragment): Promise<ShareFragmentResult> => {
   const title = fragment.title.trim() || "채집가방 조각";
-  const memo = fragment.memo?.trim() ?? "";
-  const url = getFragmentUrl(fragment);
-  const tags = getFragmentTags(fragment);
   const text = getFragmentShareText(fragment);
-  const textWithoutUrl = [title, memo && memo !== title ? memo : "", tags]
-    .filter(Boolean)
-    .join("\n\n");
 
   if (canUseNativeShare()) {
-    const nativeShareData: ShareData = {
-      title,
-      text: url ? textWithoutUrl : text,
-      ...(url ? { url } : {}),
-    };
+    const nativeShareData: ShareData = { title, text };
     const imageFile = fragment.imageKey || fragment.imageDataUrl
       ? await getFragmentImageFile(fragment)
       : undefined;
