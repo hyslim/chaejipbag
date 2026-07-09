@@ -20,6 +20,9 @@ const canUseNativeShare = (): boolean => {
   return isMobileUserAgent || isIpadDesktopMode;
 };
 
+export const shouldOfferImageShare = (fragment: Fragment): boolean =>
+  Boolean(fragment.imageKey || fragment.imageDataUrl) && canUseNativeShare();
+
 const getFragmentUrl = (fragment: Fragment): string => fragment.url?.trim() ?? "";
 
 export const getFragmentShareText = (fragment: Fragment): string => {
@@ -120,21 +123,5 @@ export const shareFragment = async (fragment: Fragment): Promise<ShareFragmentRe
     }
   }
 
-  return copyFragmentShareText(fragment);
-};
-
-export const shareFragmentWithNotice = async (fragment: Fragment): Promise<ShareFragmentResult> => {
-  const hasImage = Boolean(fragment.imageKey || fragment.imageDataUrl);
-  if (!hasImage || !canUseNativeShare()) return shareFragment(fragment);
-
-  const shouldShareImage = window.confirm(
-    "이미지를 공유하면 일부 앱에서 글이 빠질 수 있어요. 글은 클립보드에도 함께 복사합니다.\n\n확인: 이미지 공유\n취소: 다른 옵션"
-  );
-  if (shouldShareImage) return shareFragment(fragment);
-
-  const shouldCopyOnly = window.confirm(
-    "이미지 없이 제목, 메모, 원본 링크만 복사할까요?\n\n확인: 텍스트만 복사\n취소: 닫기"
-  );
-  if (!shouldCopyOnly) return "canceled";
   return copyFragmentShareText(fragment);
 };

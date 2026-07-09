@@ -5,7 +5,7 @@ import { ChevronLeft, Pencil, Trash2, ExternalLink, Globe, Instagram, Sparkles, 
 import { getPokachipColor, normalizePokachipName } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { useFragmentImage } from "@/hooks/useFragmentImage";
-import { shareFragmentWithNotice } from "@/lib/shareFragment";
+import { copyFragmentShareText, shareFragment, shouldOfferImageShare } from "@/lib/shareFragment";
 
 const sourceIconColor = "rgba(120,112,100,0.65)";
 
@@ -37,6 +37,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [isShareSheetOpen, setIsShareSheetOpen] = useState(false);
   const fragment = getFragment(params.id);
   const imageUrl = useFragmentImage(fragment);
 
@@ -80,15 +81,30 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
     window.setTimeout(() => setToastMessage(""), 2000);
   };
 
-  const handleShare = async () => {
-    const result = await shareFragmentWithNotice(fragment);
+  const handleShareResult = (result: Awaited<ReturnType<typeof shareFragment>>) => {
     if (result === "shared-and-copied") {
       showDetailToast("이미지를 보냈어요. 글은 복사해뒀어요. 입력창에 붙여넣어 주세요.");
     } else if (result === "copied") {
-      showDetailToast("\uacf5\uc720 \ub0b4\uc6a9\uc744 \ubcf5\uc0ac\ud588\uc5b4\uc694");
+      showDetailToast("공유 내용을 복사했어요");
     } else if (result === "failed") {
-      showDetailToast("\uacf5\uc720\ud560 \uc218 \uc5c6\uc5c8\uc5b4\uc694");
+      showDetailToast("공유할 수 없었어요");
     }
+  };
+
+  const performShare = async () => {
+    handleShareResult(await shareFragment(fragment));
+  };
+
+  const handleShare = () => {
+    if (shouldOfferImageShare(fragment)) {
+      setIsShareSheetOpen(true);
+      return;
+    }
+    void performShare();
+  };
+
+  const handleCopyShareText = async () => {
+    handleShareResult(await copyFragmentShareText(fragment));
   };
 
   return (
@@ -310,6 +326,52 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
                 alt=""
                 className="max-h-full max-w-full rounded-[18px] object-contain shadow-[0_18px_60px_rgba(0,0,0,0.28)]"
               />
+            </div>
+          </div>
+        )}
+
+        {isShareSheetOpen && (
+          <div
+            className="fixed inset-y-0 left-1/2 z-[80] flex w-full max-w-[390px] -translate-x-1/2 items-end bg-[rgba(32,28,24,0.32)] backdrop-blur-[2px]"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="detail-image-share-title"
+            onClick={() => setIsShareSheetOpen(false)}
+          >
+            <div
+              className="w-full rounded-t-[24px] bg-[#FFFEFB] px-5 pb-6 pt-5 shadow-[0_-16px_48px_rgba(60,50,40,0.16)]"
+              style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <h2 id="detail-image-share-title" className="text-[18px] font-semibold text-[#3a3228]">이미지와 글을 같이 보낼게요</h2>
+              <p className="mt-3 text-[13px] leading-[20px] text-[#787064b0]">
+                카톡/노션은 이미지만 받고 글을 빼먹을 수 있어요.<br />
+                그래서 제목·메모·원본 링크는 먼저 복사해둘게요.
+              </p>
+              <p className="mt-2 text-[13px] leading-[20px] text-[#787064b0]">이미지를 보낸 뒤, 입력창에 붙여넣어 주세요.</p>
+              <div className="mt-5 flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsShareSheetOpen(false);
+                    void performShare();
+                  }}
+                  className="h-12 rounded-full bg-[#8e88ed] text-[14px] font-semibold text-white"
+                >
+                  이미지 공유하고 글 복사
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsShareSheetOpen(false);
+                    void handleCopyShareText();
+                  }}
+                  className="h-12 rounded-full border border-[#0000000a] bg-[#FAF8F4] text-[14px] font-semibold text-[#787064]"
+                >
+                  글만 복사
+                </button>
+                <button type="button" onClick={() => setIsShareSheetOpen(false)} className="h-11 text-[13px] font-medium text-[#a0988c]">취소</button>
+              </div>
             </div>
           </div>
         )}
