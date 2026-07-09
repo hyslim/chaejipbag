@@ -1,4 +1,5 @@
-﻿import { normalizePokachipName, type Fragment } from "@/data/fragments";
+import { normalizePokachipName, type Fragment } from "@/data/fragments";
+import { dataUrlToBlob, getImageBlob } from "@/data/imageStore";
 
 export type ShareFragmentResult = "shared" | "copied" | "canceled" | "failed";
 
@@ -50,6 +51,50 @@ const copyShareText = async (text: string): Promise<boolean> => {
   }
 };
 
+const getImageExtension = (type: string): string => {
+  if (type === "image/png") return "png";
+  if (type === "image/webp") return "webp";
+  if (type === "image/gif") return "gif";
+  return "jpg";
+};
+
+const getFragmentImageFile = async (fragment: Fragment): Promise<File | undefined> => {
+  let blob: Blob | undefined;
+
+  if (fragment.imageKey) {
+    try {
+      blob = await getImageBlob(fragment.imageKey);
+    } catch {
+      // Fall back to legacy imageDataUrl below.
+    }
+  }
+
+  if (!blob && fragment.imageDataUrl) {
+    try {
+      blob = await dataUrlToBlob(fragment.imageDataUrl);
+    } catch {
+      return undefined;
+    }
+  }
+
+  if (!blob) return undefined;
+
+  const type = blob.type || "image/jpeg";
+  try {
+    return new File([blob], `chaejipbag-fragment.${getImageExtension(type)}`, { type });
+  } catch {
+    return undefined;
+  }
+};
+
+const canShareImageFile = (file: File): boolean => {
+  try {
+    return Boolean(navigator.canShare?.({ files: [file] }));
+  } catch {
+    return false;
+  }
+};
+
 export const shareFragment = async (fragment: Fragment): Promise<ShareFragmentResult> => {
   const title = fragment.title.trim() || "채집가방 조각";
   const memo = fragment.memo?.trim() ?? "";
@@ -61,12 +106,27 @@ export const shareFragment = async (fragment: Fragment): Promise<ShareFragmentRe
     .join("\n\n");
 
   if (canUseNativeShare()) {
+    const nativeShareData: ShareData = {
+      title,
+      text: url ? textWithoutUrl : text,
+      ...(url ? { url } : {}),
+    };
+    const imageFile = fragment.imageKey || fragment.imageDataUrl
+      ? await getFragmentImageFile(fragment)
+      : undefined;
+    const canShareImage = imageFile ? canShareImageFile(imageFile) : false;
+
+    if (imageFile && canShareImage) {
+      try {
+        await navigator.share({ ...nativeShareData, files: [imageFile] });
+        return "shared";
+      } catch (error) {
+        if (isCanceledShareError(error)) return "canceled";
+      }
+    }
+
     try {
-      await navigator.share({
-        title,
-        text: url ? textWithoutUrl : text,
-        ...(url ? { url } : {}),
-      });
+      await navigator.share(nativeShareData);
       return "shared";
     } catch (error) {
       if (isCanceledShareError(error)) return "canceled";
