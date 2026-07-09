@@ -21,7 +21,7 @@ const canUseNativeShare = (): boolean => {
 };
 
 export const shouldOfferImageShare = (fragment: Fragment): boolean =>
-  Boolean(fragment.imageKey || fragment.imageDataUrl) && canUseNativeShare();
+  Boolean(fragment.imageKey || fragment.imageDataUrl);
 
 const getFragmentUrl = (fragment: Fragment): string => fragment.url?.trim() ?? "";
 
