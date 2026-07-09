@@ -539,7 +539,9 @@ export const Home = (): JSX.Element => {
 
   const handleShareFragment = async (fragment: Fragment) => {
     const result = await shareFragment(fragment);
-    if (result === "copied") {
+    if (result === "shared-and-copied") {
+      showHomeToast("\ud14d\uc2a4\ud2b8\ub3c4 \ubcf5\uc0ac\ud588\uc5b4\uc694");
+    } else if (result === "copied") {
       showHomeToast("\uacf5\uc720 \ub0b4\uc6a9\uc744 \ubcf5\uc0ac\ud588\uc5b4\uc694");
     } else if (result === "failed") {
       showHomeToast("\uacf5\uc720\ud560 \uc218 \uc5c6\uc5c8\uc5b4\uc694");

@@ -1,7 +1,7 @@
 import { normalizePokachipName, type Fragment } from "@/data/fragments";
 import { dataUrlToBlob, getImageBlob } from "@/data/imageStore";
 
-export type ShareFragmentResult = "shared" | "copied" | "canceled" | "failed";
+export type ShareFragmentResult = "shared" | "shared-and-copied" | "copied" | "canceled" | "failed";
 
 const isCanceledShareError = (error: unknown): boolean => {
   if (!(error instanceof Error)) return false;
@@ -117,9 +117,10 @@ export const shareFragment = async (fragment: Fragment): Promise<ShareFragmentRe
     const canShareImage = imageFile ? canShareImageFile(imageFile) : false;
 
     if (imageFile && canShareImage) {
+      const textCopyPromise = copyShareText(text);
       try {
         await navigator.share({ ...nativeShareData, files: [imageFile] });
-        return "shared";
+        return (await textCopyPromise) ? "shared-and-copied" : "shared";
       } catch (error) {
         if (isCanceledShareError(error)) return "canceled";
       }

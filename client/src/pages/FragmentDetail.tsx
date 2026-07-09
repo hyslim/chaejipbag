@@ -82,7 +82,9 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
 
   const handleShare = async () => {
     const result = await shareFragment(fragment);
-    if (result === "copied") {
+    if (result === "shared-and-copied") {
+      showDetailToast("\ud14d\uc2a4\ud2b8\ub3c4 \ubcf5\uc0ac\ud588\uc5b4\uc694");
+    } else if (result === "copied") {
       showDetailToast("\uacf5\uc720 \ub0b4\uc6a9\uc744 \ubcf5\uc0ac\ud588\uc5b4\uc694");
     } else if (result === "failed") {
       showDetailToast("\uacf5\uc720\ud560 \uc218 \uc5c6\uc5c8\uc5b4\uc694");
