@@ -5,7 +5,7 @@ import { ChevronLeft, Pencil, Trash2, ExternalLink, Globe, Instagram, Sparkles, 
 import { getPokachipColor, normalizePokachipName } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { useFragmentImage } from "@/hooks/useFragmentImage";
-import { shareFragment } from "@/lib/shareFragment";
+import { shareFragmentWithNotice } from "@/lib/shareFragment";
 
 const sourceIconColor = "rgba(120,112,100,0.65)";
 
@@ -81,9 +81,9 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   };
 
   const handleShare = async () => {
-    const result = await shareFragment(fragment);
+    const result = await shareFragmentWithNotice(fragment);
     if (result === "shared-and-copied") {
-      showDetailToast("\ud14d\uc2a4\ud2b8\ub3c4 \ubcf5\uc0ac\ud588\uc5b4\uc694");
+      showDetailToast("이미지를 보냈어요. 글은 복사해뒀어요. 입력창에 붙여넣어 주세요.");
     } else if (result === "copied") {
       showDetailToast("\uacf5\uc720 \ub0b4\uc6a9\uc744 \ubcf5\uc0ac\ud588\uc5b4\uc694");
     } else if (result === "failed") {
@@ -106,7 +106,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
             initial={false}
             animate={toastMessage ? { opacity: 1, y: 0 } : { opacity: 0, y: -6 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className={`${toastMessage ? "pointer-events-auto" : "pointer-events-none"} flex h-9 min-w-[164px] items-center justify-center rounded-[8px] border border-[rgba(255,255,255,0.78)] bg-[#FFFEFB]/95 px-6 text-[13px] font-semibold text-[rgba(54,58,105,0.66)] shadow-[0_4px_14px_rgba(74,63,48,0.09),inset_0_1px_0_rgba(255,255,255,0.72)] backdrop-blur-[12px]`}
+            className={`${toastMessage ? "pointer-events-auto" : "pointer-events-none"} flex min-h-9 max-w-full min-w-[164px] items-center justify-center rounded-[8px] py-2 text-center leading-[18px] border border-[rgba(255,255,255,0.78)] bg-[#FFFEFB]/95 px-6 text-[13px] font-semibold text-[rgba(54,58,105,0.66)] shadow-[0_4px_14px_rgba(74,63,48,0.09),inset_0_1px_0_rgba(255,255,255,0.72)] backdrop-blur-[12px]`}
             style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
           >
             {toastMessage}
