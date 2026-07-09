@@ -497,7 +497,7 @@ export const FragmentCreate = () => {
 
         <div
           className="fixed bottom-0 left-1/2 w-full max-w-[390px] -translate-x-1/2 px-5 pb-8 pt-5"
-          style={{ background: "linear-gradient(to top, #FFFEFB 68%, transparent)" }}
+          style={{ background: "linear-gradient(to top, #FFFEFB 68%, transparent)", paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}
         >
           <button
             type="button"

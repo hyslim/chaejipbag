@@ -491,7 +491,7 @@ export const QuickSave = () => {
           </div>
         </div>
 
-        <div className="fixed bottom-0 left-1/2 w-full max-w-[390px] -translate-x-1/2 px-4 pb-8 pt-5" style={{ background: "linear-gradient(to top, #FAF8F4 70%, rgba(250,248,244,0))" }}>
+        <div className="fixed bottom-0 left-1/2 w-full max-w-[390px] -translate-x-1/2 px-4 pb-8 pt-5" style={{ background: "linear-gradient(to top, #FAF8F4 70%, rgba(250,248,244,0))", paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}>
           <button
             type="button"
             onClick={handleSave}

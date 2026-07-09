@@ -551,7 +551,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
         {/* 확인 버튼 */}
         <div
           className="fixed bottom-0 left-1/2 flex w-full max-w-[390px] -translate-x-1/2 justify-center px-5 pb-8 pt-4"
-          style={{ background: "linear-gradient(to top, #FAF8F4 65%, transparent)" }}
+          style={{ background: "linear-gradient(to top, #FAF8F4 65%, transparent)", paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}
         >
           <button
             onClick={handleConfirm}

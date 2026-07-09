@@ -148,7 +148,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
             {metaLabel && (
               <div className="inline-flex h-7 max-w-[160px] items-center gap-1.5 rounded-[999px] border border-[rgba(120,112,100,0.16)] bg-transparent px-3">
                 <SourceIcon size={14} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
-                <span className="truncate text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>{metaLabel}</span>
+                <span className="min-w-0 truncate text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>{metaLabel}</span>
               </div>
             )}
             <div className="flex items-center gap-1">
@@ -163,7 +163,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
 
           <section className="mt-7">
             <h1
-              className="text-[18px] font-medium leading-[26px] text-[rgba(50,44,34,0.8)]"
+              className="break-words text-[18px] font-medium leading-[26px] text-[rgba(50,44,34,0.8)]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
               {fragment.title}
@@ -179,7 +179,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
                 내 메모
               </span>
               <p
-                className="text-[14px] font-normal leading-[22px] text-[rgba(50,44,34,0.8)]"
+                className="break-words text-[14px] font-normal leading-[22px] text-[rgba(50,44,34,0.8)]"
                 style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
               >
                 {trimmedMemo}
@@ -253,7 +253,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
                 >
                   <ExternalLink size={13} className="shrink-0 text-[rgba(160,152,140,0.65)]" strokeWidth={1.8} />
                   <span
-                    className="truncate text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]"
+                    className="min-w-0 truncate text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]"
                     style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
                   >
                     {fragment.url.replace(/^https?:\/\//, "")}
@@ -269,6 +269,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
           className="fixed bottom-0 left-1/2 flex w-full max-w-[390px] -translate-x-1/2 justify-center px-5 pb-8 pt-4"
           style={{
             background: "linear-gradient(to top, #FAF8F4 65%, transparent)",
+            paddingBottom: "max(2rem, env(safe-area-inset-bottom))",
           }}
         >
           <button

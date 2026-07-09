@@ -204,7 +204,7 @@ const FragmentCard = ({
   };
 
   return (
-    <div ref={rootRef} className="relative home-select-none select-none">
+    <div ref={rootRef} className="relative min-w-0 home-select-none select-none">
       {isMenuOpen && (
       <motion.div
         role="menu"
@@ -262,7 +262,7 @@ const FragmentCard = ({
             }}
         whileTap={{ scale: isMenuOpen ? 1.01 : 0.97 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        className="home-select-none select-none overflow-hidden rounded-[18px] bg-white/90 outline-none cursor-pointer"
+        className="home-select-none min-w-0 select-none overflow-hidden rounded-[18px] bg-white/90 outline-none cursor-pointer"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerEnd}
@@ -282,7 +282,7 @@ const FragmentCard = ({
         <div className="flex flex-col p-3">
           {primaryChip && (
             <span
-              className={`${chipBottomSpacing} flex h-6 items-center self-start rounded-[999px] px-2.5 py-1 text-[11px] font-medium leading-4 text-[rgba(50,44,34,0.68)]`}
+              className={`${chipBottomSpacing} flex h-6 max-w-full items-center self-start truncate rounded-[999px] px-2.5 py-1 text-[11px] font-medium leading-4 text-[rgba(50,44,34,0.68)]`}
               style={{
                 backgroundColor: getPokachipColor(primaryChip),
                 fontFamily: "'Pretendard Variable', sans-serif",
@@ -294,7 +294,7 @@ const FragmentCard = ({
 
           {hasTitle && (
             <p
-              className="line-clamp-2 text-[14px] font-medium leading-[20px] text-[rgba(50,44,34,0.8)]"
+              className="line-clamp-2 break-words text-[14px] font-medium leading-[20px] text-[rgba(50,44,34,0.8)]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
               {fragment.title}
@@ -303,7 +303,7 @@ const FragmentCard = ({
 
           {hasMemo && (
             <p
-              className="mt-1 line-clamp-1 text-[12px] font-normal leading-[17px] text-[rgba(50,44,34,0.65)]"
+              className="mt-1 line-clamp-1 break-words text-[12px] font-normal leading-[17px] text-[rgba(50,44,34,0.65)]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
               {fragment.memo}
