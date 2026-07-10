@@ -58,7 +58,7 @@ const HistoryCard = ({ fragment, eventIcon: EventIcon }: { fragment: Fragment; e
 
   return (
     <Link href={`/fragment/${fragment.id}`}>
-      <div className="rounded-[18px] border border-white/85 bg-white/90 px-4 py-3.5 shadow-[0_6px_18px_rgba(74,63,48,0.08)]">
+      <div className="overflow-hidden rounded-[18px] border border-white/85 bg-white/90 px-4 py-3.5 shadow-[0_6px_18px_rgba(74,63,48,0.08)]">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <EventIcon
@@ -68,7 +68,7 @@ const HistoryCard = ({ fragment, eventIcon: EventIcon }: { fragment: Fragment; e
               aria-hidden="true"
             />
             <p
-              className="min-w-0 flex-1 line-clamp-2 text-[14px] font-medium leading-snug text-[rgba(50,44,34,0.8)]"
+              className="min-w-0 flex-1 overflow-hidden break-words line-clamp-2 text-[14px] font-medium leading-snug text-[rgba(50,44,34,0.8)]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
               {historyText}
@@ -80,22 +80,22 @@ const HistoryCard = ({ fragment, eventIcon: EventIcon }: { fragment: Fragment; e
               aria-hidden="true"
             />
           </div>
-          <div className="mt-2 flex flex-wrap gap-1.5 pl-[21px]">
+          <div className="mt-2 flex min-w-0 flex-wrap gap-1.5 pl-[21px]">
             {chips.length > 0 ? (
               chips.map((chip) => (
                 <span
                   key={chip}
-                  className="inline-flex h-[22px] items-center rounded-full px-2.5 text-[11px] font-medium leading-4 text-[rgba(50,44,34,0.68)]"
+                  className="inline-flex h-[22px] min-w-0 max-w-full items-center overflow-hidden rounded-full px-2.5 text-[11px] font-medium leading-4 text-[rgba(50,44,34,0.68)]"
                   style={{
                     backgroundColor: getPokachipColor(chip),
                     fontFamily: "'Pretendard Variable', sans-serif",
                   }}
                 >
-                  {chip}
+                  <span className="min-w-0 truncate">{chip}</span>
                 </span>
               ))
             ) : (
-              <span className="text-[11px] text-[rgba(120,112,100,0.75)]">{fragment.date}</span>
+              <span className="min-w-0 break-words text-[11px] text-[rgba(120,112,100,0.75)]">{fragment.date}</span>
             )}
           </div>
         </div>
@@ -209,9 +209,9 @@ const HistorySection = ({
 
 const EmptyHistory = () => (
   <div className="mt-10 rounded-[18px] border border-white/85 bg-white/90 px-5 py-10 text-center shadow-[0_6px_18px_rgba(74,63,48,0.06)]">
-    <p className="text-[14px] font-medium text-[rgba(50,44,34,0.8)]">아직 담아둔 조각이 없어요</p>
+    <p className="text-[14px] font-medium text-[rgba(50,44,34,0.8)]">아직 기록이 없어요.</p>
     <p className="mt-2 text-[12px] leading-relaxed text-[rgba(120,112,100,0.75)]">
-      떠오른 생각이나 링크를 먼저 하나 담아보세요.
+      조각을 담으면 이곳에서 다시 들여다볼 수 있어요.
     </p>
   </div>
 );
