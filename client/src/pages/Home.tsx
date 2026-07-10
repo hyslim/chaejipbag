@@ -9,6 +9,10 @@ import { useFragmentImage } from "@/hooks/useFragmentImage";
 import { BottomNav } from "@/components/BottomNav";
 import { copyFragmentShareText, shareFragment, shouldOfferImageShare } from "@/lib/shareFragment";
 
+const IMAGE_SHARE_DELAY_MS = 400;
+
+const delayImageShare = () => new Promise((resolve) => window.setTimeout(resolve, IMAGE_SHARE_DELAY_MS));
+
 const interests = [
   {
     id: "webapp",
@@ -542,7 +546,7 @@ export const Home = (): JSX.Element => {
     if (result === "shared-and-copied") {
       showHomeToast("이미지를 보냈어요. 글은 복사해뒀어요. 입력창에 붙여넣어 주세요.");
     } else if (result === "copied") {
-      showHomeToast("공유 내용을 복사했어요");
+      showHomeToast("글을 복사했어요. 원하는 곳에 붙여넣어 주세요.");
     } else if (result === "failed") {
       showHomeToast("공유할 수 없었어요");
     }
@@ -550,6 +554,25 @@ export const Home = (): JSX.Element => {
 
   const performShare = async (fragment: Fragment) => {
     handleShareResult(await shareFragment(fragment));
+  };
+
+  const handleImageShareWithTextCopy = async (fragment: Fragment) => {
+    const copyResult = await copyFragmentShareText(fragment);
+    if (copyResult !== "copied") {
+      showHomeToast("글 복사에 실패했어요. 글만 복사를 다시 시도해 주세요.");
+      return;
+    }
+
+    showHomeToast("글을 먼저 복사했어요. 이제 이미지를 보낼게요.");
+    await delayImageShare();
+
+    const shareResult = await shareFragment(fragment);
+    if (shareResult === "shared" || shareResult === "shared-and-copied") {
+      const postCopyResult = await copyFragmentShareText(fragment);
+      handleShareResult(postCopyResult === "copied" ? "shared-and-copied" : shareResult);
+      return;
+    }
+    handleShareResult(shareResult);
   };
 
   const handleShareFragment = (fragment: Fragment) => {
@@ -939,7 +962,7 @@ export const Home = (): JSX.Element => {
                   onClick={() => {
                     const fragment = shareSheetFragment;
                     setShareSheetFragment(null);
-                    void performShare(fragment);
+                    void handleImageShareWithTextCopy(fragment);
                   }}
                   className="h-12 rounded-full bg-[#8e88ed] text-[14px] font-semibold text-white"
                 >
