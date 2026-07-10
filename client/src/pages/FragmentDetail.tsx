@@ -8,7 +8,7 @@ import { useFragmentImage } from "@/hooks/useFragmentImage";
 import { copyFragmentShareText, shareFragment, shouldOfferImageShare } from "@/lib/shareFragment";
 
 const sourceIconColor = "rgba(120,112,100,0.65)";
-const IMAGE_SHARE_DELAY_MS = 400;
+const IMAGE_SHARE_DELAY_MS = 700;
 
 const delayImageShare = () => new Promise((resolve) => window.setTimeout(resolve, IMAGE_SHARE_DELAY_MS));
 
@@ -41,6 +41,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [isShareSheetOpen, setIsShareSheetOpen] = useState(false);
+  const [shareSheetStatus, setShareSheetStatus] = useState<"idle" | "copying" | "copied">("idle");
   const fragment = getFragment(params.id);
   const imageUrl = useFragmentImage(fragment);
 
@@ -99,14 +100,20 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   };
 
   const handleImageShareWithTextCopy = async () => {
+    if (shareSheetStatus !== "idle") return;
+
+    setShareSheetStatus("copying");
     const copyResult = await copyFragmentShareText(fragment);
     if (copyResult !== "copied") {
+      setShareSheetStatus("idle");
       showDetailToast("글 복사에 실패했어요. 글만 복사를 다시 시도해 주세요.");
       return;
     }
 
-    showDetailToast("글을 먼저 복사했어요. 이제 이미지를 보낼게요.");
+    setShareSheetStatus("copied");
     await delayImageShare();
+    setIsShareSheetOpen(false);
+    setShareSheetStatus("idle");
 
     const shareResult = await shareFragment(fragment);
     if (shareResult === "shared" || shareResult === "shared-and-copied") {
@@ -119,6 +126,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
 
   const handleShare = () => {
     if (shouldOfferImageShare(fragment)) {
+      setShareSheetStatus("idle");
       setIsShareSheetOpen(true);
       return;
     }
@@ -358,7 +366,9 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
             role="dialog"
             aria-modal="true"
             aria-labelledby="detail-image-share-title"
-            onClick={() => setIsShareSheetOpen(false)}
+            onClick={() => {
+              if (shareSheetStatus === "idle") setIsShareSheetOpen(false);
+            }}
           >
             <div
               className="w-full rounded-t-[24px] bg-[#FFFEFB] px-5 pb-6 pt-5 shadow-[0_-16px_48px_rgba(60,50,40,0.16)]"
@@ -371,28 +381,35 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
                 그래서 제목·메모·원본 링크는 먼저 복사해둘게요.
               </p>
               <p className="mt-2 text-[13px] leading-[20px] text-[#787064b0]">이미지를 보낸 뒤, 입력창에 붙여넣어 주세요.</p>
+              {shareSheetStatus === "copied" && (
+                <p className="mt-3 rounded-[14px] bg-[#F1F0FF] px-4 py-3 text-center text-[13px] font-semibold leading-[19px] text-[#6f68d8]">
+                  글이 복사됐어요. 이미지를 보낸 뒤 입력창에 붙여넣어 주세요.
+                </p>
+              )}
               <div className="mt-5 flex flex-col gap-2">
                 <button
                   type="button"
+                  disabled={shareSheetStatus !== "idle"}
                   onClick={() => {
-                    setIsShareSheetOpen(false);
                     void handleImageShareWithTextCopy();
                   }}
-                  className="h-12 rounded-full bg-[#8e88ed] text-[14px] font-semibold text-white"
+                  className={`h-12 rounded-full bg-[#8e88ed] text-[14px] font-semibold text-white transition ${shareSheetStatus !== "idle" ? "opacity-80" : ""}`}
                 >
-                  이미지 공유하고 글 복사
+                  {shareSheetStatus === "copied" ? "글 복사 완료! 이미지를 보낼게요" : shareSheetStatus === "copying" ? "글 복사 중..." : "글 먼저 복사하고 이미지 공유"}
                 </button>
                 <button
                   type="button"
+                  disabled={shareSheetStatus !== "idle"}
                   onClick={() => {
                     setIsShareSheetOpen(false);
+                    setShareSheetStatus("idle");
                     void handleCopyShareText();
                   }}
-                  className="h-12 rounded-full border border-[#0000000a] bg-[#FAF8F4] text-[14px] font-semibold text-[#787064]"
+                  className="h-12 rounded-full border border-[#0000000a] bg-[#FAF8F4] text-[14px] font-semibold text-[#787064] disabled:opacity-60"
                 >
                   글만 복사
                 </button>
-                <button type="button" onClick={() => setIsShareSheetOpen(false)} className="h-11 text-[13px] font-medium text-[#a0988c]">취소</button>
+                <button type="button" disabled={shareSheetStatus !== "idle"} onClick={() => { setIsShareSheetOpen(false); setShareSheetStatus("idle"); }} className="h-11 text-[13px] font-medium text-[#a0988c] disabled:opacity-60">취소</button>
               </div>
             </div>
           </div>
