@@ -283,22 +283,22 @@ const FragmentCard = ({
           />
         )}
 
-        <div className="flex flex-col p-3">
+        <div className="flex min-w-0 flex-col p-3">
           {primaryChip && (
             <span
-              className={`${chipBottomSpacing} flex h-6 max-w-full items-center self-start truncate rounded-[999px] px-2.5 py-1 text-[11px] font-medium leading-4 text-[rgba(50,44,34,0.68)]`}
+              className={`${chipBottomSpacing} flex h-6 min-w-0 max-w-full items-center self-start overflow-hidden rounded-[999px] px-2.5 py-1 text-[11px] font-medium leading-4 text-[rgba(50,44,34,0.68)]`}
               style={{
                 backgroundColor: getPokachipColor(primaryChip),
                 fontFamily: "'Pretendard Variable', sans-serif",
               }}
             >
-              {primaryChip}
+              <span className="min-w-0 truncate">{primaryChip}</span>
             </span>
           )}
 
           {hasTitle && (
             <p
-              className="line-clamp-2 break-words text-[14px] font-medium leading-[20px] text-[rgba(50,44,34,0.8)]"
+              className="min-w-0 overflow-hidden break-words line-clamp-2 text-[14px] font-medium leading-[20px] text-[rgba(50,44,34,0.8)]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
               {fragment.title}
@@ -307,16 +307,16 @@ const FragmentCard = ({
 
           {hasMemo && (
             <p
-              className="mt-1 line-clamp-1 break-words text-[12px] font-normal leading-[17px] text-[rgba(50,44,34,0.65)]"
+              className="mt-1 min-w-0 overflow-hidden break-words line-clamp-1 text-[12px] font-normal leading-[17px] text-[rgba(50,44,34,0.65)]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
               {fragment.memo}
             </p>
           )}
 
-          <div className={`${metaTopSpacing} flex items-center gap-1.5 text-[12px] leading-[17px] text-[rgba(120,112,100,0.65)]`}>
+          <div className={`${metaTopSpacing} flex min-w-0 items-center gap-1.5 text-[12px] leading-[17px] text-[rgba(120,112,100,0.65)]`}>
             <SourceIcon size={12} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
-            <span className="truncate" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
+            <span className="min-w-0 truncate" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
               {getFragmentDisplayTime(fragment)}
             </span>
           </div>
@@ -369,6 +369,23 @@ const SearchResultCard = ({ fragment }: { fragment: Fragment }) => {
     </Link>
   );
 };
+
+const HomeEmptyState = ({ title, description }: { title: string; description: string }) => (
+  <div className="flex min-h-[220px] flex-col items-center justify-center px-5 pb-[260px] pt-8 text-center">
+    <p
+      className="text-[15px] font-medium leading-[22px] text-[rgba(50,44,34,0.72)]"
+      style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+    >
+      {title}
+    </p>
+    <p
+      className="mt-2 text-[12px] leading-relaxed text-[rgba(120,112,100,0.75)]"
+      style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+    >
+      {description}
+    </p>
+  </div>
+);
 
 export const Home = (): JSX.Element => {
   const { fragments, deleteFragment } = useFragments();
@@ -863,14 +880,14 @@ export const Home = (): JSX.Element => {
                         onClick={() => selectHomeFilter(chip)}
                         whileTap={{ scale: 0.9 }}
                         transition={{ type: "spring", stiffness: 500, damping: 20 }}
-                        className="home-select-none select-none box-border inline-flex h-[29px] shrink-0 snap-start items-center justify-center gap-2.5 rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3.5 py-[6px] text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
+                        className="home-select-none select-none box-border inline-flex h-[29px] min-w-0 max-w-[calc(100%-32px)] shrink-0 snap-start items-center justify-center gap-2.5 overflow-hidden rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3.5 py-[6px] text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
                         style={{
                           backgroundColor: getColorWithAlpha(backgroundColor, 0.5),
                           boxShadow: "0 2px 4px 0 rgba(180,196,244,0.30), inset 0 1px 0 0 rgba(255,255,255,0.58)",
                           fontFamily: "'Pretendard Variable', sans-serif",
                         }}
                       >
-                        {chip}
+                        <span className="min-w-0 truncate">{chip}</span>
                       </motion.button>
                     );
                   })}
@@ -890,10 +907,10 @@ export const Home = (): JSX.Element => {
         >
           {/* 오늘 모은 조각들 헤더 */}
           <div className="px-4 mb-3 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-1.5">
+            <div className="flex min-w-0 items-center gap-1.5">
               <img src="/figmaAssets/glass.svg" alt="" className="h-[14px] w-[10px]" />
               <span
-                className="text-sm font-semibold text-[#787064bf]"
+                className="min-w-0 truncate text-sm font-semibold text-[#787064bf]"
                 style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
               >
                 {selectedChip ? `${selectedChip} · ${visibleFragments.length}개` : "오늘 모은 조각들"}
@@ -912,36 +929,48 @@ export const Home = (): JSX.Element => {
           </div>
 
           {/* 2열 카드 목록 */}
-          <div className="px-4 pb-[260px]">
-            <div className="flex gap-3">
-              <div className="flex min-w-0 flex-1 flex-col gap-3">
-                {leftColumnFragments.map((fragment) => (
-                  <FragmentCard
-                    key={fragment.id}
-                    fragment={fragment}
-                    isMenuOpen={openMenuFragmentId === fragment.id}
-                    onOpenMenu={() => setOpenMenuFragmentId(fragment.id)}
-                    onCloseMenu={() => setOpenMenuFragmentId(null)}
-                    onDelete={() => handleDeleteFragment(fragment.id)}
-                    onShare={() => handleShareFragment(fragment)}
-                  />
-                ))}
-              </div>
-              <div className="flex min-w-0 flex-1 flex-col gap-3">
-                {rightColumnFragments.map((fragment) => (
-                  <FragmentCard
-                    key={fragment.id}
-                    fragment={fragment}
-                    isMenuOpen={openMenuFragmentId === fragment.id}
-                    onOpenMenu={() => setOpenMenuFragmentId(fragment.id)}
-                    onCloseMenu={() => setOpenMenuFragmentId(null)}
-                    onDelete={() => handleDeleteFragment(fragment.id)}
-                    onShare={() => handleShareFragment(fragment)}
-                  />
-                ))}
+          {visibleFragments.length > 0 ? (
+            <div className="px-4 pb-[260px]">
+              <div className="flex gap-3">
+                <div className="flex min-w-0 flex-1 flex-col gap-3">
+                  {leftColumnFragments.map((fragment) => (
+                    <FragmentCard
+                      key={fragment.id}
+                      fragment={fragment}
+                      isMenuOpen={openMenuFragmentId === fragment.id}
+                      onOpenMenu={() => setOpenMenuFragmentId(fragment.id)}
+                      onCloseMenu={() => setOpenMenuFragmentId(null)}
+                      onDelete={() => handleDeleteFragment(fragment.id)}
+                      onShare={() => handleShareFragment(fragment)}
+                    />
+                  ))}
+                </div>
+                <div className="flex min-w-0 flex-1 flex-col gap-3">
+                  {rightColumnFragments.map((fragment) => (
+                    <FragmentCard
+                      key={fragment.id}
+                      fragment={fragment}
+                      isMenuOpen={openMenuFragmentId === fragment.id}
+                      onOpenMenu={() => setOpenMenuFragmentId(fragment.id)}
+                      onCloseMenu={() => setOpenMenuFragmentId(null)}
+                      onDelete={() => handleDeleteFragment(fragment.id)}
+                      onShare={() => handleShareFragment(fragment)}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          ) : selectedChip ? (
+            <HomeEmptyState
+              title="이 기억 조각에 담긴 조각이 아직 없어요."
+              description="다른 조각을 보거나 가방으로 돌아가보세요."
+            />
+          ) : (
+            <HomeEmptyState
+              title="아직 담긴 조각이 없어요."
+              description="마음에 걸린 것부터 하나씩 담아보세요."
+            />
+          )}
         </section>
           </>
         )}
