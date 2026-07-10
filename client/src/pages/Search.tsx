@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Link, useLocation } from "wouter";
+import { useRef, useState, type FormEvent } from "react";
+import { X } from "lucide-react";
+import { Link } from "wouter";
 import { getPokachipColor, normalizePokachipName, type Fragment } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 
@@ -33,8 +34,8 @@ const SearchCard = ({ fragment }: { fragment: Fragment }) => (
 );
 
 export const Search = () => {
-  const [, navigate] = useLocation();
   const { fragments } = useFragments();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const normalizedQuery = query.trim().toLocaleLowerCase("ko-KR");
   const recentMemoryPieces = Array.from(
@@ -45,6 +46,15 @@ export const Search = () => {
         .filter(Boolean)
     )
   ).slice(0, 8);
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    inputRef.current?.blur();
+  };
+
+  const clearQuery = () => {
+    setQuery("");
+  };
+
   const results = normalizedQuery
     ? fragments.filter((fragment) => {
         const searchable = [
@@ -64,20 +74,31 @@ export const Search = () => {
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
       <section className="min-h-screen w-full max-w-[390px] bg-[#FFFEFB] px-4 pb-12 pt-6" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
-        <button type="button" onClick={() => navigate("/")} className="mb-6 text-[13px] text-[#787064b2]">
-          ‹ 홈
-        </button>
         <h1 className="text-[24px] font-medium text-[#353a69cc]">조각 찾기</h1>
-        <div className="mt-5 flex items-center gap-2 rounded-2xl border border-[#FAF7F2] bg-white px-4 py-3 shadow-[0_4px_14px_rgba(74,63,48,0.05)]">
+        <form onSubmit={handleSearchSubmit} className="mt-5 flex items-center gap-2 rounded-2xl border border-[#FAF7F2] bg-white px-4 py-3 shadow-[0_4px_14px_rgba(74,63,48,0.05)]">
           <span aria-hidden="true" className="text-[#a0988c80]">⌕</span>
           <input
+            ref={inputRef}
+            type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="그 파란 거, 조명, 블렌더..."
             autoComplete="off"
+            enterKeyHint="search"
             className="min-w-0 flex-1 bg-transparent text-[14px] text-[#3a3228] outline-none placeholder:text-[#a0988c80]"
           />
-        </div>
+          {query && (
+            <button
+              type="button"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={clearQuery}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#a0988c80]"
+              aria-label="Clear search"
+            >
+              <X size={15} strokeWidth={2} aria-hidden="true" />
+            </button>
+          )}
+        </form>
 
         {!normalizedQuery ? (
           <div className="mt-6">
