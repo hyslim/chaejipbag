@@ -247,7 +247,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
             {metaLabel && (
               <div className="inline-flex h-7 max-w-[160px] items-center gap-1.5 rounded-[999px] border border-[rgba(120,112,100,0.16)] bg-transparent px-3">
                 <SourceIcon size={14} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
-                <span className="truncate text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
+                <span className="min-w-0 truncate text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
                   {metaLabel}
                 </span>
               </div>
@@ -387,18 +387,18 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
                 >
                   선택한 조각
                 </span>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex min-w-0 flex-wrap gap-1.5">
                   {selectedChips.map((label) => (
                     <div
                       key={label}
-                      className="flex h-[30px] items-center gap-1 rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3 py-1"
+                      className="flex h-[30px] min-w-0 max-w-full items-center gap-1 rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3 py-1"
                       style={{
                         backgroundColor: getPokachipColor(label),
                         boxShadow: "0 2px 4px 0 rgba(180,196,244,0.28), inset 0 1px 0 0 rgba(255,255,255,0.58)",
                       }}
                     >
                       <span
-                        className="text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
+                        className="min-w-0 truncate text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
                         style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
                       >
                         {label}
@@ -425,20 +425,20 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
                 최근 사용
               </span>
               {visibleRecent.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex min-w-0 flex-wrap gap-1.5">
                   {visibleRecent.map((label) => (
                     <button
                       key={label}
                       type="button"
                       onClick={() => toggleChip(label)}
-                      className="h-[30px] rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3 text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
+                      className="h-[30px] min-w-0 max-w-full rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3 text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
                       style={{
                         backgroundColor: getPokachipColor(label),
                         boxShadow: "0 2px 4px 0 rgba(180,196,244,0.24), inset 0 1px 0 0 rgba(255,255,255,0.58)",
                       }}
                     >
                       <span
-                        className="text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
+                        className="min-w-0 truncate text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
                         style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
                       >
                         {label}
@@ -503,7 +503,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
                       event.preventDefault();
                       selectCandidate(label);
                     }}
-                    className={`flex w-full items-center px-4 py-2.5 text-left text-[13px] text-[#5a5248] ${
+                    className={`flex w-full min-w-0 items-center overflow-hidden px-4 py-2.5 text-left text-[13px] text-[#5a5248] ${
                       index > 0 ? "border-t border-[#00000008]" : ""
                     }`}
                     style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
@@ -534,7 +534,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="youtube.com/watch?v="
-                className="flex-1 bg-transparent text-[12px] font-normal leading-[17px] text-[rgba(50,44,34,0.8)] placeholder:text-[rgba(120,112,100,0.6)] outline-none"
+                className="min-w-0 flex-1 bg-transparent text-[12px] font-normal leading-[17px] text-[rgba(50,44,34,0.8)] placeholder:text-[rgba(120,112,100,0.6)] outline-none"
                 style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
               />
             </div>

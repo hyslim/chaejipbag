@@ -259,21 +259,21 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
               >
                 기억 조각
               </span>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex min-w-0 flex-wrap gap-1.5">
                 {fragment.pokachips.map((chip) => {
                   const normalizedChip = normalizePokachipName(chip);
 
                   return (
                     <span
                       key={chip}
-                      className="flex h-[30px] items-center rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3 text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
+                      className="flex h-[30px] min-w-0 max-w-full items-center overflow-hidden rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3 text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
                       style={{
                         backgroundColor: getPokachipColor(normalizedChip),
                         fontFamily: "'Pretendard Variable', sans-serif",
                         boxShadow: "0 2px 4px 0 rgba(180,196,244,0.28), inset 0 1px 0 0 rgba(255,255,255,0.58)",
                       }}
                     >
-                      {normalizedChip}
+                      <span className="min-w-0 truncate">{normalizedChip}</span>
                     </span>
                   );
                 })}
@@ -297,7 +297,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
                   href={fragment.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-3 flex items-center gap-2 rounded-[14px] border border-[rgba(120,112,100,0.16)] bg-[#FFFFFF] px-4 py-3"
+                  className="mt-3 flex min-w-0 items-center gap-2 rounded-[14px] border border-[rgba(120,112,100,0.16)] bg-[#FFFFFF] px-4 py-3"
                 >
                   <ExternalLink size={13} className="shrink-0 text-[rgba(160,152,140,0.65)]" strokeWidth={1.8} />
                   <span

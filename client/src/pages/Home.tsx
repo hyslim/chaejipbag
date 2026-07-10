@@ -334,11 +334,11 @@ const SearchResultCard = ({ fragment }: { fragment: Fragment }) => {
       <motion.div
         whileTap={{ scale: 0.97 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        className="home-select-none select-none min-h-[104px] rounded-[14px] border border-white/85 bg-white/90 px-3.5 py-3 shadow-[0_6px_18px_rgba(74,63,48,0.08)]"
+        className="home-select-none min-h-[104px] min-w-0 select-none overflow-hidden rounded-[14px] border border-white/85 bg-white/90 px-3.5 py-3 shadow-[0_6px_18px_rgba(74,63,48,0.08)]"
       >
         {primaryChip && (
           <span
-            className="mb-2 inline-flex h-[20px] items-center rounded-full px-2.5 text-[10px] font-medium text-[#5a5248b0]"
+            className="mb-2 inline-flex h-[20px] min-w-0 max-w-full items-center overflow-hidden rounded-full px-2.5 text-[10px] font-medium text-[#5a5248b0]"
             style={{
               backgroundColor: getPokachipColor(primaryChip),
               fontFamily: "'Pretendard Variable', sans-serif",
@@ -348,22 +348,22 @@ const SearchResultCard = ({ fragment }: { fragment: Fragment }) => {
           </span>
         )}
         <p
-          className="line-clamp-2 text-[12px] font-semibold leading-[1.55] text-[#3a3228]"
+          className="min-w-0 overflow-hidden break-words line-clamp-2 text-[12px] font-semibold leading-[1.55] text-[#3a3228]"
           style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
         >
           {fragment.title}
         </p>
         {shouldShowMemoPreview(fragment) && (
           <p
-            className="mt-1 line-clamp-1 text-[10px] leading-snug text-[#8f877c99]"
+            className="mt-1 min-w-0 overflow-hidden break-words line-clamp-1 text-[10px] leading-snug text-[#8f877c99]"
             style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
           >
             {fragment.memo}
           </p>
         )}
-        <div className="mt-2 flex items-center gap-1.5 text-[10px] text-[rgba(120,112,100,0.65)]">
+        <div className="mt-2 flex min-w-0 items-center gap-1.5 text-[10px] text-[rgba(120,112,100,0.65)]">
           <SourceIcon size={12} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
-          <span className="truncate" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>{getFragmentDisplayTime(fragment)}</span>
+          <span className="min-w-0 truncate" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>{getFragmentDisplayTime(fragment)}</span>
         </div>
       </motion.div>
     </Link>

@@ -331,7 +331,7 @@ export const QuickSave = () => {
 
             <div className="mt-2.5 rounded-[18px] border border-[#FAF7F2] bg-white px-4 pb-2.5 pt-2.5">
               <span className="block text-[11px] font-medium text-[rgba(120,112,100,0.52)]">URL</span>
-              <p className="mt-1 truncate text-[13px] text-[rgba(74,69,64,0.72)]">
+              <p className="mt-1 min-w-0 break-all text-[13px] text-[rgba(74,69,64,0.72)]">
                 {sharedUrl || "원본 링크 없음"}
               </p>
             </div>
@@ -381,14 +381,14 @@ export const QuickSave = () => {
                   <span className="text-[11px] font-medium tracking-[0.5px] text-[rgba(120,112,100,0.55)]">
                     선택한 조각
                   </span>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex min-w-0 flex-wrap gap-1.5">
                     {selectedChips.map((chip) => (
                       <div
                         key={chip}
-                        className="flex items-center gap-1 rounded-full border border-white/70 px-3 py-1 text-[12px] font-medium text-[#5a5248b0] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
+                        className="flex min-w-0 max-w-full items-center gap-1 rounded-full border border-white/70 px-3 py-1 text-[12px] font-medium text-[#5a5248b0] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
                         style={{ backgroundColor: getPokachipColor(chip) }}
                       >
-                        <span>{chip}</span>
+                        <span className="min-w-0 truncate">{chip}</span>
                         <button
                           type="button"
                           onClick={() => removeChip(chip)}
@@ -408,16 +408,16 @@ export const QuickSave = () => {
                   최근 사용
                 </span>
                 {visibleRecentChips.length > 0 ? (
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex min-w-0 flex-wrap gap-1.5">
                     {visibleRecentChips.map((chip) => (
                       <button
                         key={chip}
                         type="button"
                         onClick={() => toggleChip(chip)}
-                        className="h-[30px] rounded-[999px] border border-white/70 px-3 text-[12px] font-medium text-[#5a5248b0] shadow-[inset_0_1px_0_rgba(255,255,255,0.68)]"
+                        className="h-[30px] min-w-0 max-w-full rounded-[999px] border border-white/70 px-3 text-[12px] font-medium text-[#5a5248b0] shadow-[inset_0_1px_0_rgba(255,255,255,0.68)]"
                         style={{ backgroundColor: getPokachipColor(chip) }}
                       >
-                        {chip}
+                        <span className="block min-w-0 truncate">{chip}</span>
                       </button>
                     ))}
                   </div>
@@ -469,9 +469,9 @@ export const QuickSave = () => {
                           setChipInput("");
                           setIsInputActive(false);
                         }}
-                        className={"flex w-full items-center px-4 py-2.5 text-left text-[13px] text-[#5a5248] " + (index > 0 ? "border-t border-[#00000008]" : "")}
+                        className={"flex w-full min-w-0 items-center px-4 py-2.5 text-left text-[13px] text-[#5a5248] " + (index > 0 ? "border-t border-[#00000008]" : "")}
                       >
-                        {chip}
+                        <span className="min-w-0 truncate">{chip}</span>
                       </button>
                     ))}
                   </div>

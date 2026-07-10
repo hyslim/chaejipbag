@@ -366,18 +366,18 @@ export const FragmentCreate = () => {
                 >
                   선택한 조각
                 </span>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex min-w-0 flex-wrap gap-1.5">
                   {selectedChips.map((label) => (
                     <div
                       key={label}
-                      className="flex items-center gap-1 rounded-full border border-white/70 px-3 py-1"
+                      className="flex min-w-0 max-w-full items-center gap-1 rounded-full border border-white/70 px-3 py-1"
                       style={{
                         backgroundColor: getPokachipColor(label),
                         boxShadow: `0 1px 4px ${getPokachipShadowColor(label)}, inset 0 1px 0 rgba(255,255,255,0.8)`,
                       }}
                     >
                       <span
-                        className="text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
+                        className="min-w-0 truncate text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
                         style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
                       >
                         {label}
@@ -401,20 +401,20 @@ export const FragmentCreate = () => {
                 최근 사용
               </span>
               {visibleRecentChips.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex min-w-0 flex-wrap gap-1.5">
                   {visibleRecentChips.map((label) => (
                     <button
                       key={label}
                       type="button"
                       onClick={() => toggleChip(label)}
-                      className="flex h-[30px] items-center rounded-[999px] border border-white/70 px-3"
+                      className="flex h-[30px] min-w-0 max-w-full items-center rounded-[999px] border border-white/70 px-3"
                       style={{
                         backgroundColor: getPokachipColor(label),
                         boxShadow: `0 1px 4px ${getPokachipShadowColor(label)}, inset 0 1px 0 rgba(255,255,255,0.7)`,
                       }}
                     >
                       <span
-                        className="inline-flex h-[17px] items-center text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
+                        className="inline-flex h-[17px] min-w-0 items-center truncate text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
                         style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
                       >
                         {label}
@@ -482,7 +482,7 @@ export const FragmentCreate = () => {
                       event.preventDefault();
                       selectAutocompleteCandidate(label);
                     }}
-                    className={`flex w-full items-center px-4 py-2.5 text-left text-[13px] text-[#5a5248] ${
+                    className={`flex w-full min-w-0 items-center overflow-hidden px-4 py-2.5 text-left text-[13px] text-[#5a5248] ${
                       index > 0 ? "border-t border-[#00000008]" : ""
                     }`}
                     style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
