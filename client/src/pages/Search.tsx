@@ -5,21 +5,22 @@ import { useFragments } from "@/hooks/useFragments";
 
 const SearchCard = ({ fragment }: { fragment: Fragment }) => (
   <Link href={`/fragment/${fragment.id}`}>
-    <div className="rounded-2xl border border-white/80 bg-white/80 p-4 shadow-[0_5px_18px_rgba(74,63,48,0.06)]">
+    <div className="min-w-0 overflow-hidden rounded-2xl border border-white/80 bg-white/80 p-4 shadow-[0_5px_18px_rgba(74,63,48,0.06)]">
       <h2
-        className="line-clamp-2 text-[14px] font-medium leading-snug text-[#3a3228]"
+        className="line-clamp-2 break-words text-[14px] font-medium leading-snug text-[#3a3228]"
         style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
       >
         {fragment.title}
       </h2>
-      {fragment.memo && <p className="mt-2 line-clamp-2 text-[12px] text-[#78706499]">{fragment.memo}</p>}
-      <div className="mt-3 flex flex-wrap gap-1.5">
+      {fragment.memo && <p className="mt-2 line-clamp-2 break-words text-[12px] leading-[18px] text-[#78706499]">{fragment.memo}</p>}
+      <div className="mt-3 flex min-w-0 flex-wrap gap-1.5 overflow-hidden">
         {(fragment.pokachips ?? []).map((chip) => {
           const name = normalizePokachipName(chip);
+          if (!name) return null;
           return (
             <span
               key={chip}
-              className="rounded-full px-2.5 py-1 text-[10px] font-medium text-[#5a5248b0]"
+              className="max-w-full truncate rounded-full px-2.5 py-1 text-[10px] font-medium text-[#5a5248b0]"
               style={{ backgroundColor: getPokachipColor(name) }}
             >
               {name}
@@ -36,7 +37,7 @@ export const Search = () => {
   const { fragments } = useFragments();
   const [query, setQuery] = useState("");
   const normalizedQuery = query.trim().toLocaleLowerCase("ko-KR");
-  const recentChips = Array.from(
+  const recentMemoryPieces = Array.from(
     new Set(
       fragments
         .flatMap((fragment) => fragment.pokachips ?? [])
@@ -81,22 +82,26 @@ export const Search = () => {
         {!normalizedQuery ? (
           <div className="mt-6">
             <p className="text-[12px] font-medium text-[#78706499]">최근 기억 조각</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {recentChips.map((chip) => (
-                <button
-                  key={chip}
-                  type="button"
-                  onClick={() => setQuery(chip)}
-                  className="rounded-full border border-white/70 px-3.5 py-1.5 text-[12px] font-medium text-[#5a5248b0]"
-                  style={{ backgroundColor: getPokachipColor(chip) }}
-                >
-                  {chip}
-                </button>
-              ))}
-            </div>
+            {recentMemoryPieces.length > 0 ? (
+              <div className="mt-3 flex min-w-0 flex-wrap gap-2 overflow-hidden">
+                {recentMemoryPieces.map((chip) => (
+                  <button
+                    key={chip}
+                    type="button"
+                    onClick={() => setQuery(chip)}
+                    className="max-w-full truncate rounded-full border border-white/70 px-3.5 py-1.5 text-[12px] font-medium text-[#5a5248b0]"
+                    style={{ backgroundColor: getPokachipColor(chip) }}
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-3 break-words text-[13px] leading-[20px] text-[#a0988c]">아직 최근 기억 조각이 없어요. 조각을 담으면 여기에서 빠르게 찾아볼 수 있어요.</p>
+            )}
           </div>
         ) : results.length > 0 ? (
-          <div className="mt-6 flex flex-col gap-3">
+          <div className="mt-6 flex min-w-0 flex-col gap-3">
             {results.map((fragment) => <SearchCard key={fragment.id} fragment={fragment} />)}
           </div>
         ) : (
