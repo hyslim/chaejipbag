@@ -246,9 +246,9 @@ export const FragmentCreate = () => {
   };
 
   return (
-    <main className="flex min-h-screen w-full justify-center bg-[#FFFEFB] sm:bg-[#f3f0ec]">
-      <section className="flex min-h-screen w-full flex-col sm:max-w-[390px] bg-[#FFFEFB]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
-        <header className="flex flex-col border-b border-[rgba(250,247,242,0.5)] bg-[#FCFBF8] px-5 pt-6 pb-3">
+    <main className="flex min-h-screen w-full justify-center bg-[#FAF8F4] sm:bg-[#f3f0ec]">
+      <section className="flex min-h-screen w-full flex-col bg-[#FAF8F4] sm:max-w-[390px]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
+        <header className="flex flex-col border-b border-[rgba(250,247,242,0.5)] bg-[#FAF8F4] px-5 pb-3 pt-6">
           <button
             type="button"
             onClick={() => navigate("/")}
@@ -270,7 +270,7 @@ export const FragmentCreate = () => {
           </h1>
         </header>
 
-        <div className="flex flex-1 flex-col gap-4 bg-[#FFFEFB] px-5 pt-5 pb-36">
+        <div className="flex flex-1 flex-col gap-4 bg-[#FAF8F4] px-5 pb-36 pt-5">
           <div className="overflow-hidden rounded-[18px] border border-[rgba(0,0,0,0.04)] bg-[#FFFFFF] shadow-[0_4px_16px_rgba(80,70,55,0.06)]">
             <textarea
               value={memo}
@@ -497,7 +497,7 @@ export const FragmentCreate = () => {
 
         <div
           className="fixed bottom-0 left-1/2 w-full -translate-x-1/2 px-5 sm:max-w-[390px] pb-8 pt-5"
-          style={{ background: "linear-gradient(to top, #FFFEFB 68%, transparent)", paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}
+          style={{ background: "linear-gradient(to top, #FAF8F4 68%, transparent)", paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}
         >
           <button
             type="button"

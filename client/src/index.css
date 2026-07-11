@@ -204,7 +204,7 @@
 
   body {
     @apply text-foreground;
-    background: #f3f0ec;
+    background: #faf8f4;
     font-feature-settings:
       "rlig" 1,
       "calt" 1;
@@ -214,10 +214,23 @@
   body,
   #root {
     min-height: 100%;
-    background-color: #f3f0ec;
+    background-color: #faf8f4;
+  }
+
+  #root {
+    padding-top: env(safe-area-inset-top);
   }
 
   #root > main {
-    background-color: #f3f0ec;
+    background-color: #faf8f4;
+  }
+
+  @media (min-width: 640px) {
+    html,
+    body,
+    #root,
+    #root > main {
+      background-color: #f3f0ec;
+    }
   }
 }

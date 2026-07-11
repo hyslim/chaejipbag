@@ -72,8 +72,8 @@ export const Search = () => {
     : [];
 
   return (
-    <main className="flex min-h-screen w-full justify-center bg-[#FFFEFB] sm:bg-[#f3f0ec]">
-      <section className="min-h-screen w-full bg-[#FFFEFB] px-4 pb-[calc(3rem+env(safe-area-inset-bottom))] pt-6 sm:max-w-[390px]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
+    <main className="flex min-h-screen w-full justify-center bg-[#FAF8F4] sm:bg-[#f3f0ec]">
+      <section className="min-h-screen w-full bg-[#FAF8F4] px-4 pb-[calc(3rem+env(safe-area-inset-bottom))] pt-6 sm:max-w-[390px]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
         <h1 className="text-[24px] font-medium text-[#353a69cc]">조각 찾기</h1>
         <form onSubmit={handleSearchSubmit} className="mt-5 flex items-center gap-2 rounded-2xl border border-[#FAF7F2] bg-white px-4 py-3 shadow-[0_4px_14px_rgba(74,63,48,0.05)]">
           <span aria-hidden="true" className="text-[#a0988c80]">⌕</span>

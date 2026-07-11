@@ -224,7 +224,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
       <section className="flex min-h-screen w-full flex-col sm:max-w-[390px] bg-[#FAF8F4]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
 
         {/* 헤더 */}
-        <header className="flex items-center border-b border-[#F5F2ED] bg-[#FFFFFB] px-4 pt-5 pb-4">
+        <header className="flex items-center border-b border-[#F5F2ED] bg-[#FAF8F4] px-4 pb-4 pt-5">
           <button
             onClick={() => navigate(`/fragment/${fragment.id}`)}
             className="flex items-center gap-1.5 text-[rgba(54,58,105,0.7)]"

@@ -53,7 +53,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
     return (
       <main className="flex min-h-screen w-full justify-center bg-[#FAF8F4]">
         <section className="flex min-h-screen w-full flex-col sm:max-w-[390px] bg-[#FAF8F4]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
-          <header className="border-b border-[#F5F2ED] bg-[#FFFFFB] px-5 pt-6 pb-4">
+          <header className="border-b border-[#F5F2ED] bg-[#FAF8F4] px-5 pb-4 pt-6">
             <button
               onClick={() => navigate("/")}
               className="flex items-center gap-1.5 text-[rgba(54,58,105,0.7)]"
@@ -159,7 +159,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
           </motion.div>
         </div>
         {/* 헤더 */}
-        <header className="flex items-center justify-between border-b border-[#F5F2ED] bg-[#FFFFFB] px-5 pt-6 pb-4">
+        <header className="flex items-center justify-between border-b border-[#F5F2ED] bg-[#FAF8F4] px-5 pb-4 pt-6">
           <button
             onClick={() => navigate("/")}
             className="flex items-center gap-1.5 text-[rgba(54,58,105,0.7)]"

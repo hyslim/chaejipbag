@@ -301,8 +301,8 @@ export const QuickSave = () => {
         className="relative min-h-screen w-full overflow-hidden bg-[#FAF8F4] px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-5 sm:max-w-[390px]"
         style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
       >
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-[160px] bg-[#FFFEFB]" />
-        <div className="relative mx-auto flex w-full max-w-[350px] flex-col">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[160px] bg-[#FAF8F4]" />
+        <div className="relative mx-auto flex w-full flex-col sm:max-w-[350px]">
           <header className="flex items-center justify-between py-2">
             <p className="text-[12px] font-medium text-[rgba(120,112,100,0.66)]">QuickSave</p>
             <button
@@ -501,7 +501,7 @@ export const QuickSave = () => {
             onClick={handleSave}
             disabled={!canSave || isSaving}
             aria-disabled={!canSave || isSaving}
-            className="mx-auto flex h-[52px] w-full max-w-[350px] items-center justify-center rounded-full bg-[#8e88ed] text-[15px] font-semibold text-white shadow-[0_8px_24px_rgba(126,135,220,0.28),inset_0_1px_0_rgba(255,255,255,0.4)] disabled:cursor-not-allowed disabled:opacity-40"
+            className="mx-auto flex h-[52px] w-full items-center justify-center rounded-full bg-[#8e88ed] text-[15px] font-semibold text-white shadow-[0_8px_24px_rgba(126,135,220,0.28),inset_0_1px_0_rgba(255,255,255,0.4)] disabled:cursor-not-allowed disabled:opacity-40 sm:max-w-[350px]"
           >
             기억에 담기
           </button>
