@@ -204,7 +204,7 @@
 
   body {
     @apply text-foreground;
-    background: #faf8f4;
+    background: #fffefb;
     font-feature-settings:
       "rlig" 1,
       "calt" 1;
@@ -214,7 +214,7 @@
   body,
   #root {
     min-height: 100%;
-    background-color: #faf8f4;
+    background-color: #fffefb;
   }
 
   #root {

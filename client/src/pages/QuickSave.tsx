@@ -297,7 +297,6 @@ export const QuickSave = () => {
 
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#FAF8F4] sm:bg-[#eee9e1]">
-      <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 h-[env(safe-area-inset-top)] bg-[#FFFEFB]" />
       <section
         className="relative min-h-screen w-full overflow-hidden bg-[#FAF8F4] px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-5 sm:max-w-[390px]"
         style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
@@ -315,7 +314,7 @@ export const QuickSave = () => {
             </button>
           </header>
 
-          <div className="mt-5 rounded-[24px] border border-white/80 bg-[#FFFEFB] px-4 pb-5 pt-4 shadow-[0_14px_42px_rgba(80,70,55,0.13)]">
+          <div className="mt-5 rounded-[24px] border border-white/80 bg-[#FFFFFF] px-4 pb-5 pt-4 shadow-[0_14px_42px_rgba(80,70,55,0.13)]">
             <p className="text-[12px] font-medium text-[rgba(120,112,100,0.72)]">외부에서 주운 조각</p>
             <div className="mt-3 rounded-[18px] bg-[#FAF8F4] px-4 pb-1.5 pt-2.5">
               <span className="block text-[11px] font-medium text-[rgba(120,112,100,0.52)]">제목</span>
@@ -343,7 +342,7 @@ export const QuickSave = () => {
 
 
             {imageDataUrl && (
-              <div className="mt-2.5 overflow-hidden rounded-[18px] border border-white/70 bg-[#FFFEFB] shadow-[0_6px_18px_rgba(80,70,55,0.06)]">
+              <div className="mt-2.5 overflow-hidden rounded-[18px] border border-white/70 bg-[#FFFFFF] shadow-[0_6px_18px_rgba(80,70,55,0.06)]">
                 <img
                   src={imageDataUrl}
                   alt=""

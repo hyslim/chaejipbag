@@ -221,7 +221,6 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
 
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#FAF8F4] sm:bg-[#f3f0ec]">
-      <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 h-[env(safe-area-inset-top)] bg-[#FFFEFB]" />
       <section className="flex min-h-screen w-full flex-col sm:max-w-[390px] bg-[#FAF8F4]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
 
         {/* 헤더 */}
@@ -310,7 +309,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
             </label>
 
             {imageUrl ? (
-              <div className="overflow-hidden rounded-2xl border border-white/70 bg-[#FFFEFB] shadow-[0_6px_18px_rgba(80,70,55,0.06)]">
+              <div className="overflow-hidden rounded-2xl border border-white/70 bg-[#FFFFFF] shadow-[0_6px_18px_rgba(80,70,55,0.06)]">
                 <img
                   src={imageUrl}
                   alt="선택된 이미지 미리보기"

@@ -698,7 +698,7 @@ export const Home = (): JSX.Element => {
         </div>
         {isSearchMode ? (
           <section className="flex min-h-screen flex-1 flex-col bg-[#faf8f4] pb-[calc(15rem+env(safe-area-inset-bottom))]">
-            <header className="border-b border-[#FAF7F2] bg-[#FFFEFB] px-4 py-3">
+            <header className="border-b border-[#F5F2ED] bg-[#FFFEFB] px-4 py-3">
               <div className="flex h-[42px] items-center gap-2 rounded-[14px] bg-[rgba(120,112,100,0.05)] px-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
                 <span aria-hidden="true" className="text-[15px] text-[rgba(120,112,100,0.5)]">
                   ⌕
@@ -809,7 +809,7 @@ export const Home = (): JSX.Element => {
           />
 
           <div className="relative z-10">
-            <header className="flex items-center justify-between px-4 pt-5 pb-3">
+            <header className="flex items-center justify-between border-b border-[#F5F2ED] bg-[#FFFEFB] px-4 pb-3 pt-5">
               <h1
                 className="text-[18px] font-semibold leading-[1.45] text-[#353a69b2]"
                 style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
@@ -985,7 +985,7 @@ export const Home = (): JSX.Element => {
             }}
           >
             <div
-              className="w-full rounded-t-[24px] bg-[#FFFEFB] px-5 pb-6 pt-5 shadow-[0_-16px_48px_rgba(60,50,40,0.16)]"
+              className="w-full rounded-t-[24px] bg-[#FFFFFF] px-5 pb-6 pt-5 shadow-[0_-16px_48px_rgba(60,50,40,0.16)]"
               style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
               onClick={(event) => event.stopPropagation()}
             >
