@@ -230,9 +230,10 @@ export const History = () => {
   }));
 
   return (
-    <main className="flex min-h-screen w-full justify-center bg-[#FAF8F4] sm:bg-[#f3f0ec]">
-      <section className="min-h-screen w-full bg-[#FAF8F4] pb-[calc(220px+env(safe-area-inset-bottom))] sm:max-w-[390px]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
-        <header className="flex flex-col border-b border-[rgba(250,247,242,0.5)] bg-[#FAF8F4] px-5 pb-3 pt-6">
+    <main className="flex min-h-screen w-full justify-center bg-[#FFFEFB] sm:bg-[#f3f0ec]">
+      <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 h-[env(safe-area-inset-top)] bg-[#FFFEFB]" />
+      <section className="min-h-screen w-full bg-[#FFFEFB] pb-[calc(220px+env(safe-area-inset-bottom))] sm:max-w-[390px]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
+        <header className="flex flex-col border-b border-[rgba(250,247,242,0.5)] bg-[#FFFEFB] px-5 pb-3 pt-6">
           <p className="mb-1 text-[13px] font-[550] text-[rgba(120,112,100,0.7)]">다시 꺼내보는 조각들</p>
           <h1
             className="text-[22px] font-medium leading-[1.4] text-[#353a69b2]"
@@ -257,13 +258,13 @@ export const History = () => {
         </div>
 
         {sortedFragments.length > 0 ? (
-          <div className="flex flex-col gap-5 bg-[#FAF8F4] px-5 pt-5 pb-4">
+          <div className="flex flex-col gap-5 bg-[#FFFEFB] px-5 pb-4 pt-5">
             {groupedFragments.map(({ label, fragments }) => (
               <HistorySection key={label} label={label} fragments={fragments} allFragments={sortedFragments} />
             ))}
           </div>
         ) : (
-          <div className="bg-[#FAF8F4] px-5 pt-5 pb-4">
+          <div className="bg-[#FFFEFB] px-5 pb-4 pt-5">
             <EmptyHistory />
           </div>
         )}
