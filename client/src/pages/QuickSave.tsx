@@ -304,20 +304,20 @@ export const QuickSave = () => {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[160px] bg-[#FFFEFB]" />
         <div className="relative mx-auto flex w-full flex-col sm:max-w-[350px]">
           <header className="flex items-center justify-between py-2">
-            <p className="text-[12px] font-medium text-[rgba(120,112,100,0.66)]">QuickSave</p>
+            <p className="text-[18px] font-semibold text-[rgba(54,58,105,0.7)]">QuickSave</p>
             <button
               type="button"
               onClick={() => navigate("/")}
-              className="flex h-8 items-center rounded-full px-2.5 text-[13px] font-medium text-[rgba(120,112,100,0.75)]"
+              className="flex h-8 items-center rounded-full px-2.5 text-[14px] font-medium text-[rgba(120,112,100,0.75)]"
             >
               닫기
             </button>
           </header>
 
           <div className="mt-5 rounded-[24px] border border-white/80 bg-[#FFFFFF] px-4 pb-5 pt-4 shadow-[0_14px_42px_rgba(80,70,55,0.13)]">
-            <p className="text-[12px] font-medium text-[rgba(120,112,100,0.72)]">외부에서 주운 조각</p>
+            <p className="text-[13px] font-medium text-[rgba(120,112,100,0.75)]">외부에서 주운 조각</p>
             <div className="mt-3 rounded-[18px] bg-[#FAF8F4] px-4 pb-1.5 pt-2.5">
-              <span className="block text-[11px] font-medium text-[rgba(120,112,100,0.52)]">제목</span>
+              <span className="block text-[12px] font-medium text-[rgba(120,112,100,0.75)]">제목</span>
               <textarea
                 ref={titleRef}
                 autoFocus={false}
@@ -331,10 +331,10 @@ export const QuickSave = () => {
 
             {sharedUrl && (
               <div className="mt-2.5 flex min-w-0 items-center gap-1.5">
-                <span className="shrink-0 rounded-full bg-[#FAF8F4] px-2 py-1 text-[10px] font-medium text-[rgba(120,112,100,0.58)]">
+                <span className="shrink-0 rounded-full bg-[#FAF8F4] px-2 py-1 text-[11px] font-medium text-[rgba(120,112,100,0.75)]">
                   {"\uC6D0\uBCF8 \uB9C1\uD06C"}
                 </span>
-                <span className="min-w-0 truncate text-[11px] leading-[16px] text-[rgba(120,112,100,0.66)]">
+                <span className="min-w-0 truncate text-[12px] leading-[17px] text-[rgba(50,44,34,0.7)]">
                   {sharedHostname || sharedUrl.replace(/^https?:\/\//, "")}
                 </span>
               </div>
@@ -369,7 +369,7 @@ export const QuickSave = () => {
               onChange={(event) => setMemo(event.target.value)}
               rows={3}
               placeholder="나중에 떠올릴 힌트를 짧게 남겨두세요"
-              className="mt-2 w-full resize-none rounded-[18px] border border-[#FAF7F2] bg-white px-4 pb-2.5 pt-2 text-[14px] leading-[21px] text-[rgba(50,44,34,0.82)] outline-none placeholder:text-[rgba(120,112,100,0.42)]"
+              className="mt-2 w-full resize-none rounded-[18px] border border-[#F5F2ED] bg-white px-4 pb-2.5 pt-2 text-[14px] leading-[21px] text-[rgba(50,44,34,0.8)] outline-none placeholder:text-[rgba(120,112,100,0.55)]"
             />
 
             {saveError && (
@@ -382,7 +382,7 @@ export const QuickSave = () => {
               <label className="text-[12px] font-medium text-[rgba(120,112,100,0.75)]">기억 조각</label>
               {selectedChips.length > 0 && (
                 <div className="flex flex-col gap-2 pt-1">
-                  <span className="text-[11px] font-medium tracking-[0.5px] text-[rgba(120,112,100,0.55)]">
+                  <span className="text-[12px] font-medium tracking-[0.3px] text-[rgba(50,44,34,0.7)]">
                     선택한 조각
                   </span>
                   <div className="flex min-w-0 flex-wrap gap-1.5">
@@ -408,7 +408,7 @@ export const QuickSave = () => {
               )}
 
               <div className="flex flex-col gap-2 pt-1">
-                <span className="text-[11px] font-medium tracking-[0.5px] text-[rgba(120,112,100,0.55)]">
+                <span className="text-[12px] font-medium tracking-[0.3px] text-[rgba(50,44,34,0.7)]">
                   최근 사용
                 </span>
                 {visibleRecentChips.length > 0 ? (
@@ -426,7 +426,7 @@ export const QuickSave = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="py-1 text-[12px] text-[rgba(120,112,100,0.45)]">
+                  <div className="py-1 text-[12px] text-[rgba(50,44,34,0.7)]">
                     최근 사용한 조각이 없어요
                   </div>
                 )}
@@ -434,8 +434,8 @@ export const QuickSave = () => {
 
               {isInputActive ? (
                 <>
-                <div className="flex items-center gap-2 rounded-[16px] border border-[#FAF7F2] bg-white px-4 py-3">
-                  <span className="shrink-0 text-[12px] text-[rgba(120,112,100,0.55)]">+</span>
+                <div className="flex items-center gap-2 rounded-[16px] border border-[#F5F2ED] bg-white px-4 py-3">
+                  <span className="shrink-0 text-[13px] text-[rgba(120,112,100,0.75)]">+</span>
                   <input
                     ref={inputRef}
                     value={chipInput}
@@ -446,7 +446,7 @@ export const QuickSave = () => {
                     }}
                     placeholder="쉼표로 여러 조각 입력"
                     autoComplete="off"
-                    className="min-w-0 flex-1 bg-transparent text-[13px] text-[rgba(50,44,34,0.8)] outline-none placeholder:text-[rgba(120,112,100,0.45)]"
+                    className="min-w-0 flex-1 bg-transparent text-[14px] text-[rgba(50,44,34,0.8)] outline-none placeholder:text-[rgba(120,112,100,0.55)]"
                   />
                   {chipInput.trim() && (
                     <button
@@ -485,23 +485,28 @@ export const QuickSave = () => {
                 <button
                   type="button"
                   onClick={handleActivateInput}
-                  className="flex w-full items-center gap-2 rounded-[16px] border border-[#FAF7F2] bg-white px-4 py-3 text-left"
+                  className="flex w-full items-center gap-2 rounded-[16px] border border-[#F5F2ED] bg-white px-4 py-3 text-left"
                 >
-                  <span className="text-[12px] text-[rgba(120,112,100,0.55)]">+</span>
-                  <span className="text-[13px] text-[rgba(120,112,100,0.55)]">직접 입력</span>
+                  <span className="text-[13px] text-[rgba(120,112,100,0.75)]">+</span>
+                  <span className="text-[14px] text-[rgba(50,44,34,0.7)]">직접 입력</span>
                 </button>
               )}
             </div>
           </div>
         </div>
 
-        <div className="fixed bottom-0 left-1/2 w-full -translate-x-1/2 px-4 sm:max-w-[390px] pb-8 pt-5" style={{ background: "linear-gradient(to top, #FAF8F4 70%, rgba(250,248,244,0))", paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}>
+        <div className="fixed bottom-0 left-1/2 flex w-full -translate-x-1/2 justify-center px-5 pb-8 pt-4 sm:max-w-[390px]" style={{ background: "linear-gradient(to top, #FAF8F4 65%, transparent)", paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}>
           <button
             type="button"
             onClick={handleSave}
             disabled={!canSave || isSaving}
             aria-disabled={!canSave || isSaving}
-            className="mx-auto flex h-[52px] w-full items-center justify-center rounded-full bg-[#8e88ed] text-[15px] font-semibold text-white shadow-[0_8px_24px_rgba(126,135,220,0.28),inset_0_1px_0_rgba(255,255,255,0.4)] disabled:cursor-not-allowed disabled:opacity-40 sm:max-w-[350px]"
+            className="h-[51px] w-[180px] rounded-full border-0 px-[50px] py-[14px] text-[15px] font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
+            style={{
+              background: "linear-gradient(135deg, rgba(130,207,255,0.60) 12%, rgba(90,144,255,0.60) 54%, rgba(139,112,255,0.60) 100%)",
+              boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.70), 0 3px 8px 0 rgba(180,196,244,0.42)",
+              fontFamily: "'Pretendard Variable', sans-serif",
+            }}
           >
             기억에 담기
           </button>
