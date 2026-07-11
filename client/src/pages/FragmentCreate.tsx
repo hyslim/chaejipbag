@@ -246,8 +246,8 @@ export const FragmentCreate = () => {
   };
 
   return (
-    <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
-      <section className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FFFEFB]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
+    <main className="flex min-h-screen w-full justify-center bg-[#FFFEFB] sm:bg-[#f3f0ec]">
+      <section className="flex min-h-screen w-full flex-col sm:max-w-[390px] bg-[#FFFEFB]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
         <header className="flex flex-col border-b border-[rgba(250,247,242,0.5)] bg-[#FCFBF8] px-5 pt-6 pb-3">
           <button
             type="button"
@@ -496,7 +496,7 @@ export const FragmentCreate = () => {
         </div>
 
         <div
-          className="fixed bottom-0 left-1/2 w-full max-w-[390px] -translate-x-1/2 px-5 pb-8 pt-5"
+          className="fixed bottom-0 left-1/2 w-full -translate-x-1/2 px-5 sm:max-w-[390px] pb-8 pt-5"
           style={{ background: "linear-gradient(to top, #FFFEFB 68%, transparent)", paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}
         >
           <button

@@ -52,7 +52,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   if (!fragment) {
     return (
       <main className="flex min-h-screen w-full justify-center bg-[#FAF8F4]">
-        <section className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FAF8F4]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
+        <section className="flex min-h-screen w-full flex-col sm:max-w-[390px] bg-[#FAF8F4]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
           <header className="border-b border-[#F5F2ED] bg-[#FFFFFB] px-5 pt-6 pb-4">
             <button
               onClick={() => navigate("/")}
@@ -143,7 +143,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="relative flex min-h-screen w-full max-w-[390px] flex-col bg-[#FAF8F4]"
+        className="relative flex min-h-screen w-full flex-col sm:max-w-[390px] bg-[#FAF8F4]"
         style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
       >
         <div className="pointer-events-none absolute inset-x-0 top-[31px] z-[70] flex justify-center px-4">
@@ -314,7 +314,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
 
         {/* 하단 공유 버튼 */}
         <div
-          className="fixed bottom-0 left-1/2 flex w-full max-w-[390px] -translate-x-1/2 justify-center px-5 pb-8 pt-4"
+          className="fixed bottom-0 left-1/2 flex w-full -translate-x-1/2 justify-center px-5 sm:max-w-[390px] pb-8 pt-4"
           style={{
             background: "linear-gradient(to top, #FAF8F4 65%, transparent)",
             paddingBottom: "max(2rem, env(safe-area-inset-bottom))",
@@ -341,7 +341,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
             aria-label="이미지 전체보기"
             onClick={() => setIsImageViewerOpen(false)}
           >
-            <div className="relative flex h-full w-full max-w-[390px] items-center justify-center" onClick={(event) => event.stopPropagation()}>
+            <div className="relative flex h-full w-full items-center sm:max-w-[390px] justify-center" onClick={(event) => event.stopPropagation()}>
               <button
                 type="button"
                 onClick={() => setIsImageViewerOpen(false)}
@@ -362,7 +362,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
 
         {isShareSheetOpen && (
           <div
-            className="fixed inset-y-0 left-1/2 z-[80] flex w-full max-w-[390px] -translate-x-1/2 items-end bg-[rgba(32,28,24,0.32)] backdrop-blur-[2px]"
+            className="fixed inset-y-0 left-1/2 z-[80] flex w-full -translate-x-1/2 items-end sm:max-w-[390px] bg-[rgba(32,28,24,0.32)] backdrop-blur-[2px]"
             role="dialog"
             aria-modal="true"
             aria-labelledby="detail-image-share-title"

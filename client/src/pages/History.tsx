@@ -230,8 +230,8 @@ export const History = () => {
   }));
 
   return (
-    <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
-      <section className="min-h-screen w-full max-w-[390px] bg-[#FFFEFB] pb-[220px]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
+    <main className="flex min-h-screen w-full justify-center bg-[#FFFEFB] sm:bg-[#f3f0ec]">
+      <section className="min-h-screen w-full bg-[#FFFEFB] pb-[calc(220px+env(safe-area-inset-bottom))] sm:max-w-[390px]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
         <header className="flex flex-col border-b border-[rgba(250,247,242,0.5)] bg-[#FCFBF8] px-5 pt-6 pb-3">
           <p className="mb-1 text-[13px] font-[550] text-[rgba(120,112,100,0.7)]">다시 꺼내보는 조각들</p>
           <h1

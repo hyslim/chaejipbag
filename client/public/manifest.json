@@ -2,6 +2,7 @@
   "name": "채집가방",
   "short_name": "채집가방",
   "description": "외부에서 발견한 링크와 메모를 빠르게 기억 조각으로 담는 채집가방입니다.",
+  "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

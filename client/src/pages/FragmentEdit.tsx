@@ -71,8 +71,8 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
 
   if (!fragment) {
     return (
-      <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
-        <section className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FAF8F4] px-5 pt-12" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
+      <main className="flex min-h-screen w-full justify-center bg-[#FAF8F4] sm:bg-[#f3f0ec]">
+        <section className="flex min-h-screen w-full flex-col sm:max-w-[390px] bg-[#FAF8F4] px-5 pt-12" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
           <button onClick={() => navigate("/")} className="flex items-center gap-1.5 text-[#787064b2]">
             <ChevronLeft size={16} />
             <span className="text-sm" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>돌아가기</span>
@@ -220,8 +220,8 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
   };
 
   return (
-    <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
-      <section className="flex min-h-screen w-full max-w-[390px] flex-col bg-[#FAF8F4]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
+    <main className="flex min-h-screen w-full justify-center bg-[#FAF8F4] sm:bg-[#f3f0ec]">
+      <section className="flex min-h-screen w-full flex-col sm:max-w-[390px] bg-[#FAF8F4]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
 
         {/* 헤더 */}
         <header className="flex items-center border-b border-[#F5F2ED] bg-[#FFFFFB] px-4 pt-5 pb-4">
@@ -550,7 +550,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
 
         {/* 확인 버튼 */}
         <div
-          className="fixed bottom-0 left-1/2 flex w-full max-w-[390px] -translate-x-1/2 justify-center px-5 pb-8 pt-4"
+          className="fixed bottom-0 left-1/2 flex w-full -translate-x-1/2 justify-center px-5 sm:max-w-[390px] pb-8 pt-4"
           style={{ background: "linear-gradient(to top, #FAF8F4 65%, transparent)", paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}
         >
           <button
