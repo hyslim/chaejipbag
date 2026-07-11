@@ -329,12 +329,16 @@ export const QuickSave = () => {
               />
             </div>
 
-            <div className="mt-2.5 rounded-[18px] border border-[#FAF7F2] bg-white px-4 pb-2.5 pt-2.5">
-              <span className="block text-[11px] font-medium text-[rgba(120,112,100,0.52)]">URL</span>
-              <p className="mt-1 min-w-0 break-all text-[13px] text-[rgba(74,69,64,0.72)]">
-                {sharedUrl || "원본 링크 없음"}
-              </p>
-            </div>
+            {sharedUrl && (
+              <div className="mt-2.5 flex min-w-0 items-center gap-1.5">
+                <span className="shrink-0 rounded-full bg-[#FAF8F4] px-2 py-1 text-[10px] font-medium text-[rgba(120,112,100,0.58)]">
+                  {"\uC6D0\uBCF8 \uB9C1\uD06C"}
+                </span>
+                <span className="min-w-0 truncate text-[11px] leading-[16px] text-[rgba(120,112,100,0.66)]">
+                  {sharedHostname || sharedUrl.replace(/^https?:\/\//, "")}
+                </span>
+              </div>
+            )}
 
 
             {imageDataUrl && (
