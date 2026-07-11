@@ -297,11 +297,12 @@ export const QuickSave = () => {
 
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#FAF8F4] sm:bg-[#eee9e1]">
+      <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 h-[env(safe-area-inset-top)] bg-[#FFFEFB]" />
       <section
         className="relative min-h-screen w-full overflow-hidden bg-[#FAF8F4] px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-5 sm:max-w-[390px]"
         style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
       >
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-[160px] bg-[#FAF8F4]" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[160px] bg-[#FFFEFB]" />
         <div className="relative mx-auto flex w-full flex-col sm:max-w-[350px]">
           <header className="flex items-center justify-between py-2">
             <p className="text-[12px] font-medium text-[rgba(120,112,100,0.66)]">QuickSave</p>

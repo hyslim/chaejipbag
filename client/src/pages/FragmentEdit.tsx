@@ -221,10 +221,11 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
 
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#FAF8F4] sm:bg-[#f3f0ec]">
+      <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 h-[env(safe-area-inset-top)] bg-[#FFFEFB]" />
       <section className="flex min-h-screen w-full flex-col sm:max-w-[390px] bg-[#FAF8F4]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
 
         {/* 헤더 */}
-        <header className="flex items-center border-b border-[#F5F2ED] bg-[#FAF8F4] px-4 pb-4 pt-5">
+        <header className="flex items-center border-b border-[#F5F2ED] bg-[#FFFEFB] px-4 pb-4 pt-5">
           <button
             onClick={() => navigate(`/fragment/${fragment.id}`)}
             className="flex items-center gap-1.5 text-[rgba(54,58,105,0.7)]"
