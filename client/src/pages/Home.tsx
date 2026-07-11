@@ -55,7 +55,7 @@ const interests = [
 const defaultPokachips = ["유리", "파랑", "임시조각"];
 const saveToastStorageKey = "chaejip-save-toast";
 
-const sourceIconColor = "rgba(120,112,100,0.65)";
+const sourceIconColor = "rgba(120,112,100,0.72)";
 
 const getColorWithAlpha = (color: string, alpha: number): string => {
   const rgbaMatch = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
@@ -307,14 +307,14 @@ const FragmentCard = ({
 
           {hasMemo && (
             <p
-              className="mt-1 min-w-0 overflow-hidden break-words line-clamp-1 text-[12px] font-normal leading-[17px] text-[rgba(50,44,34,0.65)]"
+              className="mt-1 min-w-0 overflow-hidden break-words line-clamp-1 text-[12px] font-normal leading-[17px] text-[rgba(50,44,34,0.7)]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
               {fragment.memo}
             </p>
           )}
 
-          <div className={`${metaTopSpacing} flex min-w-0 items-center gap-1.5 text-[12px] leading-[17px] text-[rgba(120,112,100,0.65)]`}>
+          <div className={`${metaTopSpacing} flex min-w-0 items-center gap-1.5 text-[12px] leading-[17px] text-[rgba(120,112,100,0.72)]`}>
             <SourceIcon size={12} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
             <span className="min-w-0 truncate" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
               {getFragmentDisplayTime(fragment)}
@@ -338,7 +338,7 @@ const SearchResultCard = ({ fragment }: { fragment: Fragment }) => {
       >
         {primaryChip && (
           <span
-            className="mb-2 inline-flex h-[20px] min-w-0 max-w-full items-center overflow-hidden rounded-full px-2.5 text-[10px] font-medium text-[#5a5248b0]"
+            className="mb-2 inline-flex h-[22px] min-w-0 max-w-full items-center overflow-hidden rounded-full px-2.5 text-[11px] font-medium text-[#5a5248b0]"
             style={{
               backgroundColor: getPokachipColor(primaryChip),
               fontFamily: "'Pretendard Variable', sans-serif",
@@ -348,20 +348,20 @@ const SearchResultCard = ({ fragment }: { fragment: Fragment }) => {
           </span>
         )}
         <p
-          className="min-w-0 overflow-hidden break-words line-clamp-2 text-[12px] font-semibold leading-[1.55] text-[#3a3228]"
+          className="min-w-0 overflow-hidden break-words line-clamp-2 text-[14px] font-semibold leading-[20px] text-[#3a3228]"
           style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
         >
           {fragment.title}
         </p>
         {shouldShowMemoPreview(fragment) && (
           <p
-            className="mt-1 min-w-0 overflow-hidden break-words line-clamp-1 text-[10px] leading-snug text-[#8f877c99]"
+            className="mt-1 min-w-0 overflow-hidden break-words line-clamp-1 text-[12px] leading-[17px] text-[rgba(50,44,34,0.7)]"
             style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
           >
             {fragment.memo}
           </p>
         )}
-        <div className="mt-2 flex min-w-0 items-center gap-1.5 text-[10px] text-[rgba(120,112,100,0.65)]">
+        <div className="mt-2 flex min-w-0 items-center gap-1.5 text-[12px] leading-[17px] text-[rgba(120,112,100,0.72)]">
           <SourceIcon size={12} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
           <span className="min-w-0 truncate" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>{getFragmentDisplayTime(fragment)}</span>
         </div>
@@ -800,11 +800,11 @@ export const Home = (): JSX.Element => {
         >
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -right-12 -top-14 z-0 h-[178px] w-[330px] opacity-[0.32] blur-[3px]"
+            className="pointer-events-none absolute -right-12 top-[62px] z-0 h-[178px] w-[330px] opacity-[0.32] blur-[3px]"
             style={{
               background: "linear-gradient(110deg, rgba(255,254,251,0.06) 0%, rgba(226,216,244,0.72) 46%, rgba(255,253,249,0.16) 100%)",
               clipPath: "polygon(16% 0, 100% 0, 84% 100%, 0 100%)",
-              transform: "rotate(-13deg)",
+
             }}
           />
 
@@ -830,7 +830,7 @@ export const Home = (): JSX.Element => {
             </header>
 
             {/* 관심사 타일 - 정돈된 3열 x 2행의 기억 조각 */}
-            <div className="px-4 pb-2">
+            <div className="px-4 pb-2 pt-2">
               <div className="grid grid-cols-3 gap-2">
                 {interests.map((interest) => (
                   <button

@@ -13,7 +13,7 @@ const SearchCard = ({ fragment }: { fragment: Fragment }) => (
       >
         {fragment.title}
       </h2>
-      {fragment.memo && <p className="mt-2 line-clamp-2 break-words text-[12px] leading-[18px] text-[#78706499]">{fragment.memo}</p>}
+      {fragment.memo && <p className="mt-2 line-clamp-2 break-words text-[12px] leading-[18px] text-[rgba(50,44,34,0.7)]">{fragment.memo}</p>}
       <div className="mt-3 flex min-w-0 flex-wrap gap-1.5 overflow-hidden">
         {(fragment.pokachips ?? []).map((chip) => {
           const name = normalizePokachipName(chip);
@@ -21,7 +21,7 @@ const SearchCard = ({ fragment }: { fragment: Fragment }) => (
           return (
             <span
               key={chip}
-              className="max-w-full truncate rounded-full px-2.5 py-1 text-[10px] font-medium text-[#5a5248b0]"
+              className="max-w-full truncate rounded-full px-2.5 py-1 text-[11px] font-medium text-[#5a5248b0]"
               style={{ backgroundColor: getPokachipColor(name) }}
             >
               {name}
@@ -78,7 +78,7 @@ export const Search = () => {
           <h1 className="text-[24px] font-medium text-[#353a69cc]">조각 찾기</h1>
         </header>
         <form onSubmit={handleSearchSubmit} className="mt-5 flex items-center gap-2 rounded-2xl border border-[#FAF7F2] bg-white px-4 py-3 shadow-[0_4px_14px_rgba(74,63,48,0.05)]">
-          <span aria-hidden="true" className="text-[#a0988c80]">⌕</span>
+          <span aria-hidden="true" className="text-[rgba(120,112,100,0.65)]">⌕</span>
           <input
             ref={inputRef}
             type="search"
@@ -87,7 +87,7 @@ export const Search = () => {
             placeholder="그 파란 거, 조명, 블렌더..."
             autoComplete="off"
             enterKeyHint="search"
-            className="min-w-0 flex-1 bg-transparent text-[14px] text-[#3a3228] outline-none placeholder:text-[#a0988c80]"
+            className="min-w-0 flex-1 bg-transparent text-[14px] text-[#3a3228] outline-none placeholder:text-[rgba(120,112,100,0.58)]"
           />
           {query && (
             <button
@@ -104,7 +104,7 @@ export const Search = () => {
 
         {!normalizedQuery ? (
           <div className="mt-6">
-            <p className="text-[12px] font-medium text-[#78706499]">최근 기억 조각</p>
+            <p className="text-[12px] font-medium text-[rgba(120,112,100,0.75)]">최근 기억 조각</p>
             {recentMemoryPieces.length > 0 ? (
               <div className="mt-3 flex min-w-0 flex-wrap gap-2 overflow-hidden">
                 {recentMemoryPieces.map((chip) => (

@@ -63,7 +63,7 @@ const HistoryCard = ({ fragment, eventIcon: EventIcon }: { fragment: Fragment; e
           <div className="flex items-center gap-2">
             <EventIcon
               size={13}
-              className="shrink-0 text-[rgba(120,112,100,0.55)]"
+              className="shrink-0 text-[rgba(120,112,100,0.68)]"
               strokeWidth={1.8}
               aria-hidden="true"
             />
@@ -75,7 +75,7 @@ const HistoryCard = ({ fragment, eventIcon: EventIcon }: { fragment: Fragment; e
             </p>
             <ArrowRight
               size={14}
-              className="shrink-0 text-[rgba(120,112,100,0.55)]"
+              className="shrink-0 text-[rgba(120,112,100,0.68)]"
               strokeWidth={1.8}
               aria-hidden="true"
             />
@@ -85,7 +85,7 @@ const HistoryCard = ({ fragment, eventIcon: EventIcon }: { fragment: Fragment; e
               chips.map((chip) => (
                 <span
                   key={chip}
-                  className="inline-flex h-[22px] min-w-0 max-w-full items-center overflow-hidden rounded-full px-2.5 text-[11px] font-medium leading-4 text-[rgba(50,44,34,0.68)]"
+                  className="inline-flex h-6 min-w-0 max-w-full items-center overflow-hidden rounded-full px-2.5 text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
                   style={{
                     backgroundColor: getPokachipColor(chip),
                     fontFamily: "'Pretendard Variable', sans-serif",
@@ -95,7 +95,7 @@ const HistoryCard = ({ fragment, eventIcon: EventIcon }: { fragment: Fragment; e
                 </span>
               ))
             ) : (
-              <span className="min-w-0 break-words text-[11px] text-[rgba(120,112,100,0.75)]">{fragment.date}</span>
+              <span className="min-w-0 break-words text-[12px] text-[rgba(120,112,100,0.75)]">{fragment.date}</span>
             )}
           </div>
         </div>
@@ -247,8 +247,8 @@ export const History = () => {
             {HISTORY_FILTERS.map(({ label, Icon }, index) => (
               <div key={label} className="flex items-center gap-2">
                 {index > 0 && <span className="h-3 w-px bg-[rgba(120,112,100,0.16)]" />}
-                <span className="flex items-center gap-1 text-[11px] font-medium text-[rgba(120,112,100,0.75)]">
-                  <Icon size={12} color="rgba(120,112,100,0.55)" strokeWidth={1.8} />
+                <span className="flex items-center gap-1 text-[12px] font-medium text-[rgba(120,112,100,0.75)]">
+                  <Icon size={13} color="rgba(120,112,100,0.68)" strokeWidth={1.8} />
                   {label}
                 </span>
               </div>
