@@ -371,7 +371,7 @@ const SearchResultCard = ({ fragment }: { fragment: Fragment }) => {
 };
 
 const HomeEmptyState = ({ title, description }: { title: string; description: string }) => (
-  <div className="flex min-h-[220px] flex-col items-center justify-center px-5 pb-[260px] pt-8 text-center">
+  <div className="flex min-h-[220px] flex-col items-center justify-center px-5 pb-[calc(18rem+env(safe-area-inset-bottom))] pt-8 text-center">
     <p
       className="text-[15px] font-medium leading-[22px] text-[rgba(50,44,34,0.72)]"
       style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
@@ -682,8 +682,8 @@ export const Home = (): JSX.Element => {
   }, [openMenuFragmentId, visibleFragments]);
 
   return (
-    <main className="flex min-h-screen w-full justify-center bg-[#f3f0ec]">
-      <section className="relative flex min-h-screen w-full max-w-[390px] flex-col bg-[#faf8f4]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
+    <main className="flex min-h-screen w-full justify-center bg-[#faf8f4] sm:bg-[#f3f0ec]">
+      <section className="relative flex min-h-screen w-full flex-col bg-[#faf8f4] sm:max-w-[390px]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
         <div className="pointer-events-none absolute inset-x-0 top-[31px] z-[70] flex justify-center px-4">
           <motion.div
             aria-live="polite"
@@ -697,7 +697,7 @@ export const Home = (): JSX.Element => {
           </motion.div>
         </div>
         {isSearchMode ? (
-          <section className="flex min-h-screen flex-1 flex-col bg-[#faf8f4] pb-[220px]">
+          <section className="flex min-h-screen flex-1 flex-col bg-[#faf8f4] pb-[calc(15rem+env(safe-area-inset-bottom))]">
             <header className="border-b border-[#FAF7F2] bg-[#FFFEFB] px-4 py-3">
               <div className="flex h-[42px] items-center gap-2 rounded-[14px] bg-[rgba(120,112,100,0.05)] px-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
                 <span aria-hidden="true" className="text-[15px] text-[rgba(120,112,100,0.5)]">
@@ -930,7 +930,7 @@ export const Home = (): JSX.Element => {
 
           {/* 2열 카드 목록 */}
           {visibleFragments.length > 0 ? (
-            <div className="px-4 pb-[260px]">
+            <div className="px-4 pb-[calc(18rem+env(safe-area-inset-bottom))]">
               <div className="flex gap-3">
                 <div className="flex min-w-0 flex-1 flex-col gap-3">
                   {leftColumnFragments.map((fragment) => (
