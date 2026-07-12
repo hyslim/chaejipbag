@@ -363,13 +363,19 @@ export const QuickSave = () => {
             <label className="mt-4 block text-[12px] font-medium text-[rgba(120,112,100,0.75)]" htmlFor="quick-save-memo">
               한 줄 메모
             </label>
-            <textarea
+            <input
               id="quick-save-memo"
+              type="text"
               value={memo}
               onChange={(event) => setMemo(event.target.value)}
-              rows={3}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter") return;
+                event.preventDefault();
+                event.currentTarget.blur();
+              }}
+              enterKeyHint="done"
               placeholder="나중에 떠올릴 힌트를 짧게 남겨두세요"
-              className="mt-2 w-full resize-none rounded-[18px] border border-[#F5F2ED] bg-white px-4 pb-2.5 pt-2 text-[14px] leading-[21px] text-[rgba(50,44,34,0.8)] outline-none placeholder:text-[rgba(120,112,100,0.55)]"
+              className="mt-2 h-16 w-full rounded-[18px] border border-[#F5F2ED] bg-white px-4 text-[14px] leading-[21px] text-[rgba(50,44,34,0.8)] outline-none placeholder:text-[rgba(120,112,100,0.55)]"
             />
 
             {saveError && (
