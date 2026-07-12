@@ -144,6 +144,22 @@ type SharedTargetPayload = {
   imageError?: string;
 };
 
+const logSharedPayloadForDevelopment = (
+  payload: SharedTargetPayload,
+  { shareId, delivery }: { shareId?: string; delivery: "service-worker-cache" }
+) => {
+  if (!import.meta.env.DEV) return;
+
+  console.info("[QuickSave] received share payload", {
+    delivery,
+    shareId: shareId || undefined,
+    rawTitle: payload.title ?? "",
+    rawText: payload.text ?? "",
+    rawUrl: payload.url ?? "",
+    hasImage: Boolean(payload.imageDataUrl),
+  });
+};
+
 type QuickSaveDefaults = {
   sharedUrl: string;
   sharedHostname: string;
@@ -232,6 +248,8 @@ export const QuickSave = () => {
 
         const payload = await response.json() as SharedTargetPayload;
         if (isCanceled) return;
+
+        logSharedPayloadForDevelopment(payload, { shareId, delivery: "service-worker-cache" });
 
         const nextShare = getQuickSaveDefaults(
           payload.title?.trim() ?? "",
