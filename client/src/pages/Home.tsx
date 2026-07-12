@@ -24,7 +24,10 @@ const interestStyles = [
 
 const existingPokachipPalette = ["#EEC4D0", "#CDEAF3", "#DCD9F3", "#F1DFA7", "#CDEBE4", "#D8E7FA"];
 const temporaryPokachipColor = "rgba(120,112,100,0.18)";
-const isTemporaryPokachip = (label: string): boolean => label.toLocaleLowerCase("ko-KR") === "임시조각";
+const getDisplayPokachipKey = (label: string): string =>
+  normalizePokachipName(label).toLocaleLowerCase("ko-KR");
+const isTemporaryPokachip = (label: string): boolean =>
+  getDisplayPokachipKey(label).replace(/\s+/g, "") === "임시조각";
 
 const getComparableColor = (color: string): string => {
   const hexMatch = color.match(/^#([0-9a-f]{6})$/i);
@@ -80,6 +83,7 @@ const getFragmentSourceIcon = (fragment: Fragment): LucideIcon => {
 
 const FragmentCard = ({
   fragment,
+  primaryChipCount,
   isMenuOpen,
   onOpenMenu,
   onCloseMenu,
@@ -87,6 +91,7 @@ const FragmentCard = ({
   onShare,
 }: {
   fragment: Fragment;
+  primaryChipCount: number;
   isMenuOpen: boolean;
   onOpenMenu: () => void;
   onCloseMenu: () => void;
@@ -271,7 +276,7 @@ const FragmentCard = ({
               style={{
                 backgroundColor: isTemporaryPrimaryChip
                   ? getColorWithAlpha(temporaryPokachipColor, 0.24)
-                  : getPokachipColor(primaryChip),
+                  : getColorWithAlpha(getPokachipColor(primaryChip), primaryChipCount <= 2 ? 0.4 : 0.55),
                 fontFamily: "'Pretendard Variable', sans-serif",
               }}
             >
@@ -308,7 +313,7 @@ const FragmentCard = ({
     </div>
   );
 };
-const SearchResultCard = ({ fragment }: { fragment: Fragment }) => {
+const SearchResultCard = ({ fragment, primaryChipCount }: { fragment: Fragment; primaryChipCount: number }) => {
   const primaryChip = fragment.pokachips[0] ? normalizePokachipName(fragment.pokachips[0]) : "";
   const isTemporaryPrimaryChip = isTemporaryPokachip(primaryChip);
   const SourceIcon = getFragmentSourceIcon(fragment);
@@ -326,7 +331,7 @@ const SearchResultCard = ({ fragment }: { fragment: Fragment }) => {
             style={{
               backgroundColor: isTemporaryPrimaryChip
                 ? getColorWithAlpha(temporaryPokachipColor, 0.24)
-                : getPokachipColor(primaryChip),
+                : getColorWithAlpha(getPokachipColor(primaryChip), primaryChipCount <= 2 ? 0.4 : 0.55),
               fontFamily: "'Pretendard Variable', sans-serif",
             }}
           >
@@ -396,7 +401,7 @@ export const Home = (): JSX.Element => {
     const fragmentPokachips = new Map<string, string>();
     (fragment.pokachips ?? []).forEach((value) => {
       const label = normalizePokachipName(value);
-      const key = label.toLocaleLowerCase("ko-KR");
+      const key = getDisplayPokachipKey(label);
       if (label && !fragmentPokachips.has(key)) fragmentPokachips.set(key, label);
     });
     fragmentPokachips.forEach((label, key) => {
@@ -405,6 +410,10 @@ export const Home = (): JSX.Element => {
     });
   });
   const pokachipUsages = Array.from(pokachipUsage.values());
+  const getPrimaryChipUsageCount = (fragment: Fragment): number => {
+    const primaryChip = fragment.pokachips[0] ?? "";
+    return pokachipUsage.get(getDisplayPokachipKey(primaryChip))?.count ?? 0;
+  };
   const topPokachips = [...pokachipUsages].sort((a, b) => b.lastUsedAt - a.lastUsedAt);
   const interestCandidates = [...pokachipUsages]
     .filter(({ label, count }) => count >= 5 && !isTemporaryPokachip(label))
@@ -784,7 +793,11 @@ export const Home = (): JSX.Element => {
               {normalizedSearchQuery && searchResults.length > 0 && (
                 <div className="mt-3 grid grid-cols-2 gap-3">
                   {searchResults.map((fragment) => (
-                    <SearchResultCard key={fragment.id} fragment={fragment} />
+                    <SearchResultCard
+                      key={fragment.id}
+                      fragment={fragment}
+                      primaryChipCount={getPrimaryChipUsageCount(fragment)}
+                    />
                   ))}
                 </div>
               )}
@@ -958,6 +971,7 @@ export const Home = (): JSX.Element => {
                     <FragmentCard
                       key={fragment.id}
                       fragment={fragment}
+                      primaryChipCount={getPrimaryChipUsageCount(fragment)}
                       isMenuOpen={openMenuFragmentId === fragment.id}
                       onOpenMenu={() => setOpenMenuFragmentId(fragment.id)}
                       onCloseMenu={() => setOpenMenuFragmentId(null)}
@@ -971,6 +985,7 @@ export const Home = (): JSX.Element => {
                     <FragmentCard
                       key={fragment.id}
                       fragment={fragment}
+                      primaryChipCount={getPrimaryChipUsageCount(fragment)}
                       isMenuOpen={openMenuFragmentId === fragment.id}
                       onOpenMenu={() => setOpenMenuFragmentId(fragment.id)}
                       onCloseMenu={() => setOpenMenuFragmentId(null)}
