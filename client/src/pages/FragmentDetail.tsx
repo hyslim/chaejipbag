@@ -9,6 +9,28 @@ import { copyFragmentShareText, shareFragment, shouldOfferImageShare } from "@/l
 
 const sourceIconColor = "rgba(120,112,100,0.65)";
 const IMAGE_SHARE_DELAY_MS = 700;
+const temporaryPokachipColor = "rgba(120,112,100,0.18)";
+
+const getColorWithAlpha = (color: string, alpha: number): string => {
+  const rgbaMatch = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if (rgbaMatch) {
+    const [, red, green, blue] = rgbaMatch;
+    return `rgba(${red},${green},${blue},${alpha})`;
+  }
+
+  const hexMatch = color.match(/^#([0-9a-f]{6})$/i);
+  if (hexMatch) {
+    const hex = hexMatch[1];
+    return `rgba(${parseInt(hex.slice(0, 2), 16)},${parseInt(hex.slice(2, 4), 16)},${parseInt(hex.slice(4, 6), 16)},${alpha})`;
+  }
+
+  return color;
+};
+
+const getDisplayPokachipKey = (label: string): string =>
+  normalizePokachipName(label).toLocaleLowerCase("ko-KR");
+const isTemporaryPokachip = (label: string): boolean =>
+  getDisplayPokachipKey(label).replace(/\s+/g, "") === "임시조각";
 
 const delayImageShare = () => new Promise((resolve) => window.setTimeout(resolve, IMAGE_SHARE_DELAY_MS));
 
@@ -36,7 +58,7 @@ const getSourceMetaLabel = (sourceType?: string, source?: string, url?: string):
 
 export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   const [, navigate] = useLocation();
-  const { getFragment, deleteFragment } = useFragments();
+  const { fragments, getFragment, deleteFragment } = useFragments();
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
@@ -73,6 +95,18 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
       </main>
     );
   }
+
+  const pokachipUsageCounts = new Map<string, number>();
+  fragments.forEach((storedFragment) => {
+    const fragmentPokachipKeys = new Set(
+      (storedFragment.pokachips ?? [])
+        .map(getDisplayPokachipKey)
+        .filter(Boolean)
+    );
+    fragmentPokachipKeys.forEach((key) => {
+      pokachipUsageCounts.set(key, (pokachipUsageCounts.get(key) ?? 0) + 1);
+    });
+  });
 
   const metaLabel = getSourceMetaLabel(fragment.sourceType, fragment.source, fragment.url);
   const SourceIcon = getSourceMetaIcon(fragment.sourceType, fragment.source, fragment.url);
@@ -262,13 +296,18 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
               <div className="flex min-w-0 flex-wrap gap-1.5">
                 {fragment.pokachips.map((chip) => {
                   const normalizedChip = normalizePokachipName(chip);
+                  const usageCount = pokachipUsageCounts.get(getDisplayPokachipKey(normalizedChip)) ?? 0;
+                  const isTemporary = isTemporaryPokachip(normalizedChip);
+                  const backgroundColor = isTemporary
+                    ? getColorWithAlpha(temporaryPokachipColor, 0.28)
+                    : getColorWithAlpha(getPokachipColor(normalizedChip), usageCount <= 2 ? 0.48 : 0.6);
 
                   return (
                     <span
                       key={chip}
-                      className="flex h-[30px] min-w-0 max-w-full items-center overflow-hidden rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3 text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
+                      className={`flex h-[30px] min-w-0 max-w-full items-center overflow-hidden rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3 text-[12px] font-medium leading-[17px] ${isTemporary ? "text-[rgba(120,112,100,0.68)]" : "text-[rgba(50,44,34,0.7)]"}`}
                       style={{
-                        backgroundColor: getPokachipColor(normalizedChip),
+                        backgroundColor,
                         fontFamily: "'Pretendard Variable', sans-serif",
                         boxShadow: "0 2px 4px 0 rgba(180,196,244,0.28), inset 0 1px 0 0 rgba(255,255,255,0.58)",
                       }}
