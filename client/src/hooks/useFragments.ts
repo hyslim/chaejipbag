@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { deleteImage, saveImage } from "@/data/imageStore";
-import { getFallbackCreatedAt, normalizeFragmentTimestamps, sampleFragments, type Fragment } from "@/data/fragments";
+import { getFallbackCreatedAt, normalizeFragmentTimestamps, normalizeSavedPokachips, sampleFragments, type Fragment } from "@/data/fragments";
 
 const STORAGE_KEY = "chaejip-fragments";
 
@@ -43,13 +43,13 @@ export function useFragments() {
     const updatedFragment: Fragment = {
       ...targetFragment,
       ...patch,
+      ...(patch.pokachips ? { pokachips: normalizeSavedPokachips(patch.pokachips) } : {}),
       createdAt: targetFragment.createdAt ?? getFallbackCreatedAt(targetFragment, targetIndex),
       updatedAt: new Date().toISOString(),
     };
-    const nextFragments = [
-      updatedFragment,
-      ...fragments.filter((fragment) => fragment.id !== id),
-    ];
+    const nextFragments = fragments.map((fragment, index) =>
+      index === targetIndex ? updatedFragment : fragment
+    );
 
     if (!saveToStorage(nextFragments)) return null;
     setFragments(nextFragments);
@@ -60,6 +60,7 @@ export function useFragments() {
     const now = new Date().toISOString();
     const newFragment: Fragment = {
       ...fragment,
+      pokachips: normalizeSavedPokachips(fragment.pokachips),
       id: typeof crypto.randomUUID === "function"
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,

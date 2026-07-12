@@ -83,11 +83,11 @@ export function getFallbackCreatedAt(fragment: Fragment, index = 0): string {
 }
 
 export function getFragmentReferenceAt(fragment: Fragment, index = 0): string {
-  const updatedAtTime = Date.parse(fragment.updatedAt ?? "");
-  if (Number.isFinite(updatedAtTime)) return new Date(updatedAtTime).toISOString();
-
   const createdAtTime = Date.parse(fragment.createdAt ?? "");
   if (Number.isFinite(createdAtTime)) return new Date(createdAtTime).toISOString();
+
+  const updatedAtTime = Date.parse(fragment.updatedAt ?? "");
+  if (Number.isFinite(updatedAtTime)) return new Date(updatedAtTime).toISOString();
 
   return getFallbackCreatedAt(fragment, index);
 }
@@ -164,6 +164,15 @@ export function getUniquePokachips(values: string[]): string[] {
 
 export function mergePokachips(current: string[], additions: string[]): string[] {
   return getUniquePokachips([...current, ...additions]);
+}
+
+export function normalizeSavedPokachips(values: string[]): string[] {
+  const normalized = getUniquePokachips(values);
+  const actualPokachips = normalized.filter((value) =>
+    getPokachipKey(value).replace(/\s+/g, "") !== "임시조각"
+  );
+
+  return actualPokachips.length > 0 ? actualPokachips : ["임시조각"];
 }
 
 function collectPokachips(values: string[], excludeSet: Set<string>, chipKeys: Set<string>, chips: string[]) {
