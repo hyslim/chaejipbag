@@ -416,7 +416,7 @@ export const Home = (): JSX.Element => {
       color = existingPokachipPalette[(Math.max(paletteIndex, 0) + 1) % existingPokachipPalette.length];
     }
     previousPokachipColor = color;
-    return { ...pokachip, color };
+    return { ...pokachip, color, isTemporary };
   });
   const topPokachipKey = displayPokachips.map(({ label, count, color }) => `${label}:${count}:${color}`).join("|");
   const visibleFragments = selectedChip
@@ -804,6 +804,8 @@ export const Home = (): JSX.Element => {
         ) : (
           <>
 
+        {/* Home top area: Header, 조건부 Hero, 작은 포카칩의 연속된 상단 흐름 */}
+        <section className="bg-[#FFFEFB]">
         {/* Header: 관심사 장식과 분리된 고정 Surface */}
         <header className="flex items-center justify-between bg-[#FFFEFB] px-4 pb-3 pt-5">
           <h1
@@ -865,9 +867,9 @@ export const Home = (): JSX.Element => {
           </section>
         )}
 
-        {/* Small chips: Hero와 분리된 Page BG 위의 독립 row */}
+        {/* Small chips: Hero gradient 밖에서 Header 흐름을 마무리하는 독립 row */}
         {displayPokachips.length > 0 && (
-          <section className="w-full overflow-hidden bg-[#FAF8F4] pb-1 pt-3">
+          <section className="w-full overflow-hidden bg-[#FFFEFB] pb-3 pt-2">
             <div className="relative flex w-full min-w-0 items-center gap-2 overflow-hidden py-[3px]">
               <div
                 ref={topPokachipScrollRef}
@@ -884,7 +886,7 @@ export const Home = (): JSX.Element => {
                 }}
               >
                 <span aria-hidden="true" className="w-2 shrink-0 snap-start" />
-                {displayPokachips.map(({ label, count, color: backgroundColor }) => {
+                {displayPokachips.map(({ label, count, color: backgroundColor, isTemporary }) => {
                   const isEarlyGrowth = count <= 2;
                   return (
                     <motion.button
@@ -892,9 +894,9 @@ export const Home = (): JSX.Element => {
                       onClick={() => selectHomeFilter(label)}
                       whileTap={{ scale: 0.9 }}
                       transition={{ type: "spring", stiffness: 500, damping: 20 }}
-                      className={`home-select-none select-none box-border inline-flex h-[29px] min-w-0 max-w-[calc(100%-32px)] shrink-0 snap-start items-center justify-center gap-2.5 overflow-hidden rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3.5 py-[6px] text-[12px] font-medium leading-[17px] ${isEarlyGrowth ? "text-[rgba(50,44,34,0.52)]" : "text-[rgba(50,44,34,0.7)]"}`}
+                      className={`home-select-none select-none box-border inline-flex h-[29px] min-w-0 max-w-[calc(100%-32px)] shrink-0 snap-start items-center justify-center gap-2.5 overflow-hidden rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3.5 py-[6px] text-[12px] font-medium leading-[17px] ${isTemporary ? "text-[rgba(120,112,100,0.58)]" : isEarlyGrowth ? "text-[rgba(50,44,34,0.52)]" : "text-[rgba(50,44,34,0.7)]"}`}
                       style={{
-                        backgroundColor: getColorWithAlpha(backgroundColor, isEarlyGrowth ? 0.3 : 0.5),
+                        backgroundColor: getColorWithAlpha(backgroundColor, isTemporary ? 0.16 : isEarlyGrowth ? 0.3 : 0.5),
                         boxShadow: "0 2px 4px 0 rgba(180,196,244,0.30), inset 0 1px 0 0 rgba(255,255,255,0.58)",
                         fontFamily: "'Pretendard Variable', sans-serif",
                       }}
@@ -908,9 +910,11 @@ export const Home = (): JSX.Element => {
             </div>
           </section>
         )}
+        </section>
+
         {/* 수집된 조각 피드 — 선 대신 따뜻한 배경 톤으로 부드럽게 전환 */}
         <section
-          className="relative flex-1 pt-3"
+          className="relative flex-1 pt-4"
           style={{
             backgroundColor: "#FAF8F4",
           }}
