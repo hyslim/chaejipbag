@@ -7,6 +7,7 @@ import { useFragments } from "@/hooks/useFragments";
 import { useFragmentImage } from "@/hooks/useFragmentImage";
 import { copyFragmentShareText, shareFragment, shouldOfferImageShare } from "@/lib/shareFragment";
 import { getYouTubeThumbnailUrl } from "@/lib/youtube";
+import { getInstagramUsername, isInstagramUrl } from "@/lib/instagram";
 
 const sourceIconColor = "rgba(120,112,100,0.65)";
 const IMAGE_SHARE_DELAY_MS = 700;
@@ -71,6 +72,8 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   const youtubeThumbnailUrl = getYouTubeThumbnailUrl(fragment?.url);
   const hasStoredImage = Boolean(fragment?.imageKey || fragment?.imageDataUrl);
   const displayImageUrl = imageUrl || (!hasStoredImage && youtubeThumbnailUrl !== failedYouTubeThumbnailUrl ? youtubeThumbnailUrl : null);
+  const instagramUsername = getInstagramUsername(fragment?.title, fragment?.url);
+  const showInstagramPlaceholder = !hasStoredImage && !youtubeThumbnailUrl && isInstagramUrl(fragment?.url);
 
   const handleDelete = () => {
     if (deleteFragment(params.id)) navigate("/");
@@ -290,6 +293,14 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
                   className="h-[236px] w-full object-cover transition-transform duration-200 group-active:scale-[0.99]"
                 />
               </button>
+            </section>
+          )}
+          {showInstagramPlaceholder && (
+            <section className="mt-8 flex h-[236px] w-full flex-col items-center justify-center rounded-[18px] border border-[rgba(120,112,100,0.08)] bg-[#FAF8F4] px-4 text-center">
+              <span className="text-[12px] font-medium text-[rgba(120,112,100,0.66)]">Instagram</span>
+              <span className="mt-2 max-w-full truncate text-[14px] font-medium text-[rgba(50,44,34,0.72)]">
+                {instagramUsername ? `@${instagramUsername}` : "저장한 게시물"}
+              </span>
             </section>
           )}
 

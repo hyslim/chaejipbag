@@ -9,6 +9,7 @@ import { useFragmentImage } from "@/hooks/useFragmentImage";
 import { BottomNav } from "@/components/BottomNav";
 import { copyFragmentShareText, shareFragment, shouldOfferImageShare } from "@/lib/shareFragment";
 import { getYouTubeThumbnailUrl } from "@/lib/youtube";
+import { getInstagramUsername, isInstagramUrl } from "@/lib/instagram";
 
 const IMAGE_SHARE_DELAY_MS = 700;
 
@@ -105,6 +106,8 @@ const FragmentCard = ({
   const youtubeThumbnailUrl = getYouTubeThumbnailUrl(fragment.url);
   const hasStoredImage = Boolean(fragment.imageKey || fragment.imageDataUrl);
   const displayImageUrl = imageUrl || (!hasStoredImage && youtubeThumbnailUrl !== failedYouTubeThumbnailUrl ? youtubeThumbnailUrl : null);
+  const instagramUsername = getInstagramUsername(fragment.title, fragment.url);
+  const showInstagramPlaceholder = !hasStoredImage && !youtubeThumbnailUrl && isInstagramUrl(fragment.url);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const longPressTimerRef = useRef<number | null>(null);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -275,6 +278,14 @@ const FragmentCard = ({
             }}
             className="h-[140px] w-full object-cover"
           />
+        )}
+        {showInstagramPlaceholder && (
+          <div className="flex h-[140px] w-full flex-col items-center justify-center bg-[#FAF8F4] px-3 text-center">
+            <span className="text-[11px] font-medium text-[rgba(120,112,100,0.66)]">Instagram</span>
+            <span className="mt-1.5 max-w-full truncate text-[13px] font-medium text-[rgba(50,44,34,0.72)]">
+              {instagramUsername ? `@${instagramUsername}` : "저장한 게시물"}
+            </span>
+          </div>
         )}
 
         <div className="flex min-w-0 flex-col p-3">

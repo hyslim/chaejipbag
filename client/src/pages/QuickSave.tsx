@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { getCleanPokachipName, getPokachipColor, getPokachipCandidates, getPokachipKey, getRecentPokachips, mergePokachips, parsePokachipInput } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { getYouTubeThumbnailUrl, getYouTubeVideoId } from "@/lib/youtube";
+import { getInstagramSuggestedTitle, isInstagramUrl } from "@/lib/instagram";
 
 const urlPattern = /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/i;
 const trailingUrlPunctuationPattern = /[),.;!?]+$/;
@@ -124,25 +125,6 @@ const getParsedUrl = (value: string) => {
   }
 };
 
-const getNormalizedHostname = (url: URL) =>
-  url.hostname.toLocaleLowerCase("en-US").replace(/^www\./, "").replace(/^m\./, "");
-
-const getInstagramHandle = (sharedText: string, sharedUrl: string) => {
-  const explicitHandle = removeUrls(sharedText)
-    .match(/(?:^|[\s(])@([A-Za-z0-9._]{1,30})\b/)?.[1];
-  if (explicitHandle) return explicitHandle;
-
-  const url = getParsedUrl(sharedUrl);
-  if (!url || getNormalizedHostname(url) !== "instagram.com") return "";
-
-  const pathParts = url.pathname.split("/").filter(Boolean);
-  const reservedPaths = new Set(["p", "reel", "reels", "tv", "stories", "explore"]);
-  const profileName = pathParts.length === 1 ? pathParts[0] : "";
-  return /^[A-Za-z0-9._]{1,30}$/.test(profileName) && !reservedPaths.has(profileName.toLocaleLowerCase("en-US"))
-    ? profileName
-    : "";
-};
-
 const getDomainFallbackTitle = (sharedUrl: string) => {
   const url = getParsedUrl(sharedUrl);
   if (!url) return "";
@@ -187,13 +169,10 @@ const getQuickSaveDefaults = (sharedTitle: string, sharedText: string, urlParam:
   const sharedHostname = sharedUrl ? getUrlHostname(sharedUrl) : "";
   const titleSentence = getFirstMeaningfulSentence(cleanSharedTitle);
   const textSentence = getFirstMeaningfulSentence(cleanSharedText);
-  const parsedUrl = getParsedUrl(sharedUrl);
-  const normalizedHostname = parsedUrl ? getNormalizedHostname(parsedUrl) : "";
   const youtubeVideoId = getYouTubeVideoId(sharedUrl);
-  const isInstagram = normalizedHostname === "instagram.com";
-  const instagramHandle = isInstagram ? getInstagramHandle(cleanSharedText, sharedUrl) : "";
+  const isInstagram = isInstagramUrl(sharedUrl);
   const fallbackTitle = isInstagram
-    ? instagramHandle ? `@${instagramHandle}님의 게시물` : "Instagram 조각"
+    ? getInstagramSuggestedTitle(cleanSharedText, sharedUrl)
     : titleSentence
       || textSentence
       || (youtubeVideoId ? "YouTube 조각" : getDomainFallbackTitle(sharedUrl))
