@@ -21,6 +21,17 @@ const interestStyles = [
   { gradient: "linear-gradient(145deg, #f3e4b8 0%, #efd28c 52%, #e9c472 100%)", shadow: "0 8px 18px rgba(151,126,73,0.18)" },
   { gradient: "linear-gradient(140deg, #f0bdc4 0%, #eeaebb 50%, #efc2b3 100%)", shadow: "0 8px 18px rgba(148,99,96,0.18)" },
 ];
+
+const existingPokachipPalette = ["#EEC4D0", "#CDEAF3", "#DCD9F3", "#F1DFA7", "#CDEBE4", "#D8E7FA"];
+const temporaryPokachipColor = "rgba(120,112,100,0.18)";
+
+const getComparableColor = (color: string): string => {
+  const hexMatch = color.match(/^#([0-9a-f]{6})$/i);
+  if (hexMatch) return hexMatch[1].match(/.{2}/g)!.join(",").toLocaleLowerCase("en-US");
+  const rgbMatch = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  return rgbMatch ? rgbMatch.slice(1, 4).join(",") : color.toLocaleLowerCase("en-US");
+};
+
 const saveToastStorageKey = "chaejip-save-toast";
 
 const sourceIconColor = "rgba(120,112,100,0.72)";
@@ -388,8 +399,26 @@ export const Home = (): JSX.Element => {
   });
   const pokachipUsages = Array.from(pokachipUsage.values());
   const topPokachips = [...pokachipUsages].sort((a, b) => b.lastUsedAt - a.lastUsedAt);
-  const interests = [...pokachipUsages].filter(({ count }) => count >= 5).sort((a, b) => b.count - a.count || b.lastUsedAt - a.lastUsedAt).slice(0, 6);
-  const topPokachipKey = topPokachips.map(({ label, count }) => `${label}:${count}`).join("|");
+  const interestCandidates = [...pokachipUsages]
+    .filter(({ label, count }) => count >= 5 && label.toLocaleLowerCase("ko-KR") !== "임시조각")
+    .sort((a, b) => b.count - a.count || b.lastUsedAt - a.lastUsedAt)
+    .slice(0, 6);
+  const interests = interestCandidates.length >= 3 ? interestCandidates : [];
+  const hasInterests = interests.length >= 3;
+  let previousPokachipColor = "";
+  const displayPokachips = topPokachips.map((pokachip) => {
+    const isTemporary = pokachip.label.toLocaleLowerCase("ko-KR") === "임시조각";
+    let color = isTemporary ? temporaryPokachipColor : getPokachipColor(pokachip.label);
+    if (!isTemporary && getComparableColor(color) === getComparableColor(previousPokachipColor)) {
+      const paletteIndex = existingPokachipPalette.findIndex(
+        (paletteColor) => getComparableColor(paletteColor) === getComparableColor(color)
+      );
+      color = existingPokachipPalette[(Math.max(paletteIndex, 0) + 1) % existingPokachipPalette.length];
+    }
+    previousPokachipColor = color;
+    return { ...pokachip, color };
+  });
+  const topPokachipKey = displayPokachips.map(({ label, count, color }) => `${label}:${count}:${color}`).join("|");
   const visibleFragments = selectedChip
     ? fragments.filter((fragment) =>
         (fragment.pokachips ?? []).some(
@@ -775,110 +804,113 @@ export const Home = (): JSX.Element => {
         ) : (
           <>
 
-        {/* 상단 memory section */}
-        <section
-          className="relative min-h-[272px] overflow-hidden"
-          style={{
-            background: "radial-gradient(circle at 32% 10%, rgba(224,217,242,0.24), transparent 38%), radial-gradient(circle at 88% 78%, rgba(244,220,194,0.22), transparent 42%), #FFFEFB",
-          }}
-        >
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-12 top-[62px] z-0 h-[178px] w-[330px] opacity-[0.32] blur-[3px]"
+        {/* Header: 관심사 장식과 분리된 고정 Surface */}
+        <header className="flex items-center justify-between bg-[#FFFEFB] px-4 pb-3 pt-5">
+          <h1
+            className="text-[18px] font-semibold leading-[1.45] text-[#353a69b2]"
+            style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+          >
+            {"\uB0B4 \uAE30\uC5B5"}
+          </h1>
+          <button
+            type="button"
+            onClick={openSearchMode}
+            className="text-[#78706480]"
+            aria-label="조각 찾기"
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <circle cx="8" cy="8" r="5.25" stroke="currentColor" strokeWidth="1.3" />
+              <path d="M12 12L15 15" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+            </svg>
+          </button>
+        </header>
+
+        {/* Hero: 큰 관심사가 충분히 자랐을 때만 장식과 함께 표시 */}
+        {hasInterests && (
+          <section
+            className="relative overflow-hidden px-4 pb-2 pt-2"
             style={{
-              background: "linear-gradient(110deg, rgba(255,254,251,0.06) 0%, rgba(226,216,244,0.72) 46%, rgba(255,253,249,0.16) 100%)",
-              clipPath: "polygon(16% 0, 100% 0, 84% 100%, 0 100%)",
-
+              background: "radial-gradient(circle at 32% 10%, rgba(224,217,242,0.24), transparent 38%), radial-gradient(circle at 88% 78%, rgba(244,220,194,0.22), transparent 42%), #FFFEFB",
             }}
-          />
+          >
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -right-12 top-0 z-0 h-[178px] w-[330px] opacity-[0.32] blur-[3px]"
+              style={{
+                background: "linear-gradient(110deg, rgba(255,254,251,0.06) 0%, rgba(226,216,244,0.72) 46%, rgba(255,253,249,0.16) 100%)",
+                clipPath: "polygon(16% 0, 100% 0, 84% 100%, 0 100%)",
+              }}
+            />
+            <div className="relative z-10 grid grid-cols-3 gap-2">
+              {interests.map((interest, index) => {
+                const interestStyle = interestStyles[index % interestStyles.length];
+                return (
+                  <button
+                    key={interest.label}
+                    type="button"
+                    onClick={() => selectHomeFilter(interest.label)}
+                    className="home-select-none select-none flex h-20 items-center justify-center rounded-[20px] px-2"
+                    style={{ background: interestStyle.gradient, boxShadow: interestStyle.shadow }}
+                  >
+                    <span
+                      className="text-[13px] font-medium text-[rgba(255,255,255,0.82)]"
+                      style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+                    >
+                      {interest.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
-          <div className="relative z-10">
-            <header className="flex items-center justify-between border-b border-[#F5F2ED] bg-[#FFFEFB] px-4 pb-3 pt-5">
-              <h1
-                className="text-[18px] font-semibold leading-[1.45] text-[#353a69b2]"
-                style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+        {/* Small chips: Hero와 분리된 Page BG 위의 독립 row */}
+        {displayPokachips.length > 0 && (
+          <section className="w-full overflow-hidden bg-[#FAF8F4] pb-1 pt-3">
+            <div className="relative flex w-full min-w-0 items-center gap-2 overflow-hidden py-[3px]">
+              <div
+                ref={topPokachipScrollRef}
+                onPointerDown={handleTopPokachipPointerDown}
+                onPointerMove={handleTopPokachipPointerMove}
+                onPointerUp={stopTopPokachipDrag}
+                onPointerCancel={stopTopPokachipDrag}
+                onPointerLeave={stopTopPokachipDrag}
+                className="home-select-none flex w-full min-w-0 snap-x snap-proximity cursor-grab touch-pan-x flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap overscroll-x-contain pr-6 pt-0.5 pb-1.5 select-none active:cursor-grabbing [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                style={{
+                  scrollbarWidth: "none",
+                  msOverflowStyle: "none",
+                  WebkitOverflowScrolling: "touch",
+                }}
               >
-                {"\uB0B4 \uAE30\uC5B5"}
-              </h1>
-              <button
-                type="button"
-                onClick={openSearchMode}
-                className="text-[#78706480]"
-                aria-label="조각 찾기"
-              >
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-                  <circle cx="8" cy="8" r="5.25" stroke="currentColor" strokeWidth="1.3" />
-                  <path d="M12 12L15 15" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                </svg>
-              </button>
-            </header>
-
-            {/* 관심사 타일 - 정돈된 3열 x 2행의 기억 조각 */}
-            {interests.length > 0 && (
-              <div className="px-4 pb-2 pt-2">
-                <div className="grid grid-cols-3 gap-2">
-                  {interests.map((interest, index) => {
-                    const interestStyle = interestStyles[index % interestStyles.length];
-                    return (
-                      <button key={interest.label} type="button" onClick={() => selectHomeFilter(interest.label)} className="home-select-none select-none flex h-20 items-center justify-center rounded-[20px] px-2" style={{ background: interestStyle.gradient, boxShadow: interestStyle.shadow }}>
-                        <span className="text-[13px] font-medium text-[rgba(255,255,255,0.82)]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>{interest.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* 포카칩 영역 - 가로 드래그 가능 */}
-            {topPokachips.length > 0 && (
-            <div className="w-full overflow-hidden pb-2">
-              <div className="relative flex w-full min-w-0 items-center gap-2 overflow-hidden py-[3px]">
-                <div
-                  ref={topPokachipScrollRef}
-                  onPointerDown={handleTopPokachipPointerDown}
-                  onPointerMove={handleTopPokachipPointerMove}
-                  onPointerUp={stopTopPokachipDrag}
-                  onPointerCancel={stopTopPokachipDrag}
-                  onPointerLeave={stopTopPokachipDrag}
-                  className="home-select-none flex w-full min-w-0 snap-x snap-proximity cursor-grab touch-pan-x flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap overscroll-x-contain pr-6 pt-0.5 pb-1.5 select-none active:cursor-grabbing [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                  style={{
-                    scrollbarWidth: "none",
-                    msOverflowStyle: "none",
-                    WebkitOverflowScrolling: "touch",
-                  }}
-                >
-                  <span aria-hidden="true" className="w-2 shrink-0 snap-start" />
-                  {topPokachips.map(({ label, count }) => {
-                    const backgroundColor = getPokachipColor(label);
-                    const isEarlyGrowth = count <= 2;
-                    return (
-                      <motion.button
-                        key={label}
-                        onClick={() => selectHomeFilter(label)}
-                        whileTap={{ scale: 0.9 }}
-                        transition={{ type: "spring", stiffness: 500, damping: 20 }}
-                        className={`home-select-none select-none box-border inline-flex h-[29px] min-w-0 max-w-[calc(100%-32px)] shrink-0 snap-start items-center justify-center gap-2.5 overflow-hidden rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3.5 py-[6px] text-[12px] font-medium leading-[17px] ${isEarlyGrowth ? "text-[rgba(50,44,34,0.52)]" : "text-[rgba(50,44,34,0.7)]"}`}
-                        style={{
-                          backgroundColor: getColorWithAlpha(backgroundColor, isEarlyGrowth ? 0.3 : 0.5),
-                          boxShadow: "0 2px 4px 0 rgba(180,196,244,0.30), inset 0 1px 0 0 rgba(255,255,255,0.58)",
-                          fontFamily: "'Pretendard Variable', sans-serif",
-                        }}
-                      >
-                        <span className="min-w-0 truncate">{label}</span>
-                      </motion.button>
-                    );
-                  })}
-                  <span aria-hidden="true" className="w-[calc(100%-64px)] shrink-0" />
-                </div>
-                {/* TODO: MVP 이후 새 기억묶음/포카칩 생성 기능으로 재검토 */}
+                <span aria-hidden="true" className="w-2 shrink-0 snap-start" />
+                {displayPokachips.map(({ label, count, color: backgroundColor }) => {
+                  const isEarlyGrowth = count <= 2;
+                  return (
+                    <motion.button
+                      key={label}
+                      onClick={() => selectHomeFilter(label)}
+                      whileTap={{ scale: 0.9 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 20 }}
+                      className={`home-select-none select-none box-border inline-flex h-[29px] min-w-0 max-w-[calc(100%-32px)] shrink-0 snap-start items-center justify-center gap-2.5 overflow-hidden rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3.5 py-[6px] text-[12px] font-medium leading-[17px] ${isEarlyGrowth ? "text-[rgba(50,44,34,0.52)]" : "text-[rgba(50,44,34,0.7)]"}`}
+                      style={{
+                        backgroundColor: getColorWithAlpha(backgroundColor, isEarlyGrowth ? 0.3 : 0.5),
+                        boxShadow: "0 2px 4px 0 rgba(180,196,244,0.30), inset 0 1px 0 0 rgba(255,255,255,0.58)",
+                        fontFamily: "'Pretendard Variable', sans-serif",
+                      }}
+                    >
+                      <span className="min-w-0 truncate">{label}</span>
+                    </motion.button>
+                  );
+                })}
+                <span aria-hidden="true" className="w-[calc(100%-64px)] shrink-0" />
               </div>
             </div>
-            )}
-          </div>
-        </section>
+          </section>
+        )}
         {/* 수집된 조각 피드 — 선 대신 따뜻한 배경 톤으로 부드럽게 전환 */}
         <section
-          className="relative flex-1 border-t border-[#FAF7F2] pt-3"
+          className="relative flex-1 pt-3"
           style={{
             backgroundColor: "#FAF8F4",
           }}
