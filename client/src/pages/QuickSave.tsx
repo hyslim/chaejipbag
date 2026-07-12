@@ -43,18 +43,6 @@ const getUrlHostname = (url: string) => {
   }
 };
 
-const getSourceLabel = (hostname: string, hasImage = false) => {
-  const lowerHostname = hostname.toLocaleLowerCase("en-US");
-
-  if (lowerHostname.includes("instagram.com")) return "\uc778\uc2a4\ud0c0\uadf8\ub7a8 \uc870\uac01";
-  if (lowerHostname.includes("youtube.com") || lowerHostname.includes("youtu.be")) return "YouTube \uc601\uc0c1";
-  if (lowerHostname.includes("pinterest.com")) return "Pinterest \uc870\uac01";
-  if (hostname) return "\uacf5\uc720\ubc1b\uc740 \uae00";
-  if (hasImage) return "\uc774\ubbf8\uc9c0 \uc870\uac01";
-
-  return "\uacf5\uc720\ubc1b\uc740 \uae00";
-};
-
 const isUrlLike = (value: string) => {
   const trimmedValue = value.trim();
   if (!trimmedValue) return false;
@@ -69,12 +57,6 @@ const isUrlLike = (value: string) => {
 };
 
 const normalizeSharedLine = (value: string) => value.replace(/\s+/g, " ").trim();
-
-const getMeaningfulLines = (value: string) =>
-  value
-    .split(/\r?\n/)
-    .map(normalizeSharedLine)
-    .filter((line) => line && !isUrlLike(line));
 
 const getCompactTitle = (value: string) => {
   const normalizedTitle = normalizeSharedLine(value);
@@ -92,6 +74,106 @@ const removeDuplicateTitleLine = (value: string, title: string) => {
     .join("\n");
 };
 
+const fixedSharePhrases = new Set([
+  "공유됨",
+  "링크를 공유했습니다",
+  "다음 링크를 확인하세요",
+  "check out this link",
+  "shared a link",
+  "instagram",
+  "youtube",
+]);
+
+const isFixedSharePhrase = (value: string) =>
+  fixedSharePhrases.has(normalizeSharedLine(value).replace(/[.!?]+$/, "").toLocaleLowerCase("ko-KR"));
+
+const removeUrls = (value: string) =>
+  value.replace(new RegExp(urlPattern.source, "gi"), " ");
+
+const getFirstMeaningfulSentence = (value: string) => {
+  const cleanValue = removeUrls(value).trim();
+  if (!cleanValue) return "";
+
+  let sentences: string[] = [];
+  try {
+    if ("Segmenter" in Intl) {
+      const segmenter = new Intl.Segmenter("ko-KR", { granularity: "sentence" });
+      sentences = Array.from(segmenter.segment(cleanValue), ({ segment }) => segment);
+    }
+  } catch {
+    // Fall through to the punctuation/newline fallback below.
+  }
+
+  if (sentences.length === 0) {
+    sentences = cleanValue.match(/[^.!?\r\n]+[.!?]?/g) ?? [];
+  }
+
+  const meaningfulSentence = sentences
+    .map(normalizeSharedLine)
+    .find((sentence) => sentence && !isUrlLike(sentence) && !isFixedSharePhrase(sentence));
+
+  return meaningfulSentence ? getCompactTitle(meaningfulSentence) : "";
+};
+
+const getParsedUrl = (value: string) => {
+  try {
+    return new URL(normalizeSharedUrl(value));
+  } catch {
+    return undefined;
+  }
+};
+
+const getNormalizedHostname = (url: URL) =>
+  url.hostname.toLocaleLowerCase("en-US").replace(/^www\./, "").replace(/^m\./, "");
+
+const getYouTubeVideoId = (sharedUrl: string) => {
+  const url = getParsedUrl(sharedUrl);
+  if (!url) return "";
+
+  const hostname = getNormalizedHostname(url);
+  let candidate = "";
+
+  if (hostname === "youtu.be") {
+    candidate = url.pathname.split("/").filter(Boolean)[0] ?? "";
+  } else if (hostname === "youtube.com" || hostname === "youtube-nocookie.com") {
+    if (url.pathname === "/watch") {
+      candidate = url.searchParams.get("v") ?? "";
+    } else {
+      const [type, id] = url.pathname.split("/").filter(Boolean);
+      if (["shorts", "embed", "live", "v"].includes(type)) candidate = id ?? "";
+    }
+  }
+
+  return /^[A-Za-z0-9_-]{11}$/.test(candidate) ? candidate : "";
+};
+
+const getInstagramHandle = (sharedText: string, sharedUrl: string) => {
+  const explicitHandle = removeUrls(sharedText)
+    .match(/(?:^|[\s(])@([A-Za-z0-9._]{1,30})\b/)?.[1];
+  if (explicitHandle) return explicitHandle;
+
+  const url = getParsedUrl(sharedUrl);
+  if (!url || getNormalizedHostname(url) !== "instagram.com") return "";
+
+  const pathParts = url.pathname.split("/").filter(Boolean);
+  const reservedPaths = new Set(["p", "reel", "reels", "tv", "stories", "explore"]);
+  const profileName = pathParts.length === 1 ? pathParts[0] : "";
+  return /^[A-Za-z0-9._]{1,30}$/.test(profileName) && !reservedPaths.has(profileName.toLocaleLowerCase("en-US"))
+    ? profileName
+    : "";
+};
+
+const getDomainFallbackTitle = (sharedUrl: string) => {
+  const url = getParsedUrl(sharedUrl);
+  if (!url) return "";
+
+  const hostname = url.hostname
+    .toLocaleLowerCase("en-US")
+    .replace(/^www\./, "")
+    .replace(/^m\./, "");
+  return hostname;
+};
+
 type SharedTargetPayload = {
   title?: string;
   text?: string;
@@ -105,9 +187,10 @@ type QuickSaveDefaults = {
   sharedHostname: string;
   fallbackTitle: string;
   initialMemo: string;
+  youtubeThumbnailUrl: string;
 };
 
-const getQuickSaveDefaults = (sharedTitle: string, sharedText: string, urlParam: string, hasImage = false): QuickSaveDefaults => {
+const getQuickSaveDefaults = (sharedTitle: string, sharedText: string, urlParam: string, _hasImage = false): QuickSaveDefaults => {
   const titleUrl = getFirstUrl(sharedTitle);
   const textUrl = getFirstUrl(sharedText);
   const sharedUrl = urlParam ? normalizeSharedUrl(urlParam) : textUrl?.normalized ?? titleUrl?.normalized ?? "";
@@ -122,14 +205,25 @@ const getQuickSaveDefaults = (sharedTitle: string, sharedText: string, urlParam:
   const cleanSharedTitle = removeRepeatedUrl(sharedTitle, urlCandidates);
   const cleanSharedText = removeRepeatedUrl(sharedText, urlCandidates);
   const sharedHostname = sharedUrl ? getUrlHostname(sharedUrl) : "";
-  const sourceLabel = getSourceLabel(sharedHostname, hasImage);
-  const titleCandidate = cleanSharedTitle && !isUrlLike(cleanSharedTitle)
-    ? cleanSharedTitle
-    : getMeaningfulLines(cleanSharedText)[0] ?? "";
-  const fallbackTitle = getCompactTitle(titleCandidate || sourceLabel);
+  const titleSentence = getFirstMeaningfulSentence(cleanSharedTitle);
+  const textSentence = getFirstMeaningfulSentence(cleanSharedText);
+  const parsedUrl = getParsedUrl(sharedUrl);
+  const normalizedHostname = parsedUrl ? getNormalizedHostname(parsedUrl) : "";
+  const youtubeVideoId = getYouTubeVideoId(sharedUrl);
+  const isInstagram = normalizedHostname === "instagram.com";
+  const instagramHandle = isInstagram ? getInstagramHandle(cleanSharedText, sharedUrl) : "";
+  const fallbackTitle = isInstagram
+    ? instagramHandle ? `@${instagramHandle}님의 게시물` : "Instagram 조각"
+    : titleSentence
+      || textSentence
+      || (youtubeVideoId ? "YouTube 조각" : getDomainFallbackTitle(sharedUrl))
+      || "새 조각";
   const initialMemo = removeDuplicateTitleLine(cleanSharedText, fallbackTitle);
+  const youtubeThumbnailUrl = youtubeVideoId
+    ? `https://i.ytimg.com/vi/${youtubeVideoId}/hqdefault.jpg`
+    : "";
 
-  return { sharedUrl, sharedHostname, fallbackTitle, initialMemo };
+  return { sharedUrl, sharedHostname, fallbackTitle, initialMemo, youtubeThumbnailUrl };
 };
 
 export const QuickSave = () => {
@@ -146,6 +240,8 @@ export const QuickSave = () => {
   const [fallbackTitle, setFallbackTitle] = useState(initialShare.fallbackTitle);
   const [memo, setMemo] = useState(initialShare.initialMemo);
   const [imageDataUrl, setImageDataUrl] = useState("");
+  const [youtubeThumbnailUrl, setYoutubeThumbnailUrl] = useState(initialShare.youtubeThumbnailUrl);
+  const [isYoutubeThumbnailHidden, setIsYoutubeThumbnailHidden] = useState(false);
   const [imageError, setImageError] = useState("");
   const [saveError, setSaveError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -153,6 +249,7 @@ export const QuickSave = () => {
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
   const [isInputActive, setIsInputActive] = useState(false);
   const titleRef = useRef<HTMLTextAreaElement>(null);
+  const hasUserEditedTitleRef = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const trimmedMemo = memo.trim();
   const canSave = Boolean(sharedUrl || trimmedMemo || fallbackTitle || imageDataUrl);
@@ -189,9 +286,11 @@ export const QuickSave = () => {
         setSharedUrl(nextShare.sharedUrl);
         setSharedHostname(nextShare.sharedHostname);
         setFallbackTitle(nextShare.fallbackTitle);
-        setTitle(nextShare.fallbackTitle);
+        if (!hasUserEditedTitleRef.current) setTitle(nextShare.fallbackTitle);
         setMemo(nextShare.initialMemo);
         setImageDataUrl(payload.imageDataUrl ?? "");
+        setYoutubeThumbnailUrl(nextShare.youtubeThumbnailUrl);
+        setIsYoutubeThumbnailHidden(false);
         setImageError(payload.imageError ?? "");
 
         void fetch(payloadUrl, { method: "DELETE" });
@@ -322,7 +421,10 @@ export const QuickSave = () => {
                 ref={titleRef}
                 autoFocus={false}
                 value={title}
-                onChange={(event) => setTitle(event.target.value)}
+                onChange={(event) => {
+                  hasUserEditedTitleRef.current = true;
+                  setTitle(event.target.value);
+                }}
                 rows={1}
                 placeholder="제목"
                 className="mt-0.5 max-h-[46px] min-h-[23px] w-full resize-none overflow-y-auto bg-transparent text-[18px] font-medium leading-[23px] text-[rgba(54,58,105,0.72)] outline-none placeholder:text-[rgba(54,58,105,0.36)]"
@@ -341,7 +443,7 @@ export const QuickSave = () => {
             )}
 
 
-            {imageDataUrl && (
+            {imageDataUrl ? (
               <div className="mt-2.5 overflow-hidden rounded-[18px] border border-white/70 bg-[#FFFFFF] shadow-[0_6px_18px_rgba(80,70,55,0.06)]">
                 <img
                   src={imageDataUrl}
@@ -353,7 +455,16 @@ export const QuickSave = () => {
                   className="h-[142px] w-full object-cover"
                 />
               </div>
-            )}
+            ) : youtubeThumbnailUrl && !isYoutubeThumbnailHidden ? (
+              <div className="mt-2.5 overflow-hidden rounded-[18px] border border-white/70 bg-[#FFFFFF] shadow-[0_6px_18px_rgba(80,70,55,0.06)]">
+                <img
+                  src={youtubeThumbnailUrl}
+                  alt=""
+                  onError={() => setIsYoutubeThumbnailHidden(true)}
+                  className="h-[142px] w-full object-cover"
+                />
+              </div>
+            ) : null}
             {imageError && (
               <p className="mt-2 rounded-[14px] bg-[#FAF8F4] px-3 py-2 text-[12px] leading-[17px] text-[rgba(120,112,100,0.72)]">
                 {imageError}
