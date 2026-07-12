@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from 
 import { Globe, Instagram, Pencil, Sparkles, Youtube, type LucideIcon } from "lucide-react";
 import { flushSync } from "react-dom";
 import { Link, useLocation } from "wouter";
-import { getFragmentDisplayTime, getPokachipColor, getRecentPokachips, normalizePokachipName, type Fragment } from "@/data/fragments";
+import { getFragmentDisplayTime, getFragmentReferenceAt, getPokachipColor, getRecentPokachips, normalizePokachipName, type Fragment } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { useFragmentImage } from "@/hooks/useFragmentImage";
 import { BottomNav } from "@/components/BottomNav";
@@ -13,46 +13,14 @@ const IMAGE_SHARE_DELAY_MS = 700;
 
 const delayImageShare = () => new Promise((resolve) => window.setTimeout(resolve, IMAGE_SHARE_DELAY_MS));
 
-const interests = [
-  {
-    id: "webapp",
-    label: "웹앱",
-    gradient: "linear-gradient(145deg, #c9d9f4 0%, #c5c5ef 48%, #d7c8ed 100%)",
-    shadow: "0 8px 18px rgba(112,126,153,0.18)",
-  },
-  {
-    id: "interior",
-    label: "인테리어",
-    gradient: "linear-gradient(140deg, #d5bff0 0%, #dec1e8 50%, #edcfc2 100%)",
-    shadow: "0 8px 18px rgba(142,113,128,0.18)",
-  },
-  {
-    id: "aquarium",
-    label: "수조",
-    gradient: "linear-gradient(145deg, #bfe4db 0%, #b3ddd9 50%, #bddfeb 100%)",
-    shadow: "0 8px 18px rgba(91,135,137,0.18)",
-  },
-  {
-    id: "routine",
-    label: "루틴",
-    gradient: "linear-gradient(140deg, #b8ddce 0%, #c9dfc7 50%, #eadfae 100%)",
-    shadow: "0 8px 18px rgba(119,132,103,0.18)",
-  },
-  {
-    id: "lighting",
-    label: "조명",
-    gradient: "linear-gradient(145deg, #f3e4b8 0%, #efd28c 52%, #e9c472 100%)",
-    shadow: "0 8px 18px rgba(151,126,73,0.18)",
-  },
-  {
-    id: "cooking",
-    label: "요리",
-    gradient: "linear-gradient(140deg, #f0bdc4 0%, #eeaebb 50%, #efc2b3 100%)",
-    shadow: "0 8px 18px rgba(148,99,96,0.18)",
-  },
+const interestStyles = [
+  { gradient: "linear-gradient(145deg, #c9d9f4 0%, #c5c5ef 48%, #d7c8ed 100%)", shadow: "0 8px 18px rgba(112,126,153,0.18)" },
+  { gradient: "linear-gradient(140deg, #d5bff0 0%, #dec1e8 50%, #edcfc2 100%)", shadow: "0 8px 18px rgba(142,113,128,0.18)" },
+  { gradient: "linear-gradient(145deg, #bfe4db 0%, #b3ddd9 50%, #bddfeb 100%)", shadow: "0 8px 18px rgba(91,135,137,0.18)" },
+  { gradient: "linear-gradient(140deg, #b8ddce 0%, #c9dfc7 50%, #eadfae 100%)", shadow: "0 8px 18px rgba(119,132,103,0.18)" },
+  { gradient: "linear-gradient(145deg, #f3e4b8 0%, #efd28c 52%, #e9c472 100%)", shadow: "0 8px 18px rgba(151,126,73,0.18)" },
+  { gradient: "linear-gradient(140deg, #f0bdc4 0%, #eeaebb 50%, #efc2b3 100%)", shadow: "0 8px 18px rgba(148,99,96,0.18)" },
 ];
-
-const defaultPokachips = ["유리", "파랑", "임시조각"];
 const saveToastStorageKey = "chaejip-save-toast";
 
 const sourceIconColor = "rgba(120,112,100,0.72)";
@@ -404,8 +372,24 @@ export const Home = (): JSX.Element => {
   const [shareSheetFragment, setShareSheetFragment] = useState<Fragment | null>(null);
   const [shareSheetStatus, setShareSheetStatus] = useState<"idle" | "copying" | "copied">("idle");
   const storedPokachips = getRecentPokachips(fragments, { includeFallback: false });
-  const topPokachips = getRecentPokachips(fragments);
-  const topPokachipKey = topPokachips.join("|");
+  const pokachipUsage = new Map<string, { label: string; count: number; lastUsedAt: number }>();
+  fragments.forEach((fragment, fragmentIndex) => {
+    const lastUsedAt = Date.parse(getFragmentReferenceAt(fragment, fragmentIndex)) || 0;
+    const fragmentPokachips = new Map<string, string>();
+    (fragment.pokachips ?? []).forEach((value) => {
+      const label = normalizePokachipName(value);
+      const key = label.toLocaleLowerCase("ko-KR");
+      if (label && !fragmentPokachips.has(key)) fragmentPokachips.set(key, label);
+    });
+    fragmentPokachips.forEach((label, key) => {
+      const current = pokachipUsage.get(key);
+      pokachipUsage.set(key, { label: current?.label ?? label, count: (current?.count ?? 0) + 1, lastUsedAt: Math.max(current?.lastUsedAt ?? 0, lastUsedAt) });
+    });
+  });
+  const pokachipUsages = Array.from(pokachipUsage.values());
+  const topPokachips = [...pokachipUsages].sort((a, b) => b.lastUsedAt - a.lastUsedAt);
+  const interests = [...pokachipUsages].filter(({ count }) => count >= 5).sort((a, b) => b.count - a.count || b.lastUsedAt - a.lastUsedAt).slice(0, 6);
+  const topPokachipKey = topPokachips.map(({ label, count }) => `${label}:${count}`).join("|");
   const visibleFragments = selectedChip
     ? fragments.filter((fragment) =>
         (fragment.pokachips ?? []).some(
@@ -830,31 +814,23 @@ export const Home = (): JSX.Element => {
             </header>
 
             {/* 관심사 타일 - 정돈된 3열 x 2행의 기억 조각 */}
-            <div className="px-4 pb-2 pt-2">
-              <div className="grid grid-cols-3 gap-2">
-                {interests.map((interest) => (
-                  <button
-                    key={interest.id}
-                    type="button"
-                    onClick={() => selectHomeFilter(interest.label)}
-                    className="home-select-none select-none flex h-20 items-center justify-center rounded-[20px] px-2"
-                    style={{
-                      background: interest.gradient,
-                      boxShadow: interest.shadow,
-                    }}
-                  >
-                    <span
-                      className="text-[13px] font-medium text-[rgba(255,255,255,0.82)]"
-                      style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
-                    >
-                      {interest.label}
-                    </span>
-                  </button>
-                ))}
+            {interests.length > 0 && (
+              <div className="px-4 pb-2 pt-2">
+                <div className="grid grid-cols-3 gap-2">
+                  {interests.map((interest, index) => {
+                    const interestStyle = interestStyles[index % interestStyles.length];
+                    return (
+                      <button key={interest.label} type="button" onClick={() => selectHomeFilter(interest.label)} className="home-select-none select-none flex h-20 items-center justify-center rounded-[20px] px-2" style={{ background: interestStyle.gradient, boxShadow: interestStyle.shadow }}>
+                        <span className="text-[13px] font-medium text-[rgba(255,255,255,0.82)]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>{interest.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* 포카칩 영역 - 가로 드래그 가능 */}
+            {topPokachips.length > 0 && (
             <div className="w-full overflow-hidden pb-2">
               <div className="relative flex w-full min-w-0 items-center gap-2 overflow-hidden py-[3px]">
                 <div
@@ -872,22 +848,23 @@ export const Home = (): JSX.Element => {
                   }}
                 >
                   <span aria-hidden="true" className="w-2 shrink-0 snap-start" />
-                  {topPokachips.map((chip) => {
-                    const backgroundColor = getPokachipColor(chip);
+                  {topPokachips.map(({ label, count }) => {
+                    const backgroundColor = getPokachipColor(label);
+                    const isEarlyGrowth = count <= 2;
                     return (
                       <motion.button
-                        key={chip}
-                        onClick={() => selectHomeFilter(chip)}
+                        key={label}
+                        onClick={() => selectHomeFilter(label)}
                         whileTap={{ scale: 0.9 }}
                         transition={{ type: "spring", stiffness: 500, damping: 20 }}
-                        className="home-select-none select-none box-border inline-flex h-[29px] min-w-0 max-w-[calc(100%-32px)] shrink-0 snap-start items-center justify-center gap-2.5 overflow-hidden rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3.5 py-[6px] text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
+                        className={`home-select-none select-none box-border inline-flex h-[29px] min-w-0 max-w-[calc(100%-32px)] shrink-0 snap-start items-center justify-center gap-2.5 overflow-hidden rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3.5 py-[6px] text-[12px] font-medium leading-[17px] ${isEarlyGrowth ? "text-[rgba(50,44,34,0.52)]" : "text-[rgba(50,44,34,0.7)]"}`}
                         style={{
-                          backgroundColor: getColorWithAlpha(backgroundColor, 0.5),
+                          backgroundColor: getColorWithAlpha(backgroundColor, isEarlyGrowth ? 0.3 : 0.5),
                           boxShadow: "0 2px 4px 0 rgba(180,196,244,0.30), inset 0 1px 0 0 rgba(255,255,255,0.58)",
                           fontFamily: "'Pretendard Variable', sans-serif",
                         }}
                       >
-                        <span className="min-w-0 truncate">{chip}</span>
+                        <span className="min-w-0 truncate">{label}</span>
                       </motion.button>
                     );
                   })}
@@ -896,6 +873,7 @@ export const Home = (): JSX.Element => {
                 {/* TODO: MVP 이후 새 기억묶음/포카칩 생성 기능으로 재검토 */}
               </div>
             </div>
+            )}
           </div>
         </section>
         {/* 수집된 조각 피드 — 선 대신 따뜻한 배경 톤으로 부드럽게 전환 */}
