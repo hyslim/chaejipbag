@@ -8,6 +8,7 @@ import { useFragments } from "@/hooks/useFragments";
 import { useFragmentImage } from "@/hooks/useFragmentImage";
 import { BottomNav } from "@/components/BottomNav";
 import { copyFragmentShareText, shareFragment, shouldOfferImageShare } from "@/lib/shareFragment";
+import { getYouTubeThumbnailUrl } from "@/lib/youtube";
 
 const IMAGE_SHARE_DELAY_MS = 700;
 
@@ -100,6 +101,10 @@ const FragmentCard = ({
 }) => {
   const [, navigate] = useLocation();
   const imageUrl = useFragmentImage(fragment);
+  const [failedYouTubeThumbnailUrl, setFailedYouTubeThumbnailUrl] = useState<string | null>(null);
+  const youtubeThumbnailUrl = getYouTubeThumbnailUrl(fragment.url);
+  const hasStoredImage = Boolean(fragment.imageKey || fragment.imageDataUrl);
+  const displayImageUrl = imageUrl || (!hasStoredImage && youtubeThumbnailUrl !== failedYouTubeThumbnailUrl ? youtubeThumbnailUrl : null);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const longPressTimerRef = useRef<number | null>(null);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -261,10 +266,13 @@ const FragmentCard = ({
         onContextMenu={(event) => event.preventDefault()}
         onClick={handleCardClick}
       >
-        {imageUrl && (
+        {displayImageUrl && (
           <img
-            src={imageUrl}
+            src={displayImageUrl}
             alt=""
+            onError={() => {
+              if (!imageUrl) setFailedYouTubeThumbnailUrl(youtubeThumbnailUrl);
+            }}
             className="h-[140px] w-full object-cover"
           />
         )}

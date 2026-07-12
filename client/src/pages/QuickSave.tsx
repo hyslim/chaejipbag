@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { X } from "lucide-react";
 import { getCleanPokachipName, getPokachipColor, getPokachipCandidates, getPokachipKey, getRecentPokachips, mergePokachips, parsePokachipInput } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
+import { getYouTubeThumbnailUrl, getYouTubeVideoId } from "@/lib/youtube";
 
 const urlPattern = /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/i;
 const trailingUrlPunctuationPattern = /[),.;!?]+$/;
@@ -126,27 +127,6 @@ const getParsedUrl = (value: string) => {
 const getNormalizedHostname = (url: URL) =>
   url.hostname.toLocaleLowerCase("en-US").replace(/^www\./, "").replace(/^m\./, "");
 
-const getYouTubeVideoId = (sharedUrl: string) => {
-  const url = getParsedUrl(sharedUrl);
-  if (!url) return "";
-
-  const hostname = getNormalizedHostname(url);
-  let candidate = "";
-
-  if (hostname === "youtu.be") {
-    candidate = url.pathname.split("/").filter(Boolean)[0] ?? "";
-  } else if (hostname === "youtube.com" || hostname === "youtube-nocookie.com") {
-    if (url.pathname === "/watch") {
-      candidate = url.searchParams.get("v") ?? "";
-    } else {
-      const [type, id] = url.pathname.split("/").filter(Boolean);
-      if (["shorts", "embed", "live", "v"].includes(type)) candidate = id ?? "";
-    }
-  }
-
-  return /^[A-Za-z0-9_-]{11}$/.test(candidate) ? candidate : "";
-};
-
 const getInstagramHandle = (sharedText: string, sharedUrl: string) => {
   const explicitHandle = removeUrls(sharedText)
     .match(/(?:^|[\s(])@([A-Za-z0-9._]{1,30})\b/)?.[1];
@@ -219,9 +199,7 @@ const getQuickSaveDefaults = (sharedTitle: string, sharedText: string, urlParam:
       || (youtubeVideoId ? "YouTube 조각" : getDomainFallbackTitle(sharedUrl))
       || "새 조각";
   const initialMemo = removeDuplicateTitleLine(cleanSharedText, fallbackTitle);
-  const youtubeThumbnailUrl = youtubeVideoId
-    ? `https://i.ytimg.com/vi/${youtubeVideoId}/hqdefault.jpg`
-    : "";
+  const youtubeThumbnailUrl = getYouTubeThumbnailUrl(sharedUrl) ?? "";
 
   return { sharedUrl, sharedHostname, fallbackTitle, initialMemo, youtubeThumbnailUrl };
 };

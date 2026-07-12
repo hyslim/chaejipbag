@@ -6,6 +6,7 @@ import { getPokachipColor, normalizePokachipName } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { useFragmentImage } from "@/hooks/useFragmentImage";
 import { copyFragmentShareText, shareFragment, shouldOfferImageShare } from "@/lib/shareFragment";
+import { getYouTubeThumbnailUrl } from "@/lib/youtube";
 
 const sourceIconColor = "rgba(120,112,100,0.65)";
 const IMAGE_SHARE_DELAY_MS = 700;
@@ -66,6 +67,10 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   const [shareSheetStatus, setShareSheetStatus] = useState<"idle" | "copying" | "copied">("idle");
   const fragment = getFragment(params.id);
   const imageUrl = useFragmentImage(fragment);
+  const [failedYouTubeThumbnailUrl, setFailedYouTubeThumbnailUrl] = useState<string | null>(null);
+  const youtubeThumbnailUrl = getYouTubeThumbnailUrl(fragment?.url);
+  const hasStoredImage = Boolean(fragment?.imageKey || fragment?.imageDataUrl);
+  const displayImageUrl = imageUrl || (!hasStoredImage && youtubeThumbnailUrl !== failedYouTubeThumbnailUrl ? youtubeThumbnailUrl : null);
 
   const handleDelete = () => {
     if (deleteFragment(params.id)) navigate("/");
@@ -268,7 +273,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
               </p>
             </section>
           )}
-          {imageUrl && (
+          {displayImageUrl && (
             <section className="mt-8">
               <button
                 type="button"
@@ -277,8 +282,11 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
                 aria-label="이미지 전체보기 열기"
               >
                 <img
-                  src={imageUrl}
+                  src={displayImageUrl}
                   alt=""
+                  onError={() => {
+                    if (!imageUrl) setFailedYouTubeThumbnailUrl(youtubeThumbnailUrl);
+                  }}
                   className="h-[236px] w-full object-cover transition-transform duration-200 group-active:scale-[0.99]"
                 />
               </button>
@@ -372,7 +380,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
             공유하기
           </button>
         </div>
-        {isImageViewerOpen && imageUrl && (
+        {isImageViewerOpen && displayImageUrl && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(32,28,24,0.72)] px-4 py-8 backdrop-blur-[2px]"
             role="dialog"
@@ -391,7 +399,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
               </button>
               {/* TODO: If single-image storage expands to images[], add n/n counter and prev/next controls here. */}
               <img
-                src={imageUrl}
+                src={displayImageUrl}
                 alt=""
                 className="max-h-full max-w-full rounded-[18px] object-contain shadow-[0_18px_60px_rgba(0,0,0,0.28)]"
               />
