@@ -24,6 +24,7 @@ const interestStyles = [
 
 const existingPokachipPalette = ["#EEC4D0", "#CDEAF3", "#DCD9F3", "#F1DFA7", "#CDEBE4", "#D8E7FA"];
 const temporaryPokachipColor = "rgba(120,112,100,0.18)";
+const isTemporaryPokachip = (label: string): boolean => label.toLocaleLowerCase("ko-KR") === "임시조각";
 
 const getComparableColor = (color: string): string => {
   const hexMatch = color.match(/^#([0-9a-f]{6})$/i);
@@ -100,6 +101,7 @@ const FragmentCard = ({
   const didLongPressRef = useRef(false);
   const SourceIcon = getFragmentSourceIcon(fragment);
   const primaryChip = fragment.pokachips[0] ? normalizePokachipName(fragment.pokachips[0]) : "";
+  const isTemporaryPrimaryChip = isTemporaryPokachip(primaryChip);
   const hasTitle = Boolean(fragment.title.trim());
   const hasMemo = shouldShowMemoPreview(fragment);
   const chipBottomSpacing = hasTitle || hasMemo ? "mb-2" : "mb-0";
@@ -265,9 +267,11 @@ const FragmentCard = ({
         <div className="flex min-w-0 flex-col p-3">
           {primaryChip && (
             <span
-              className={`${chipBottomSpacing} flex h-6 min-w-0 max-w-full items-center self-start overflow-hidden rounded-[999px] px-2.5 py-1 text-[11px] font-medium leading-4 text-[rgba(50,44,34,0.68)]`}
+              className={`${chipBottomSpacing} flex h-6 min-w-0 max-w-full items-center self-start overflow-hidden rounded-[999px] px-2.5 py-1 text-[11px] font-medium leading-4 ${isTemporaryPrimaryChip ? "text-[rgba(120,112,100,0.66)]" : "text-[rgba(50,44,34,0.68)]"}`}
               style={{
-                backgroundColor: getPokachipColor(primaryChip),
+                backgroundColor: isTemporaryPrimaryChip
+                  ? getColorWithAlpha(temporaryPokachipColor, 0.24)
+                  : getPokachipColor(primaryChip),
                 fontFamily: "'Pretendard Variable', sans-serif",
               }}
             >
@@ -306,6 +310,7 @@ const FragmentCard = ({
 };
 const SearchResultCard = ({ fragment }: { fragment: Fragment }) => {
   const primaryChip = fragment.pokachips[0] ? normalizePokachipName(fragment.pokachips[0]) : "";
+  const isTemporaryPrimaryChip = isTemporaryPokachip(primaryChip);
   const SourceIcon = getFragmentSourceIcon(fragment);
 
   return (
@@ -317,9 +322,11 @@ const SearchResultCard = ({ fragment }: { fragment: Fragment }) => {
       >
         {primaryChip && (
           <span
-            className="mb-2 inline-flex h-[22px] min-w-0 max-w-full items-center overflow-hidden rounded-full px-2.5 text-[11px] font-medium text-[#5a5248b0]"
+            className={`mb-2 inline-flex h-[22px] min-w-0 max-w-full items-center overflow-hidden rounded-full px-2.5 text-[11px] font-medium ${isTemporaryPrimaryChip ? "text-[rgba(120,112,100,0.66)]" : "text-[#5a5248b0]"}`}
             style={{
-              backgroundColor: getPokachipColor(primaryChip),
+              backgroundColor: isTemporaryPrimaryChip
+                ? getColorWithAlpha(temporaryPokachipColor, 0.24)
+                : getPokachipColor(primaryChip),
               fontFamily: "'Pretendard Variable', sans-serif",
             }}
           >
@@ -400,14 +407,14 @@ export const Home = (): JSX.Element => {
   const pokachipUsages = Array.from(pokachipUsage.values());
   const topPokachips = [...pokachipUsages].sort((a, b) => b.lastUsedAt - a.lastUsedAt);
   const interestCandidates = [...pokachipUsages]
-    .filter(({ label, count }) => count >= 5 && label.toLocaleLowerCase("ko-KR") !== "임시조각")
+    .filter(({ label, count }) => count >= 5 && !isTemporaryPokachip(label))
     .sort((a, b) => b.count - a.count || b.lastUsedAt - a.lastUsedAt)
     .slice(0, 6);
   const interests = interestCandidates.length >= 3 ? interestCandidates : [];
   const hasInterests = interests.length >= 3;
   let previousPokachipColor = "";
   const displayPokachips = topPokachips.map((pokachip) => {
-    const isTemporary = pokachip.label.toLocaleLowerCase("ko-KR") === "임시조각";
+    const isTemporary = isTemporaryPokachip(pokachip.label);
     let color = isTemporary ? temporaryPokachipColor : getPokachipColor(pokachip.label);
     if (!isTemporary && getComparableColor(color) === getComparableColor(previousPokachipColor)) {
       const paletteIndex = existingPokachipPalette.findIndex(
