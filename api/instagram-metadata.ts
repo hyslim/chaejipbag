@@ -1,4 +1,4 @@
-import { fetchInstagramMetadata } from "./_instagram-metadata";
+import { fetchInstagramMetadata } from "./_instagram-metadata.js";
 
 const jsonResponse = (body: unknown, status = 200, headers: HeadersInit = {}): Response =>
   Response.json(body, {
