@@ -1,10 +1,11 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { X } from "lucide-react";
 import { getCleanPokachipName, getPokachipColor, getPokachipCandidates, getPokachipKey, getRecentPokachips, mergePokachips, parsePokachipInput } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { getYouTubeThumbnailUrl, getYouTubeVideoId } from "@/lib/youtube";
 import { getInstagramSuggestedTitle, isInstagramUrl } from "@/lib/instagram";
+import { AutoGrowingSingleLineTextarea, normalizeSingleLineText } from "@/components/AutoGrowingSingleLineTextarea";
 
 const urlPattern = /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/i;
 const trailingUrlPunctuationPattern = /[),.;!?]+$/;
@@ -221,16 +222,11 @@ export const QuickSave = () => {
   const [chipInput, setChipInput] = useState("");
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
   const [isInputActive, setIsInputActive] = useState(false);
-  const titleRef = useRef<HTMLTextAreaElement>(null);
   const hasUserEditedTitleRef = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const trimmedMemo = memo.trim();
   const canSave = Boolean(sharedUrl || trimmedMemo || fallbackTitle || imageDataUrl);
   const [title, setTitle] = useState(fallbackTitle);
-
-  useLayoutEffect(() => {
-    titleRef.current?.blur();
-  }, []);
 
   useEffect(() => {
     if (!shareId) return;
@@ -392,19 +388,18 @@ export const QuickSave = () => {
             <p className="text-[13px] font-medium text-[rgba(120,112,100,0.75)]">외부에서 주운 조각</p>
             <div className="mt-3 rounded-[18px] bg-[#FAF8F4] px-4 pb-1.5 pt-2.5">
               <span className="block text-[12px] font-medium text-[rgba(120,112,100,0.75)]">제목</span>
-              <textarea
-                ref={titleRef}
+              <AutoGrowingSingleLineTextarea
                 autoFocus={false}
                 value={title}
-                onChange={(event) => {
+                onChange={(value) => {
                   hasUserEditedTitleRef.current = true;
-                  setTitle(event.target.value);
+                  setTitle(value);
                 }}
-                rows={1}
+                minHeight={23}
+                maxHeight={46}
                 placeholder="제목"
                 className="mt-0.5 max-h-[46px] min-h-[23px] w-full resize-none overflow-y-auto bg-transparent text-[18px] font-medium leading-[23px] text-[rgba(54,58,105,0.72)] outline-none placeholder:text-[rgba(54,58,105,0.36)]"
-              />
-            </div>
+              />            </div>
 
             {sharedUrl && (
               <div className="mt-2.5 flex min-w-0 items-center gap-1.5">
@@ -453,9 +448,10 @@ export const QuickSave = () => {
               id="quick-save-memo"
               type="text"
               value={memo}
-              onChange={(event) => setMemo(event.target.value)}
+              onChange={(event) => setMemo(normalizeSingleLineText(event.target.value))}
               onKeyDown={(event) => {
                 if (event.key !== "Enter") return;
+                if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) return;
                 event.preventDefault();
                 event.currentTarget.blur();
               }}

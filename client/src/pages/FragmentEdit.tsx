@@ -5,6 +5,7 @@ import { getCleanPokachipName, getPokachipColor, getPokachipCandidates, getPokac
 import { useFragments } from "@/hooks/useFragments";
 import { useFragmentImage } from "@/hooks/useFragmentImage";
 import { processSelectedImage } from "@/data/imageProcessing";
+import { AutoGrowingSingleLineTextarea } from "@/components/AutoGrowingSingleLineTextarea";
 
 const koreanInitials = [
   "ㄱ", "ㄲ", "ㄴ", "ㄷ", "ㄸ", "ㄹ", "ㅁ", "ㅂ", "ㅃ", "ㅅ",
@@ -271,12 +272,13 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
             >
               제목
             </label>
-            <textarea
+            <AutoGrowingSingleLineTextarea
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={setTitle}
               placeholder="제목을 적어주세요"
-              rows={2}
-              className="w-full resize-none rounded-xl border border-[#0000000a] bg-white px-4 py-3 text-[17px] font-medium leading-[24px] text-[rgba(50,44,34,0.8)] placeholder:text-[rgba(120,112,100,0.6)] outline-none shadow-[0px_1px_4px_#0000000a]"
+              minHeight={48}
+              maxHeight={72}
+              className="w-full resize-none overflow-y-auto rounded-xl border border-[#0000000a] bg-white px-4 py-3 text-[17px] font-medium leading-[24px] text-[rgba(50,44,34,0.8)] placeholder:text-[rgba(120,112,100,0.6)] outline-none shadow-[0px_1px_4px_#0000000a]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             />
           </div>
