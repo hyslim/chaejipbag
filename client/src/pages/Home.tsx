@@ -10,6 +10,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { copyFragmentShareText, shareFragment, shouldOfferImageShare } from "@/lib/shareFragment";
 import { getYouTubeThumbnailUrl } from "@/lib/youtube";
 import { getInstagramUsername, isInstagramUrl } from "@/lib/instagram";
+import { getCardImageHeight, type CardImageHeight } from "@/lib/cardImageHeight";
 
 const IMAGE_SHARE_DELAY_MS = 700;
 
@@ -106,6 +107,13 @@ const FragmentCard = ({
   const youtubeThumbnailUrl = getYouTubeThumbnailUrl(fragment.url);
   const hasStoredImage = Boolean(fragment.imageKey || fragment.imageDataUrl);
   const displayImageUrl = imageUrl || (!hasStoredImage && youtubeThumbnailUrl !== failedYouTubeThumbnailUrl ? youtubeThumbnailUrl : null);
+  const isYouTubeThumbnail = Boolean(displayImageUrl && !hasStoredImage && displayImageUrl === youtubeThumbnailUrl);
+  const [imageHeightState, setImageHeightState] = useState<{ src: string; height: CardImageHeight } | null>(null);
+  const imageHeight = isYouTubeThumbnail
+    ? 160
+    : imageHeightState?.src === displayImageUrl
+      ? imageHeightState.height
+      : 200;
   const instagramUsername = getInstagramUsername(fragment.title, fragment.url);
   const showInstagramPlaceholder = !hasStoredImage && !youtubeThumbnailUrl && isInstagramUrl(fragment.url);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -273,10 +281,19 @@ const FragmentCard = ({
           <img
             src={displayImageUrl}
             alt=""
+            onLoad={(event) => {
+              setImageHeightState({
+                src: displayImageUrl,
+                height: isYouTubeThumbnail
+                  ? 160
+                  : getCardImageHeight(event.currentTarget.naturalWidth, event.currentTarget.naturalHeight),
+              });
+            }}
             onError={() => {
               if (!imageUrl) setFailedYouTubeThumbnailUrl(youtubeThumbnailUrl);
             }}
-            className="h-[140px] w-full object-cover"
+            className="w-full object-cover"
+            style={{ height: imageHeight }}
           />
         )}
         {showInstagramPlaceholder && (
