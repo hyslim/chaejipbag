@@ -6,7 +6,7 @@ import { useFragments } from "@/hooks/useFragments";
 
 const SearchCard = ({ fragment }: { fragment: Fragment }) => (
   <Link href={`/fragment/${fragment.id}`}>
-    <div className="min-w-0 overflow-hidden rounded-2xl border border-white/80 bg-white/80 p-4 shadow-[0_5px_18px_rgba(74,63,48,0.06)]">
+    <div className="min-w-0 overflow-hidden rounded-2xl border border-[rgba(120,112,100,0.14)] bg-white p-4 shadow-[0_6px_18px_rgba(74,63,48,0.09)]">
       <h2
         className="line-clamp-2 break-words text-[14px] font-medium leading-snug text-[#3a3228]"
         style={{ fontFamily: "'Pretendard Variable', sans-serif" }}

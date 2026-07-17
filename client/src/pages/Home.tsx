@@ -256,11 +256,11 @@ const FragmentCard = ({
           : {
               scale: 1,
               y: 0,
-              boxShadow: "0px 8px 24px rgba(74,63,48,0.08)",
+              boxShadow: "0px 6px 18px rgba(74,63,48,0.09)",
             }}
         whileTap={{ scale: isMenuOpen ? 1.01 : 0.97 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        className="home-select-none min-w-0 select-none overflow-hidden rounded-[18px] bg-white/90 outline-none cursor-pointer"
+        className="home-select-none min-w-0 select-none overflow-hidden rounded-[18px] border border-[rgba(120,112,100,0.14)] bg-white outline-none cursor-pointer"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerEnd}
@@ -305,7 +305,7 @@ const FragmentCard = ({
 
           {hasTitle && (
             <p
-              className="min-w-0 overflow-hidden break-words line-clamp-2 text-[14px] font-medium leading-[20px] text-[rgba(50,44,34,0.8)]"
+              className="min-w-0 overflow-hidden break-words line-clamp-2 text-[14px] font-medium leading-[20px] text-[rgba(50,44,34,0.86)]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
               {fragment.title}
@@ -342,7 +342,7 @@ const SearchResultCard = ({ fragment, primaryChipCount }: { fragment: Fragment; 
       <motion.div
         whileTap={{ scale: 0.97 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        className="home-select-none min-h-[104px] min-w-0 select-none overflow-hidden rounded-[14px] border border-white/85 bg-white/90 px-3.5 py-3 shadow-[0_6px_18px_rgba(74,63,48,0.08)]"
+        className="home-select-none min-h-[104px] min-w-0 select-none overflow-hidden rounded-[14px] border border-[rgba(120,112,100,0.14)] bg-white px-3.5 py-3 shadow-[0_6px_18px_rgba(74,63,48,0.09)]"
       >
         {primaryChip && (
           <span

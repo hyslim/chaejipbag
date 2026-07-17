@@ -60,7 +60,7 @@ const HistoryCard = ({ fragment, eventIcon: EventIcon }: { fragment: Fragment; e
 
   return (
     <Link href={`/fragment/${fragment.id}`}>
-      <div className="overflow-hidden rounded-[18px] border border-white/85 bg-white/90 px-4 py-3.5 shadow-[0_6px_18px_rgba(74,63,48,0.08)]">
+      <div className="overflow-hidden rounded-[18px] border border-[rgba(120,112,100,0.14)] bg-white px-4 py-3.5 shadow-[0_6px_18px_rgba(74,63,48,0.09)]">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <EventIcon
@@ -70,7 +70,7 @@ const HistoryCard = ({ fragment, eventIcon: EventIcon }: { fragment: Fragment; e
               aria-hidden="true"
             />
             <p
-              className="min-w-0 flex-1 overflow-hidden break-words line-clamp-2 text-[14px] font-medium leading-snug text-[rgba(50,44,34,0.8)]"
+              className="min-w-0 flex-1 overflow-hidden break-words line-clamp-2 text-[14px] font-medium leading-snug text-[rgba(50,44,34,0.86)]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
               {historyText}
