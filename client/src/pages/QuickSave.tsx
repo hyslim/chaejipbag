@@ -118,6 +118,36 @@ const getFirstMeaningfulSentence = (value: string) => {
   return meaningfulSentence ? getCompactTitle(meaningfulSentence) : "";
 };
 
+type InstagramMetadataPreview = {
+  ok: boolean;
+  type?: "post" | "reel" | "carousel";
+  typeCandidates?: Array<"post" | "reel" | "carousel">;
+  username?: string;
+  caption?: string;
+  title?: string;
+  thumbnailUrl?: string;
+  reason?: string;
+};
+
+const instagramMetadataTimeoutMs = 6_000;
+
+const getInstagramMetadataTitle = (
+  metadata: InstagramMetadataPreview,
+  currentFallbackTitle: string,
+) => getFirstMeaningfulSentence(metadata.caption ?? "")
+  || getFirstMeaningfulSentence(metadata.title ?? "")
+  || (metadata.username ? getCompactTitle(`@${metadata.username}님의 게시물`) : "")
+  || currentFallbackTitle;
+
+const getInstagramTypeLabel = (metadata: InstagramMetadataPreview) => {
+  if (metadata.type === "reel") return "Reel";
+  if (metadata.type === "carousel") return "캐러셀";
+  if (metadata.type === "post") return "게시물";
+  if (metadata.typeCandidates?.includes("reel")) return "Reel";
+  if (metadata.typeCandidates?.includes("post")) return "게시물";
+  return "";
+};
+
 const getParsedUrl = (value: string) => {
   try {
     return new URL(normalizeSharedUrl(value));
@@ -216,6 +246,9 @@ export const QuickSave = () => {
   const [imageDataUrl, setImageDataUrl] = useState("");
   const [youtubeThumbnailUrl, setYoutubeThumbnailUrl] = useState(initialShare.youtubeThumbnailUrl);
   const [isYoutubeThumbnailHidden, setIsYoutubeThumbnailHidden] = useState(false);
+  const [instagramMetadata, setInstagramMetadata] = useState<InstagramMetadataPreview | null>(null);
+  const [isInstagramMetadataLoading, setIsInstagramMetadataLoading] = useState(false);
+  const [isInstagramThumbnailHidden, setIsInstagramThumbnailHidden] = useState(false);
   const [imageError, setImageError] = useState("");
   const [saveError, setSaveError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -227,6 +260,7 @@ export const QuickSave = () => {
   const trimmedMemo = memo.trim();
   const canSave = Boolean(sharedUrl || trimmedMemo || fallbackTitle || imageDataUrl);
   const [title, setTitle] = useState(fallbackTitle);
+  const isInstagram = isInstagramUrl(sharedUrl);
 
   useEffect(() => {
     if (!shareId) return;
@@ -276,6 +310,60 @@ export const QuickSave = () => {
       isCanceled = true;
     };
   }, [shareId]);
+
+  useEffect(() => {
+    setInstagramMetadata(null);
+    setIsInstagramThumbnailHidden(false);
+
+    if (!isInstagram) {
+      setIsInstagramMetadataLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    let isDisposed = false;
+    const timeout = window.setTimeout(() => controller.abort(), instagramMetadataTimeoutMs);
+
+    setIsInstagramMetadataLoading(true);
+
+    const loadInstagramMetadata = async () => {
+      try {
+        const response = await fetch(`/api/instagram-metadata?url=${encodeURIComponent(sharedUrl)}`, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        const metadata = await response.json() as InstagramMetadataPreview;
+        if (isDisposed) return;
+
+        if (!response.ok || metadata.ok !== true) {
+          setIsInstagramMetadataLoading(false);
+          return;
+        }
+
+        setInstagramMetadata(metadata);
+        setIsInstagramMetadataLoading(false);
+
+        if (!hasUserEditedTitleRef.current) {
+          const metadataTitle = getInstagramMetadataTitle(metadata, fallbackTitle);
+          setFallbackTitle(metadataTitle);
+          setTitle(metadataTitle);
+        }
+      } catch {
+        if (!isDisposed) setIsInstagramMetadataLoading(false);
+      } finally {
+        window.clearTimeout(timeout);
+      }
+    };
+
+    void loadInstagramMetadata();
+
+    return () => {
+      isDisposed = true;
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [isInstagram, sharedUrl]);
+
   const visibleRecentChips = getRecentPokachips(fragments, {
     limit: 5,
     exclude: selectedChips,
@@ -412,6 +500,28 @@ export const QuickSave = () => {
               </div>
             )}
 
+            {isInstagramMetadataLoading && (
+              <p
+                aria-live="polite"
+                className="mt-2 text-[11px] leading-[16px] text-[rgba(120,112,100,0.68)]"
+              >
+                게시물 정보를 불러오는 중...
+              </p>
+            )}
+
+            {instagramMetadata && (instagramMetadata.username || getInstagramTypeLabel(instagramMetadata)) && (
+              <div className="mt-2 flex min-w-0 items-center gap-1.5 text-[11px] leading-[16px] text-[rgba(120,112,100,0.72)]">
+                {instagramMetadata.username && (
+                  <span className="min-w-0 truncate">@{instagramMetadata.username}</span>
+                )}
+                {instagramMetadata.username && getInstagramTypeLabel(instagramMetadata) && (
+                  <span aria-hidden="true">·</span>
+                )}
+                {getInstagramTypeLabel(instagramMetadata) && (
+                  <span className="shrink-0">{getInstagramTypeLabel(instagramMetadata)}</span>
+                )}
+              </div>
+            )}
 
             {imageDataUrl ? (
               <div className="mt-2.5 overflow-hidden rounded-[18px] border border-white/70 bg-[#FFFFFF] shadow-[0_6px_18px_rgba(80,70,55,0.06)]">
@@ -422,6 +532,15 @@ export const QuickSave = () => {
                     setImageDataUrl("");
                     setImageError("이미지를 표시할 수 없어 이미지 없이 열었어요.");
                   }}
+                  className="h-[142px] w-full object-cover"
+                />
+              </div>
+            ) : instagramMetadata?.thumbnailUrl && !isInstagramThumbnailHidden ? (
+              <div className="mt-2.5 overflow-hidden rounded-[18px] border border-white/70 bg-[#FFFFFF] shadow-[0_6px_18px_rgba(80,70,55,0.06)]">
+                <img
+                  src={instagramMetadata.thumbnailUrl}
+                  alt=""
+                  onError={() => setIsInstagramThumbnailHidden(true)}
                   className="h-[142px] w-full object-cover"
                 />
               </div>
