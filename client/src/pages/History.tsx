@@ -1,8 +1,10 @@
-import { ArrowRight, ArrowUp, Link2, RotateCcw, Sparkles, type LucideIcon } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, ArrowUp, Download, Link2, RotateCcw, Sparkles, type LucideIcon } from "lucide-react";
 import { Link } from "wouter";
 import { getPokachipColor, normalizePokachipName, type Fragment } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { BottomNav } from "@/components/BottomNav";
+import { downloadChaejipbagBackup } from "@/lib/exportBackup";
 
 const HISTORY_FILTERS = [
   { label: "첫 등장", Icon: Sparkles },
@@ -218,6 +220,8 @@ const EmptyHistory = () => (
 
 export const History = () => {
   const { fragments } = useFragments();
+  const [isExporting, setIsExporting] = useState(false);
+  const [backupMessage, setBackupMessage] = useState("");
   const fragmentOrder = new Map(fragments.map((fragment, index) => [fragment.id, index]));
   const sortedFragments = [...fragments].sort(
     (a, b) =>
@@ -229,18 +233,57 @@ export const History = () => {
     fragments: sortedFragments.filter((fragment) => getHistorySection(fragment) === label),
   }));
 
+  const handleBackupExport = async () => {
+    if (isExporting) return;
+
+    setIsExporting(true);
+    setBackupMessage("");
+
+    try {
+      const backup = await downloadChaejipbagBackup(fragments);
+      setBackupMessage(
+        backup.imageFailureCount > 0
+          ? `백업을 저장했어요. 이미지 ${backup.imageFailureCount}개는 담지 못했어요.`
+          : "가방 백업을 저장했어요."
+      );
+    } catch {
+      setBackupMessage("백업 파일을 만들지 못했어요. 다시 시도해 주세요.");
+    } finally {
+      setIsExporting(false);
+      window.setTimeout(() => setBackupMessage(""), 3000);
+    }
+  };
+
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#FAF8F4] sm:bg-[#f3f0ec]">
       <section className="min-h-screen w-full bg-[#FAF8F4] pb-[calc(220px+env(safe-area-inset-bottom))] sm:max-w-[390px]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
-        <header className="flex flex-col border-b border-[#F5F2ED] bg-[#FFFEFB] px-5 pb-3 pt-6">
-          <p className="mb-1 text-[13px] font-[550] text-[rgba(120,112,100,0.7)]">다시 꺼내보는 조각들</p>
-          <h1
-            className="text-[22px] font-medium leading-[1.4] text-[#353a69b2]"
-            style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+        <header className="flex items-end justify-between gap-4 border-b border-[#F5F2ED] bg-[#FFFEFB] px-5 pb-3 pt-6">
+          <div className="min-w-0">
+            <p className="mb-1 text-[13px] font-[550] text-[rgba(120,112,100,0.7)]">다시 꺼내보는 조각들</p>
+            <h1
+              className="text-[22px] font-medium leading-[1.4] text-[#353a69b2]"
+              style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+            >
+              기록
+            </h1>
+          </div>
+          <button
+            type="button"
+            onClick={() => void handleBackupExport()}
+            disabled={isExporting}
+            className="mb-0.5 inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-[rgba(120,112,100,0.14)] bg-white px-3 text-[12px] font-medium text-[rgba(53,58,105,0.72)] shadow-[0_3px_10px_rgba(74,63,48,0.05)] disabled:opacity-55"
+            aria-label="가방 백업 JSON 내보내기"
           >
-            기록
-          </h1>
+            <Download size={14} strokeWidth={1.8} aria-hidden="true" />
+            {isExporting ? "준비 중" : "백업"}
+          </button>
         </header>
+
+        {backupMessage && (
+          <div className="border-b border-[#F5F2ED] bg-[#FFFEFB] px-5 py-2 text-center text-[12px] font-medium leading-[18px] text-[rgba(54,58,105,0.66)]" role="status">
+            {backupMessage}
+          </div>
+        )}
 
         <div className="bg-[#FFFFFF] px-5 py-3">
           <div className="flex flex-wrap items-center gap-2">
