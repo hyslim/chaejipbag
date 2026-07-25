@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from "react";
-import { Globe, Instagram, Pencil, Sparkles, Youtube, type LucideIcon } from "lucide-react";
+import { Globe, Instagram, Pencil, Pin, Sparkles, Youtube, type LucideIcon } from "lucide-react";
 import { flushSync } from "react-dom";
 import { Link, useLocation } from "wouter";
 import { getFragmentDisplayTime, getFragmentReferenceAt, getPokachipColor, getRecentPokachips, normalizePokachipName, type Fragment } from "@/data/fragments";
@@ -90,6 +90,7 @@ const FragmentCard = ({
   isMenuOpen,
   onOpenMenu,
   onCloseMenu,
+  onTogglePin,
   onDelete,
   onShare,
 }: {
@@ -98,6 +99,7 @@ const FragmentCard = ({
   isMenuOpen: boolean;
   onOpenMenu: () => void;
   onCloseMenu: () => void;
+  onTogglePin: () => void;
   onDelete: () => void;
   onShare: () => void | Promise<void>;
 }) => {
@@ -197,6 +199,11 @@ const FragmentCard = ({
     navigate(`/fragment/${fragment.id}`);
   };
 
+  const handleTogglePin = () => {
+    onTogglePin();
+    onCloseMenu();
+  };
+
   const handleSend = () => {
     onCloseMenu();
     void onShare();
@@ -226,6 +233,19 @@ const FragmentCard = ({
         }}
         onClick={(event) => event.stopPropagation()}
       >
+        <button
+          type="button"
+          role="menuitem"
+          tabIndex={isMenuOpen ? 0 : -1}
+          className="flex h-11 min-h-11 items-center justify-center rounded-full text-[11px] font-semibold text-[rgba(54,58,105,0.72)] home-select-none select-none shadow-[inset_0_0_0_1px_rgba(255,255,255,0.60),inset_0_1px_0_rgba(255,255,255,0.24)] outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+          style={{
+            background: "linear-gradient(135deg, rgba(225,221,255,0.72), rgba(204,218,255,0.62))",
+            fontFamily: "'Pretendard Variable', sans-serif",
+          }}
+          onClick={handleTogglePin}
+        >
+          {fragment.pinnedAt ? "고정 해제" : "상단 고정"}
+        </button>
         <button
           type="button"
           role="menuitem"
@@ -343,6 +363,14 @@ const FragmentCard = ({
             <span className="min-w-0 truncate" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
               {getFragmentDisplayTime(fragment)}
             </span>
+            {fragment.pinnedAt && (
+              <Pin
+                size={12}
+                strokeWidth={1.9}
+                className="ml-auto shrink-0 text-[rgba(110,103,207,0.72)]"
+                aria-label="상단 고정됨"
+              />
+            )}
           </div>
         </div>
       </motion.div>
@@ -415,7 +443,7 @@ const HomeEmptyState = ({ title, description }: { title: string; description: st
 );
 
 export const Home = (): JSX.Element => {
-  const { fragments, deleteFragment } = useFragments();
+  const { fragments, updateFragment, deleteFragment } = useFragments();
   const topPokachipScrollRef = useRef<HTMLDivElement | null>(null);
   const topPokachipDragRef = useRef<{ isDragging: boolean; startX: number; scrollLeft: number }>({
     isDragging: false,
@@ -478,8 +506,14 @@ export const Home = (): JSX.Element => {
         )
       )
     : fragments;
-  const leftColumnFragments = visibleFragments.filter((_, index) => index % 2 === 0);
-  const rightColumnFragments = visibleFragments.filter((_, index) => index % 2 === 1);
+  const pinnedFragments = visibleFragments
+    .filter((fragment) => Boolean(fragment.pinnedAt))
+    .sort(
+      (a, b) =>
+        (Date.parse(b.pinnedAt ?? "") || 0) -
+        (Date.parse(a.pinnedAt ?? "") || 0)
+    );
+  const regularFragments = visibleFragments.filter((fragment) => !fragment.pinnedAt);
   const normalizedSearchQuery = searchQuery.trim().toLocaleLowerCase("ko-KR");
   const searchResults = normalizedSearchQuery
     ? fragments.filter((fragment) => {
@@ -625,6 +659,22 @@ export const Home = (): JSX.Element => {
     window.setTimeout(() => setToastMessage(""), 2000);
   };
 
+  const handleToggleFragmentPin = (fragment: Fragment) => {
+    const wasPinned = Boolean(fragment.pinnedAt);
+    const updatedFragment = updateFragment(fragment.id, {
+      pinnedAt: wasPinned ? undefined : new Date().toISOString(),
+    });
+
+    setOpenMenuFragmentId(null);
+    showHomeToast(
+      updatedFragment
+        ? wasPinned
+          ? "상단 고정을 해제했어요"
+          : "기억 조각을 상단에 고정했어요"
+        : "상단 고정을 바꾸지 못했어요"
+    );
+  };
+
   const handleShareResult = (result: Awaited<ReturnType<typeof shareFragment>>) => {
     if (result === "shared-and-copied") {
       showHomeToast("이미지를 보냈어요. 글은 복사해뒀어요. 입력창에 붙여넣어 주세요.");
@@ -745,6 +795,35 @@ export const Home = (): JSX.Element => {
       closeLongPressMenu();
     }
   }, [openMenuFragmentId, visibleFragments]);
+
+  const renderFragmentColumns = (items: Fragment[]) => {
+    const columns = [
+      items.filter((_, index) => index % 2 === 0),
+      items.filter((_, index) => index % 2 === 1),
+    ];
+
+    return (
+      <div className="flex gap-3">
+        {columns.map((column, columnIndex) => (
+          <div key={columnIndex} className="flex min-w-0 flex-1 flex-col gap-3">
+            {column.map((fragment) => (
+              <FragmentCard
+                key={fragment.id}
+                fragment={fragment}
+                primaryChipCount={getPrimaryChipUsageCount(fragment)}
+                isMenuOpen={openMenuFragmentId === fragment.id}
+                onOpenMenu={() => setOpenMenuFragmentId(fragment.id)}
+                onCloseMenu={() => setOpenMenuFragmentId(null)}
+                onTogglePin={() => handleToggleFragmentPin(fragment)}
+                onDelete={() => handleDeleteFragment(fragment.id)}
+                onShare={() => handleShareFragment(fragment)}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#faf8f4] sm:bg-[#f3f0ec]">
@@ -978,12 +1057,20 @@ export const Home = (): JSX.Element => {
           {/* 오늘 모은 조각들 헤더 */}
           <div className="px-4 mb-3 flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-1.5">
-              <img src="/figmaAssets/glass.svg" alt="" className="h-[14px] w-[10px]" />
+              {!selectedChip && pinnedFragments.length > 0 ? (
+                <Pin size={13} strokeWidth={1.9} className="shrink-0 text-[rgba(110,103,207,0.68)]" aria-hidden="true" />
+              ) : (
+                <img src="/figmaAssets/glass.svg" alt="" className="h-[14px] w-[10px]" />
+              )}
               <span
                 className="min-w-0 truncate text-sm font-semibold text-[#787064bf]"
                 style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
               >
-                {selectedChip ? `${selectedChip} · ${visibleFragments.length}개` : "오늘 모은 조각들"}
+                {selectedChip
+                  ? `${selectedChip} · ${visibleFragments.length}개`
+                  : pinnedFragments.length > 0
+                    ? `상단 고정 · ${pinnedFragments.length}개`
+                    : "오늘 모은 조각들"}
               </span>
             </div>
             {selectedChip && (
@@ -998,39 +1085,31 @@ export const Home = (): JSX.Element => {
             )}
           </div>
 
-          {/* 2열 카드 목록 */}
+          {/* 고정된 조각을 일반 카드 목록보다 먼저 표시 */}
           {visibleFragments.length > 0 ? (
             <div className="px-4 pb-[calc(18rem+env(safe-area-inset-bottom))]">
-              <div className="flex gap-3">
-                <div className="flex min-w-0 flex-1 flex-col gap-3">
-                  {leftColumnFragments.map((fragment) => (
-                    <FragmentCard
-                      key={fragment.id}
-                      fragment={fragment}
-                      primaryChipCount={getPrimaryChipUsageCount(fragment)}
-                      isMenuOpen={openMenuFragmentId === fragment.id}
-                      onOpenMenu={() => setOpenMenuFragmentId(fragment.id)}
-                      onCloseMenu={() => setOpenMenuFragmentId(null)}
-                      onDelete={() => handleDeleteFragment(fragment.id)}
-                      onShare={() => handleShareFragment(fragment)}
-                    />
-                  ))}
+              {selectedChip && pinnedFragments.length > 0 && (
+                <div className="mb-3 flex items-center gap-1.5">
+                  <Pin size={13} strokeWidth={1.9} className="shrink-0 text-[rgba(110,103,207,0.68)]" aria-hidden="true" />
+                  <span className="text-[12px] font-semibold text-[rgba(120,112,100,0.72)]">
+                    상단 고정
+                  </span>
                 </div>
-                <div className="flex min-w-0 flex-1 flex-col gap-3">
-                  {rightColumnFragments.map((fragment) => (
-                    <FragmentCard
-                      key={fragment.id}
-                      fragment={fragment}
-                      primaryChipCount={getPrimaryChipUsageCount(fragment)}
-                      isMenuOpen={openMenuFragmentId === fragment.id}
-                      onOpenMenu={() => setOpenMenuFragmentId(fragment.id)}
-                      onCloseMenu={() => setOpenMenuFragmentId(null)}
-                      onDelete={() => handleDeleteFragment(fragment.id)}
-                      onShare={() => handleShareFragment(fragment)}
-                    />
-                  ))}
-                </div>
-              </div>
+              )}
+              {pinnedFragments.length > 0 && renderFragmentColumns(pinnedFragments)}
+              {regularFragments.length > 0 && (
+                <section className={pinnedFragments.length > 0 ? "mt-6" : ""}>
+                  {pinnedFragments.length > 0 && (
+                    <div className="mb-3 flex items-center gap-1.5">
+                      <img src="/figmaAssets/glass.svg" alt="" className="h-[14px] w-[10px]" />
+                      <span className="text-[12px] font-semibold text-[rgba(120,112,100,0.72)]">
+                        모아둔 조각들
+                      </span>
+                    </div>
+                  )}
+                  {renderFragmentColumns(regularFragments)}
+                </section>
+              )}
             </div>
           ) : selectedChip ? (
             <HomeEmptyState
