@@ -9,6 +9,7 @@ export interface Fragment {
   date: string;
   createdAt?: string;
   updatedAt?: string;
+  pinnedAt?: string;
   pokachips: string[];
   thumbnailColor: string;
   imageKey?: string;
