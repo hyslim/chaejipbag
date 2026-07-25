@@ -1,3 +1,19 @@
+export type FragmentAttachmentKind = "image" | "audio" | "video" | "pdf";
+
+export interface FragmentAttachment {
+  id: string;
+  kind: FragmentAttachmentKind;
+  blobKey: string;
+  mimeType: string;
+  filename?: string;
+  sizeBytes?: number;
+  width?: number;
+  height?: number;
+  createdAt: string;
+}
+
+export const MAX_FRAGMENT_IMAGE_ATTACHMENTS = 5;
+
 export interface Fragment {
   id: string;
   title: string;
@@ -11,8 +27,11 @@ export interface Fragment {
   updatedAt?: string;
   pokachips: string[];
   thumbnailColor: string;
+  /** @deprecated Legacy single-image pointer. New writes use attachments. */
   imageKey?: string;
+  /** @deprecated Legacy/back-up inline image. New writes use attachments. */
   imageDataUrl?: string;
+  attachments?: FragmentAttachment[];
 }
 
 export const pokachipColorMap: Record<string, string> = {
@@ -113,16 +132,68 @@ export function getFragmentDisplayTime(fragment: Fragment, now = new Date()): st
   }).format(referenceAt);
 }
 
+const attachmentKinds = new Set<FragmentAttachmentKind>(["image", "audio", "video", "pdf"]);
+
+const isSupportedAttachment = (value: unknown): value is FragmentAttachment => {
+  if (!value || typeof value !== "object") return false;
+  const attachment = value as Partial<FragmentAttachment>;
+  return typeof attachment.id === "string"
+    && attachmentKinds.has(attachment.kind as FragmentAttachmentKind)
+    && typeof attachment.blobKey === "string"
+    && typeof attachment.mimeType === "string"
+    && typeof attachment.createdAt === "string";
+};
+
+const getNormalizedAttachments = (
+  fragment: Pick<Fragment, "attachments" | "imageKey" | "createdAt" | "updatedAt">
+): FragmentAttachment[] => {
+  let imageCount = 0;
+  const attachments = (fragment.attachments ?? [])
+    .filter(isSupportedAttachment)
+    .filter((attachment) => attachment.kind !== "image" || imageCount++ < MAX_FRAGMENT_IMAGE_ATTACHMENTS);
+
+  if (attachments.some((attachment) => attachment.kind === "image") || !fragment.imageKey) {
+    return attachments;
+  }
+
+  return [...attachments, {
+    id: `legacy-${fragment.imageKey}`,
+    kind: "image",
+    blobKey: fragment.imageKey,
+    mimeType: "image/*",
+    createdAt: fragment.createdAt ?? fragment.updatedAt ?? new Date(0).toISOString(),
+  }];
+};
+
+export function getFragmentImageAttachments(
+  fragment?: Pick<Fragment, "attachments" | "imageKey" | "createdAt" | "updatedAt">
+): FragmentAttachment[] {
+  if (!fragment) return [];
+  return getNormalizedAttachments(fragment).filter((attachment) => attachment.kind === "image");
+}
+
+export function getFragmentImageCount(
+  fragment?: Pick<Fragment, "attachments" | "imageKey" | "imageDataUrl" | "createdAt" | "updatedAt">
+): number {
+  const attachmentCount = getFragmentImageAttachments(fragment).length;
+  return attachmentCount || (fragment?.imageDataUrl ? 1 : 0);
+}
+
 export function normalizeFragmentTimestamps(fragment: Fragment, index = 0): Fragment {
   const createdAtTime = Date.parse(fragment.createdAt ?? "");
   const updatedAtTime = Date.parse(fragment.updatedAt ?? "");
   const createdAt = Number.isFinite(createdAtTime)
     ? new Date(createdAtTime).toISOString()
     : getFallbackCreatedAt(fragment, index);
+  const attachments = getNormalizedAttachments({
+    ...fragment,
+    createdAt,
+  });
 
   return {
     ...fragment,
     createdAt,
+    ...(attachments.length > 0 ? { attachments } : {}),
     ...(Number.isFinite(updatedAtTime) ? { updatedAt: new Date(updatedAtTime).toISOString() } : {}),
   };
 }

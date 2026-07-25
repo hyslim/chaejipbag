@@ -172,6 +172,7 @@ type SharedTargetPayload = {
   text?: string;
   url?: string;
   imageDataUrl?: string;
+  imageDataUrls?: string[];
   imageError?: string;
 };
 
@@ -187,7 +188,7 @@ const logSharedPayloadForDevelopment = (
     rawTitle: payload.title ?? "",
     rawText: payload.text ?? "",
     rawUrl: payload.url ?? "",
-    hasImage: Boolean(payload.imageDataUrl),
+    imageCount: payload.imageDataUrls?.length ?? (payload.imageDataUrl ? 1 : 0),
   });
 };
 
@@ -232,7 +233,7 @@ const getQuickSaveDefaults = (sharedTitle: string, sharedText: string, urlParam:
 
 export const QuickSave = () => {
   const [, navigate] = useLocation();
-  const { fragments, addFragment, addFragmentWithImage } = useFragments();
+  const { fragments, addFragment, addFragmentWithImages } = useFragments();
   const params = new URLSearchParams(window.location.search);
   const sharedTitle = params.get("title")?.trim() ?? "";
   const sharedText = params.get("text")?.trim() ?? "";
@@ -243,7 +244,7 @@ export const QuickSave = () => {
   const [sharedHostname, setSharedHostname] = useState(initialShare.sharedHostname);
   const [fallbackTitle, setFallbackTitle] = useState(initialShare.fallbackTitle);
   const [memo, setMemo] = useState(initialShare.initialMemo);
-  const [imageDataUrl, setImageDataUrl] = useState("");
+  const [imageDataUrls, setImageDataUrls] = useState<string[]>([]);
   const [youtubeThumbnailUrl, setYoutubeThumbnailUrl] = useState(initialShare.youtubeThumbnailUrl);
   const [isYoutubeThumbnailHidden, setIsYoutubeThumbnailHidden] = useState(false);
   const [instagramMetadata, setInstagramMetadata] = useState<InstagramMetadataPreview | null>(null);
@@ -258,7 +259,7 @@ export const QuickSave = () => {
   const hasUserEditedTitleRef = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const trimmedMemo = memo.trim();
-  const canSave = Boolean(sharedUrl || trimmedMemo || fallbackTitle || imageDataUrl);
+  const canSave = Boolean(sharedUrl || trimmedMemo || fallbackTitle || imageDataUrls.length > 0);
   const [title, setTitle] = useState(fallbackTitle);
   const isInstagram = isInstagramUrl(sharedUrl);
 
@@ -285,7 +286,7 @@ export const QuickSave = () => {
           payload.title?.trim() ?? "",
           payload.text?.trim() ?? "",
           payload.url?.trim() ?? "",
-          Boolean(payload.imageDataUrl)
+          Boolean(payload.imageDataUrls?.length || payload.imageDataUrl)
         );
 
         setSharedUrl(nextShare.sharedUrl);
@@ -293,7 +294,10 @@ export const QuickSave = () => {
         setFallbackTitle(nextShare.fallbackTitle);
         if (!hasUserEditedTitleRef.current) setTitle(nextShare.fallbackTitle);
         setMemo(nextShare.initialMemo);
-        setImageDataUrl(payload.imageDataUrl ?? "");
+        setImageDataUrls(
+          (payload.imageDataUrls?.length ? payload.imageDataUrls : payload.imageDataUrl ? [payload.imageDataUrl] : [])
+            .slice(0, 5)
+        );
         setYoutubeThumbnailUrl(nextShare.youtubeThumbnailUrl);
         setIsYoutubeThumbnailHidden(false);
         setImageError(payload.imageError ?? "");
@@ -438,8 +442,8 @@ export const QuickSave = () => {
       pokachips: pokachips.length > 0 ? pokachips : ["\uC784\uC2DC\uC870\uAC01"],
       thumbnailColor: "#dce8f8",
     };
-    const savedFragment = imageDataUrl
-      ? await addFragmentWithImage(fragmentInput, imageDataUrl)
+    const savedFragment = imageDataUrls.length > 0
+      ? await addFragmentWithImages(fragmentInput, imageDataUrls)
       : addFragment(fragmentInput);
 
     if (!savedFragment) {
@@ -523,17 +527,26 @@ export const QuickSave = () => {
               </div>
             )}
 
-            {imageDataUrl ? (
-              <div className="mt-2.5 overflow-hidden rounded-[18px] border border-white/70 bg-[#FFFFFF] shadow-[0_6px_18px_rgba(80,70,55,0.06)]">
-                <img
-                  src={imageDataUrl}
-                  alt=""
-                  onError={() => {
-                    setImageDataUrl("");
-                    setImageError("이미지를 표시할 수 없어 이미지 없이 열었어요.");
-                  }}
-                  className="h-[142px] w-full object-cover"
-                />
+            {imageDataUrls.length > 0 ? (
+              <div className="mt-2.5">
+                <div className="grid grid-cols-2 gap-2">
+                  {imageDataUrls.map((imageDataUrl, index) => (
+                    <div key={`${index}-${imageDataUrl.slice(-12)}`} className="relative overflow-hidden rounded-[14px] border border-white/70 bg-[#FFFFFF] shadow-[0_6px_18px_rgba(80,70,55,0.06)]">
+                      <img
+                        src={imageDataUrl}
+                        alt={`공유받은 이미지 ${index + 1}`}
+                        onError={() => {
+                          setImageDataUrls((current) => current.filter((_, currentIndex) => currentIndex !== index));
+                          setImageError("일부 이미지를 표시할 수 없어 제외했어요.");
+                        }}
+                        className="h-[118px] w-full object-cover"
+                      />
+                      <span className="absolute bottom-1.5 right-1.5 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-semibold text-white">
+                        {index + 1}/{imageDataUrls.length}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : instagramMetadata?.thumbnailUrl && !isInstagramThumbnailHidden ? (
               <div className="mt-2.5 overflow-hidden rounded-[18px] border border-white/70 bg-[#FFFFFF] shadow-[0_6px_18px_rgba(80,70,55,0.06)]">

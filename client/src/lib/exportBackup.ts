@@ -1,4 +1,4 @@
-import type { Fragment } from "@/data/fragments";
+import { getFragmentImageAttachments, type Fragment } from "@/data/fragments";
 import { getImageBlob } from "@/data/imageStore";
 
 export type ChaejipbagBackup = {
@@ -9,6 +9,7 @@ export type ChaejipbagBackup = {
   imageCount: number;
   imageFailureCount: number;
   fragments: Fragment[];
+  attachmentDataUrls: Record<string, string>;
 };
 
 const blobToDataUrl = (blob: Blob): Promise<string> =>
@@ -28,25 +29,36 @@ export const createChaejipbagBackup = async (
 ): Promise<ChaejipbagBackup> => {
   let imageCount = 0;
   let imageFailureCount = 0;
+  const attachmentDataUrls: Record<string, string> = {};
 
   const backupFragments = await Promise.all(
     fragments.map(async (fragment): Promise<Fragment> => {
-      if (!fragment.imageKey) {
+      const attachments = getFragmentImageAttachments(fragment);
+
+      if (attachments.length === 0) {
         if (fragment.imageDataUrl) imageCount += 1;
         return { ...fragment };
       }
 
-      try {
-        const imageBlob = await getImageBlob(fragment.imageKey);
-        if (!imageBlob) throw new Error("Stored image was not found.");
+      let legacyFirstImageDataUrl = fragment.imageDataUrl;
+      for (const [index, attachment] of attachments.entries()) {
+        try {
+          const imageBlob = await getImageBlob(attachment.blobKey);
+          if (!imageBlob) throw new Error("Stored image was not found.");
 
-        const imageDataUrl = await blobToDataUrl(imageBlob);
-        imageCount += 1;
-        return { ...fragment, imageDataUrl };
-      } catch {
-        imageFailureCount += 1;
-        return { ...fragment };
+          const imageDataUrl = await blobToDataUrl(imageBlob);
+          attachmentDataUrls[attachment.blobKey] = imageDataUrl;
+          if (index === 0 && !legacyFirstImageDataUrl) legacyFirstImageDataUrl = imageDataUrl;
+          imageCount += 1;
+        } catch {
+          imageFailureCount += 1;
+        }
       }
+
+      return {
+        ...fragment,
+        ...(legacyFirstImageDataUrl ? { imageDataUrl: legacyFirstImageDataUrl } : {}),
+      };
     })
   );
 
@@ -58,6 +70,7 @@ export const createChaejipbagBackup = async (
     imageCount,
     imageFailureCount,
     fragments: backupFragments,
+    attachmentDataUrls,
   };
 };
 

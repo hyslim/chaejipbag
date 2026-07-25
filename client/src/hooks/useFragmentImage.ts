@@ -1,33 +1,66 @@
-import { useEffect, useState } from "react";
-import type { Fragment } from "@/data/fragments";
+import { useEffect, useMemo, useState } from "react";
+import { getFragmentImageAttachments, type Fragment } from "@/data/fragments";
 import { getImageBlob } from "@/data/imageStore";
 
-export const useFragmentImage = (fragment?: Pick<Fragment, "imageKey" | "imageDataUrl">) => {
-  const [imageUrl, setImageUrl] = useState<string | undefined>(fragment?.imageDataUrl);
+export type FragmentImageSource = {
+  id: string;
+  url: string;
+};
+
+export const useFragmentImages = (
+  fragment?: Pick<Fragment, "attachments" | "imageKey" | "imageDataUrl" | "createdAt" | "updatedAt">
+): FragmentImageSource[] => {
+  const attachments = useMemo(
+    () => getFragmentImageAttachments(fragment),
+    [fragment?.attachments, fragment?.imageKey, fragment?.createdAt, fragment?.updatedAt]
+  );
+  const [imageSources, setImageSources] = useState<FragmentImageSource[]>(
+    fragment?.imageDataUrl && attachments.length === 0
+      ? [{ id: "legacy-data-url", url: fragment.imageDataUrl }]
+      : []
+  );
 
   useEffect(() => {
     let isCanceled = false;
-    let objectUrl: string | undefined;
+    const objectUrls: string[] = [];
 
-    setImageUrl(fragment?.imageDataUrl);
-
-    if (fragment?.imageKey) {
-      void getImageBlob(fragment.imageKey)
-        .then((blob) => {
-          if (!blob || isCanceled) return;
-          objectUrl = URL.createObjectURL(blob);
-          setImageUrl(objectUrl);
-        })
-        .catch(() => {
-          if (!isCanceled) setImageUrl(fragment.imageDataUrl);
-        });
+    if (attachments.length === 0) {
+      setImageSources(
+        fragment?.imageDataUrl
+          ? [{ id: "legacy-data-url", url: fragment.imageDataUrl }]
+          : []
+      );
+      return () => {
+        isCanceled = true;
+      };
     }
+
+    setImageSources([]);
+    void Promise.all(
+      attachments.map(async (attachment): Promise<FragmentImageSource | undefined> => {
+        try {
+          const blob = await getImageBlob(attachment.blobKey);
+          if (!blob || isCanceled) return undefined;
+          const url = URL.createObjectURL(blob);
+          objectUrls.push(url);
+          return { id: attachment.id, url };
+        } catch {
+          return undefined;
+        }
+      })
+    ).then((sources) => {
+      if (!isCanceled) setImageSources(sources.filter((source): source is FragmentImageSource => Boolean(source)));
+    });
 
     return () => {
       isCanceled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      objectUrls.forEach((url) => URL.revokeObjectURL(url));
     };
-  }, [fragment?.imageDataUrl, fragment?.imageKey]);
+  }, [attachments, fragment?.imageDataUrl]);
 
-  return imageUrl;
+  return imageSources;
 };
+
+export const useFragmentImage = (
+  fragment?: Pick<Fragment, "attachments" | "imageKey" | "imageDataUrl" | "createdAt" | "updatedAt">
+) => useFragmentImages(fragment)[0]?.url;

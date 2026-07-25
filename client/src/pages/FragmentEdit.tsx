@@ -1,9 +1,9 @@
 import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { ChevronLeft, Globe, Instagram, Pencil, Sparkles, Youtube, X, type LucideIcon } from "lucide-react";
-import { getCleanPokachipName, getPokachipColor, getPokachipCandidates, getPokachipKey, getRecentPokachips, getUniquePokachips, mergePokachips, normalizePokachipName } from "@/data/fragments";
-import { useFragments } from "@/hooks/useFragments";
-import { useFragmentImage } from "@/hooks/useFragmentImage";
+import { getCleanPokachipName, getFragmentImageAttachments, getPokachipColor, getPokachipCandidates, getPokachipKey, getRecentPokachips, getUniquePokachips, mergePokachips, normalizePokachipName } from "@/data/fragments";
+import { useFragments, type ImageAttachmentInput } from "@/hooks/useFragments";
+import { useFragmentImages } from "@/hooks/useFragmentImage";
 import { processSelectedImage } from "@/data/imageProcessing";
 import { AutoGrowingSingleLineTextarea } from "@/components/AutoGrowingSingleLineTextarea";
 
@@ -47,15 +47,15 @@ const getSourceMetaLabel = (sourceType?: string, source?: string, url?: string):
 
 export const FragmentEdit = ({ params }: { params: { id: string } }) => {
   const [, navigate] = useLocation();
-  const { fragments, getFragment, updateFragment, updateFragmentImage } = useFragments();
+  const { fragments, getFragment, updateFragment, updateFragmentImages } = useFragments();
   const fragment = getFragment(params.id);
 
   const [title, setTitle] = useState(fragment?.title ?? "");
   const [memo, setMemo] = useState(fragment?.memo ?? "");
   const [url, setUrl] = useState(fragment?.url ?? "");
-  const storedImageUrl = useFragmentImage(fragment);
-  const [pendingImageDataUrl, setPendingImageDataUrl] = useState<string | undefined>();
-  const [isImageRemoved, setIsImageRemoved] = useState(false);
+  const storedImages = useFragmentImages(fragment);
+  const [pendingImages, setPendingImages] = useState<ImageAttachmentInput[]>([]);
+  const [removedImageIds, setRemovedImageIds] = useState<Set<string>>(new Set());
   const [imageError, setImageError] = useState("");
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -136,28 +136,40 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
     setTimeout(() => inputRef.current?.focus(), 0);
   };
 
+  const originalImageIds = getFragmentImageAttachments(fragment).map((attachment) => attachment.id);
+  if (originalImageIds.length === 0 && fragment.imageDataUrl) originalImageIds.push("legacy-data-url");
+  const keptImageIds = originalImageIds.filter((id) => !removedImageIds.has(id));
+  const visibleStoredImages = storedImages.filter((image) => !removedImageIds.has(image.id));
+  const totalImageCount = keptImageIds.length + pendingImages.length;
+
   const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const files = Array.from(event.target.files ?? []);
     event.target.value = "";
-    if (!file) return;
+    if (files.length === 0) return;
 
-    setImageError("");
-    setIsProcessingImage(true);
-    try {
-      setPendingImageDataUrl(await processSelectedImage(file));
-      setIsImageRemoved(false);
-    } catch (error) {
-      setImageError(error instanceof Error ? error.message : "이미지를 줄이거나 불러오지 못했어요.");
-    } finally {
-      setIsProcessingImage(false);
+    const availableSlots = Math.max(0, 5 - totalImageCount);
+    if (availableSlots === 0) {
+      setImageError("이미지는 최대 5장까지 담을 수 있어요.");
+      return;
     }
-  };
 
-  const handleRemoveImage = () => {
-    setPendingImageDataUrl(undefined);
-    setIsImageRemoved(true);
-    setImageError("");
-    if (imageInputRef.current) imageInputRef.current.value = "";
+    setImageError(files.length > availableSlots ? "최대 5장까지만 추가했어요." : "");
+    setIsProcessingImage(true);
+    const processedImages: ImageAttachmentInput[] = [];
+
+    for (const file of files.slice(0, availableSlots)) {
+      try {
+        processedImages.push({
+          dataUrl: await processSelectedImage(file),
+          filename: file.name,
+        });
+      } catch (error) {
+        setImageError(error instanceof Error ? error.message : "일부 이미지를 줄이거나 불러오지 못했어요.");
+      }
+    }
+
+    setPendingImages((current) => [...current, ...processedImages].slice(0, 5));
+    setIsProcessingImage(false);
   };
 
   const visibleRecent = getRecentPokachips(fragments, {
@@ -184,9 +196,8 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
   const hasChipChanges = initialChips.length !== nextChips.length
     || initialChips.some((chip, index) => chip !== nextChips[index]);
   const trimmedUrl = url.trim();
-  const imageUrl = isImageRemoved ? undefined : pendingImageDataUrl ?? storedImageUrl;
-  const hasImageChanges = isImageRemoved || Boolean(pendingImageDataUrl);
-  const hasImage = !isImageRemoved && Boolean(pendingImageDataUrl || fragment.imageKey || fragment.imageDataUrl);
+  const hasImageChanges = removedImageIds.size > 0 || pendingImages.length > 0;
+  const hasImage = totalImageCount > 0;
   const hasChanges = title !== fragment.title
     || memo !== (fragment.memo ?? "")
     || trimmedUrl !== (fragment.url ?? "")
@@ -208,7 +219,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
       pokachips: nextChips.length > 0 ? nextChips : ["임시조각"],
     };
     const updatedFragment = hasImageChanges
-      ? await updateFragmentImage(fragment.id, patch, pendingImageDataUrl ?? null)
+      ? await updateFragmentImages(fragment.id, patch, keptImageIds, pendingImages)
       : updateFragment(fragment.id, patch);
 
     if (!updatedFragment) {
@@ -310,59 +321,48 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
               이미지
             </label>
 
-            {imageUrl ? (
-              <div className="overflow-hidden rounded-2xl border border-white/70 bg-[#FFFFFF] shadow-[0_6px_18px_rgba(80,70,55,0.06)]">
-                <img
-                  src={imageUrl}
-                  alt="선택된 이미지 미리보기"
-                  className="h-[168px] w-full object-cover"
-                />
-                <div className="flex items-center justify-between gap-2 border-t border-[rgba(120,112,100,0.08)] bg-[#FAF8F4]/70 px-3 py-2.5">
-                  <button
-                    type="button"
-                    onClick={handleRemoveImage}
-                    disabled={isProcessingImage}
-                    className="flex h-9 w-[74px] items-center justify-center rounded-xl text-[12px] font-semibold text-[rgba(50,44,34,0.68)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.60),inset_0_1px_0_rgba(255,255,255,0.24)]"
-                    style={{ background: "linear-gradient(135deg, rgba(244,224,216,0.54), rgba(224,196,190,0.42))", fontFamily: "'Pretendard Variable', sans-serif" }}
-                  >
-                    삭제
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => imageInputRef.current?.click()}
-                    disabled={isProcessingImage}
-                    className="flex h-9 flex-1 items-center justify-center rounded-xl border border-[rgba(120,112,100,0.16)] bg-[#FAF8F4] text-[12px] font-medium text-[rgba(120,112,100,0.75)]"
-                    style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
-                  >
-                    이미지 바꾸기
-                  </button>
-                </div>
+            {(visibleStoredImages.length > 0 || pendingImages.length > 0) && (
+              <div className="grid grid-cols-2 gap-2">
+                {visibleStoredImages.map((image, index) => (
+                  <div key={image.id} className="relative overflow-hidden rounded-[14px] border border-white/70 bg-white shadow-[0_6px_18px_rgba(80,70,55,0.06)]">
+                    <img src={image.url} alt={`저장된 이미지 ${index + 1}`} className="h-[112px] w-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setRemovedImageIds((current) => new Set([...current, image.id]))}
+                      className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/55 text-white"
+                      aria-label={`이미지 ${index + 1} 삭제`}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+                {pendingImages.map((image, index) => (
+                  <div key={`pending-${index}-${image.filename ?? "image"}`} className="relative overflow-hidden rounded-[14px] border border-white/70 bg-white shadow-[0_6px_18px_rgba(80,70,55,0.06)]">
+                    <img src={image.dataUrl} alt={`새 이미지 ${index + 1}`} className="h-[112px] w-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setPendingImages((current) => current.filter((_, currentIndex) => currentIndex !== index))}
+                      className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/55 text-white"
+                      aria-label={`새 이미지 ${index + 1} 삭제`}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
               </div>
-            ) : (
+            )}
+            {totalImageCount < 5 && (
               <button
                 type="button"
                 onClick={() => imageInputRef.current?.click()}
                 disabled={isProcessingImage}
                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#0000000a] bg-white px-4 py-3 text-[13px] font-medium text-[rgba(120,112,100,0.6)] shadow-[0px_1px_4px_#0000000a]"
-                style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
               >
-                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
-                  <rect x="2" y="2.5" width="11" height="10" rx="2" stroke="currentColor" strokeWidth="1.2" />
-                  <circle cx="5" cy="5.5" r="1" fill="currentColor" />
-                  <path d="m3.8 10 2.3-2.3 1.7 1.6 1.4-1.2 2 1.9" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                이미지 추가
+                이미지 추가 ({totalImageCount}/5)
               </button>
             )}
 
-            <input
-              ref={imageInputRef}
-              disabled={isProcessingImage}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageChange}
-            />
+            <input ref={imageInputRef} disabled={isProcessingImage} type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
             {isProcessingImage && (
               <p className="px-1 text-[12px] leading-[17px] text-[rgba(120,112,100,0.72)]">이미지를 줄이고 있어요…</p>
             )}
@@ -371,7 +371,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
             )}
           </div>
 
-          {/* 기억 조각 */}
+                    {/* 기억 조각 */}
           <div className="flex flex-col gap-2.5">
             <label
               className="text-[12px] font-medium leading-[17px] text-[rgba(120,112,100,0.75)]"

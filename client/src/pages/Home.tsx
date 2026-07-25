@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from 
 import { Globe, Instagram, Pencil, Sparkles, Youtube, type LucideIcon } from "lucide-react";
 import { flushSync } from "react-dom";
 import { Link, useLocation } from "wouter";
-import { getFragmentDisplayTime, getFragmentReferenceAt, getPokachipColor, getRecentPokachips, normalizePokachipName, type Fragment } from "@/data/fragments";
+import { getFragmentDisplayTime, getFragmentImageCount, getFragmentReferenceAt, getPokachipColor, getRecentPokachips, normalizePokachipName, type Fragment } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { useFragmentImage } from "@/hooks/useFragmentImage";
 import { BottomNav } from "@/components/BottomNav";
@@ -105,7 +105,8 @@ const FragmentCard = ({
   const imageUrl = useFragmentImage(fragment);
   const [failedYouTubeThumbnailUrl, setFailedYouTubeThumbnailUrl] = useState<string | null>(null);
   const youtubeThumbnailUrl = getYouTubeThumbnailUrl(fragment.url);
-  const hasStoredImage = Boolean(fragment.imageKey || fragment.imageDataUrl);
+  const imageCount = getFragmentImageCount(fragment);
+  const hasStoredImage = imageCount > 0;
   const displayImageUrl = imageUrl || (!hasStoredImage && youtubeThumbnailUrl !== failedYouTubeThumbnailUrl ? youtubeThumbnailUrl : null);
   const isYouTubeThumbnail = Boolean(displayImageUrl && !hasStoredImage && displayImageUrl === youtubeThumbnailUrl);
   const [imageHeightState, setImageHeightState] = useState<{ src: string; height: CardImageHeight } | null>(null);
@@ -268,7 +269,7 @@ const FragmentCard = ({
             }}
         whileTap={{ scale: isMenuOpen ? 1.01 : 0.97 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        className="home-select-none min-w-0 select-none overflow-hidden rounded-[18px] border border-[rgba(120,112,100,0.14)] bg-white outline-none cursor-pointer"
+        className="home-select-none relative min-w-0 select-none overflow-hidden rounded-[18px] border border-[rgba(120,112,100,0.14)] bg-white outline-none cursor-pointer"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerEnd}
@@ -295,6 +296,11 @@ const FragmentCard = ({
             className="w-full object-cover"
             style={{ height: imageHeight }}
           />
+        )}
+        {displayImageUrl && imageCount > 1 && (
+          <span className="absolute right-2.5 top-2.5 rounded-full bg-black/55 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
+            +{imageCount - 1}
+          </span>
         )}
         {showInstagramPlaceholder && (
           <div className="flex h-[140px] w-full flex-col items-center justify-center bg-[#FAF8F4] px-3 text-center">

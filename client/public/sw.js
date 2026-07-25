@@ -17,7 +17,7 @@ const getFormValue = (formData, key) => {
   return typeof value === "string" ? value : "";
 };
 
-const getFirstImageFile = (formData) => {
+const getImageFiles = (formData) => {
   const candidates = [
     ...formData.getAll("image"),
     ...formData.getAll("images"),
@@ -25,7 +25,9 @@ const getFirstImageFile = (formData) => {
     ...formData.getAll("files"),
   ];
 
-  return candidates.find((value) => value instanceof File && value.type.startsWith("image/"));
+  return candidates
+    .filter((value) => value instanceof File && value.type.startsWith("image/"))
+    .slice(0, 5);
 };
 
 const fileToDataUrl = async (file) => {
@@ -120,26 +122,29 @@ const storePayload = async (payload) => {
 
 const handleQuickSavePost = async (request) => {
   const formData = await request.formData();
-  const imageFile = getFirstImageFile(formData);
+  const imageFiles = getImageFiles(formData);
   const payload = {
     title: getFormValue(formData, "title"),
     text: getFormValue(formData, "text"),
     url: getFormValue(formData, "url"),
     imageDataUrl: "",
+    imageDataUrls: [],
     imageError: "",
   };
 
-  if (imageFile) {
+  for (const imageFile of imageFiles) {
     if (imageFile.size > MAX_SOURCE_IMAGE_SIZE_BYTES) {
-      payload.imageError = "이미지가 커서 이미지 없이 열었어요.";
-    } else {
-      try {
-        payload.imageDataUrl = await resizeImage(imageFile);
-      } catch {
-        payload.imageError = "이미지를 저장용으로 줄일 수 없어 이미지 없이 열었어요.";
-      }
+      payload.imageError = "일부 이미지가 커서 제외했어요.";
+      continue;
+    }
+
+    try {
+      payload.imageDataUrls.push(await resizeImage(imageFile));
+    } catch {
+      payload.imageError = "일부 이미지를 저장용으로 줄일 수 없어 제외했어요.";
     }
   }
+  payload.imageDataUrl = payload.imageDataUrls[0] || "";
 
   const shareId = await storePayload(payload);
   return Response.redirect(`/quick-save?shareId=${encodeURIComponent(shareId)}`, 303);

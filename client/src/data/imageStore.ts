@@ -1,3 +1,5 @@
+import type { FragmentAttachment } from "@/data/fragments";
+
 const DATABASE_NAME = "chaejip-images";
 const DATABASE_VERSION = 1;
 const STORE_NAME = "images";
@@ -35,27 +37,60 @@ export const dataUrlToBlob = async (dataUrl: string): Promise<Blob> => {
   return response.blob();
 };
 
-export const saveImage = async (dataUrl: string): Promise<string> => {
+const createId = (): string => typeof crypto.randomUUID === "function"
+  ? crypto.randomUUID()
+  : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
+const getImageDimensions = async (blob: Blob): Promise<{ width?: number; height?: number }> => {
+  if (typeof createImageBitmap !== "function") return {};
+
+  try {
+    const bitmap = await createImageBitmap(blob);
+    const dimensions = { width: bitmap.width, height: bitmap.height };
+    bitmap.close();
+    return dimensions;
+  } catch {
+    return {};
+  }
+};
+
+export const saveImageAttachment = async (
+  dataUrl: string,
+  filename?: string
+): Promise<FragmentAttachment> => {
   const blob = await dataUrlToBlob(dataUrl);
   const database = await openDatabase();
-  const key = typeof crypto.randomUUID === "function"
-    ? crypto.randomUUID()
-    : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  const blobKey = createId();
+  const createdAt = new Date().toISOString();
 
   try {
     const transaction = database.transaction(STORE_NAME, "readwrite");
     const image: StoredImage = {
-      key,
+      key: blobKey,
       blob,
-      createdAt: new Date().toISOString(),
+      createdAt,
     };
     transaction.objectStore(STORE_NAME).add(image);
     await completeTransaction(transaction);
-    return key;
   } finally {
     database.close();
   }
+
+  const dimensions = await getImageDimensions(blob);
+  return {
+    id: createId(),
+    kind: "image",
+    blobKey,
+    mimeType: blob.type || "image/jpeg",
+    ...(filename ? { filename } : {}),
+    sizeBytes: blob.size,
+    ...dimensions,
+    createdAt,
+  };
 };
+
+export const saveImage = async (dataUrl: string): Promise<string> =>
+  (await saveImageAttachment(dataUrl)).blobKey;
 
 export const getImageBlob = async (key: string): Promise<Blob | undefined> => {
   const database = await openDatabase();
