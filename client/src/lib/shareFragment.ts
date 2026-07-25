@@ -113,11 +113,16 @@ export const shareFragment = async (fragment: Fragment): Promise<ShareFragmentRe
     const imageFiles = shouldOfferImageShare(fragment)
       ? await getFragmentImageFiles(fragment)
       : [];
+    const shareableImageFiles = canShareImageFiles(imageFiles)
+      ? imageFiles
+      : imageFiles.length > 1 && canShareImageFiles([imageFiles[0]])
+        ? [imageFiles[0]]
+        : [];
 
-    if (canShareImageFiles(imageFiles)) {
+    if (shareableImageFiles.length > 0) {
       const textCopyPromise = copyShareText(text);
       try {
-        await navigator.share({ ...nativeShareData, files: imageFiles });
+        await navigator.share({ ...nativeShareData, files: shareableImageFiles });
         return (await textCopyPromise) ? "shared-and-copied" : "shared";
       } catch (error) {
         if (isCanceledShareError(error)) return "canceled";
