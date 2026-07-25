@@ -39,22 +39,69 @@ const generatedPokachipPalette = [
 export function normalizePokachipName(value: string): string {
   return value
     .trim()
-    .replace(/^[+\-#]\s*/, "")
-    .replace(/\s*×$/, "")
+    .replace(/^(?:[+#-]\s*)+/, "")
+    .replace(/(?:\s*[+×])+$/, "")
     .trim();
 }
 
+export function getCleanPokachipName(value: string): string {
+  const normalized = normalizePokachipName(value);
+  return normalized && normalized !== "추가" ? normalized : "";
+}
+
+export function getPokachipKey(value: string): string {
+  return getCleanPokachipName(value)
+    .replace(/\s+/g, "")
+    .toLocaleLowerCase("ko-KR");
+}
+
+export function getPokachipsInDisplayOrder(values: string[], selectedChip?: string | null): string[] {
+  const normalized = values.map(normalizePokachipName).filter(Boolean);
+  const selectedKey = getPokachipKey(selectedChip ?? "");
+  if (!selectedKey) return normalized;
+
+  const selectedIndex = normalized.findIndex((chip) => getPokachipKey(chip) === selectedKey);
+  if (selectedIndex <= 0) return normalized;
+
+  return [
+    normalized[selectedIndex],
+    ...normalized.slice(0, selectedIndex),
+    ...normalized.slice(selectedIndex + 1),
+  ];
+}
+
 export function getPokachipColor(value: string): string {
-  const name = normalizePokachipName(value);
-  const mappedColor = pokachipColorMap[name];
+  const key = getPokachipKey(value);
+  const mappedColor = Object.entries(pokachipColorMap).find(
+    ([label]) => getPokachipKey(label) === key
+  )?.[1];
   if (mappedColor) return mappedColor;
 
   let hash = 0;
-  for (const character of name) {
+  for (const character of key) {
     hash = (hash * 31 + character.codePointAt(0)!) >>> 0;
   }
 
   return generatedPokachipPalette[hash % generatedPokachipPalette.length];
+}
+
+export function getColorWithAlpha(color: string, alpha: number): string {
+  const rgbaMatch = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if (rgbaMatch) {
+    const [, red, green, blue] = rgbaMatch;
+    return `rgba(${red},${green},${blue},${alpha})`;
+  }
+
+  const hexMatch = color.match(/^#([0-9a-f]{6})$/i);
+  if (hexMatch) {
+    const hex = hexMatch[1];
+    const red = parseInt(hex.slice(0, 2), 16);
+    const green = parseInt(hex.slice(2, 4), 16);
+    const blue = parseInt(hex.slice(4, 6), 16);
+    return `rgba(${red},${green},${blue},${alpha})`;
+  }
+
+  return color;
 }
 const stableFallbackCreatedAtBase = Date.UTC(2026, 0, 1, 9, 0, 0);
 
@@ -130,15 +177,6 @@ export function normalizeFragmentTimestamps(fragment: Fragment, index = 0): Frag
 export const homeInterestPokachips = ["웹앱", "인테리어", "수조", "루틴", "조명", "요리"];
 export const fallbackRecentPokachips = ["글쓰기", "수조", "조명", "웹앱", "블렌더"];
 
-export function getCleanPokachipName(value: string): string {
-  const normalized = normalizePokachipName(value);
-  return normalized && normalized !== "추가" ? normalized : "";
-}
-
-export function getPokachipKey(value: string): string {
-  return getCleanPokachipName(value).toLocaleLowerCase("ko-KR");
-}
-
 export function parsePokachipInput(value: string): string[] {
   return value
     .split(",")
@@ -169,7 +207,7 @@ export function mergePokachips(current: string[], additions: string[]): string[]
 export function normalizeSavedPokachips(values: string[]): string[] {
   const normalized = getUniquePokachips(values);
   const actualPokachips = normalized.filter((value) =>
-    getPokachipKey(value).replace(/\s+/g, "") !== "임시조각"
+    getPokachipKey(value) !== "임시조각"
   );
 
   return actualPokachips.length > 0 ? actualPokachips : ["임시조각"];

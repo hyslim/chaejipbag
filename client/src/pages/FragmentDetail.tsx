@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { ChevronLeft, Pencil, Trash2, ExternalLink, Globe, Instagram, Sparkles, Youtube, X, type LucideIcon } from "lucide-react";
-import { getPokachipColor, normalizePokachipName } from "@/data/fragments";
+import { getColorWithAlpha, getPokachipColor, getPokachipKey, normalizePokachipName } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { useFragmentImage } from "@/hooks/useFragmentImage";
 import { copyFragmentShareText, shareFragment, shouldOfferImageShare } from "@/lib/shareFragment";
@@ -13,26 +13,8 @@ const sourceIconColor = "rgba(120,112,100,0.65)";
 const IMAGE_SHARE_DELAY_MS = 700;
 const temporaryPokachipColor = "rgba(120,112,100,0.18)";
 
-const getColorWithAlpha = (color: string, alpha: number): string => {
-  const rgbaMatch = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-  if (rgbaMatch) {
-    const [, red, green, blue] = rgbaMatch;
-    return `rgba(${red},${green},${blue},${alpha})`;
-  }
-
-  const hexMatch = color.match(/^#([0-9a-f]{6})$/i);
-  if (hexMatch) {
-    const hex = hexMatch[1];
-    return `rgba(${parseInt(hex.slice(0, 2), 16)},${parseInt(hex.slice(2, 4), 16)},${parseInt(hex.slice(4, 6), 16)},${alpha})`;
-  }
-
-  return color;
-};
-
-const getDisplayPokachipKey = (label: string): string =>
-  normalizePokachipName(label).toLocaleLowerCase("ko-KR");
 const isTemporaryPokachip = (label: string): boolean =>
-  getDisplayPokachipKey(label).replace(/\s+/g, "") === "임시조각";
+  getPokachipKey(label) === "임시조각";
 
 const delayImageShare = () => new Promise((resolve) => window.setTimeout(resolve, IMAGE_SHARE_DELAY_MS));
 
@@ -108,7 +90,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   fragments.forEach((storedFragment) => {
     const fragmentPokachipKeys = new Set(
       (storedFragment.pokachips ?? [])
-        .map(getDisplayPokachipKey)
+        .map(getPokachipKey)
         .filter(Boolean)
     );
     fragmentPokachipKeys.forEach((key) => {
@@ -315,7 +297,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
               <div className="flex min-w-0 flex-wrap gap-1.5">
                 {fragment.pokachips.map((chip) => {
                   const normalizedChip = normalizePokachipName(chip);
-                  const usageCount = pokachipUsageCounts.get(getDisplayPokachipKey(normalizedChip)) ?? 0;
+                  const usageCount = pokachipUsageCounts.get(getPokachipKey(normalizedChip)) ?? 0;
                   const isTemporary = isTemporaryPokachip(normalizedChip);
                   const backgroundColor = isTemporary
                     ? getColorWithAlpha(temporaryPokachipColor, 0.28)
