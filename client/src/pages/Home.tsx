@@ -443,7 +443,7 @@ const HomeEmptyState = ({ title, description }: { title: string; description: st
 );
 
 export const Home = (): JSX.Element => {
-  const { fragments, updateFragment, deleteFragment } = useFragments();
+  const { fragments, toggleFragmentPin, deleteFragment } = useFragments();
   const topPokachipScrollRef = useRef<HTMLDivElement | null>(null);
   const topPokachipDragRef = useRef<{ isDragging: boolean; startX: number; scrollLeft: number }>({
     isDragging: false,
@@ -506,14 +506,19 @@ export const Home = (): JSX.Element => {
         )
       )
     : fragments;
-  const pinnedFragments = visibleFragments
-    .filter((fragment) => Boolean(fragment.pinnedAt))
-    .sort(
-      (a, b) =>
-        (Date.parse(b.pinnedAt ?? "") || 0) -
-        (Date.parse(a.pinnedAt ?? "") || 0)
-    );
-  const regularFragments = visibleFragments.filter((fragment) => !fragment.pinnedAt);
+  const isDefaultHomeList = selectedChip === null;
+  const pinnedFragments = isDefaultHomeList
+    ? visibleFragments
+        .filter((fragment) => Boolean(fragment.pinnedAt))
+        .sort(
+          (a, b) =>
+            (Date.parse(b.pinnedAt ?? "") || 0) -
+            (Date.parse(a.pinnedAt ?? "") || 0)
+        )
+    : [];
+  const regularFragments = isDefaultHomeList
+    ? visibleFragments.filter((fragment) => !fragment.pinnedAt)
+    : visibleFragments;
   const normalizedSearchQuery = searchQuery.trim().toLocaleLowerCase("ko-KR");
   const searchResults = normalizedSearchQuery
     ? fragments.filter((fragment) => {
@@ -660,17 +665,14 @@ export const Home = (): JSX.Element => {
   };
 
   const handleToggleFragmentPin = (fragment: Fragment) => {
-    const wasPinned = Boolean(fragment.pinnedAt);
-    const updatedFragment = updateFragment(fragment.id, {
-      pinnedAt: wasPinned ? undefined : new Date().toISOString(),
-    });
+    const updatedFragment = toggleFragmentPin(fragment.id);
 
     setOpenMenuFragmentId(null);
     showHomeToast(
       updatedFragment
-        ? wasPinned
-          ? "상단 고정을 해제했어요"
-          : "기억 조각을 상단에 고정했어요"
+        ? updatedFragment.pinnedAt
+          ? "기억 조각을 상단에 고정했어요"
+          : "상단 고정을 해제했어요"
         : "상단 고정을 바꾸지 못했어요"
     );
   };
@@ -798,14 +800,14 @@ export const Home = (): JSX.Element => {
 
   const renderFragmentColumns = (items: Fragment[]) => {
     const columns = [
-      items.filter((_, index) => index % 2 === 0),
-      items.filter((_, index) => index % 2 === 1),
+      { id: "left", fragments: items.filter((_, index) => index % 2 === 0) },
+      { id: "right", fragments: items.filter((_, index) => index % 2 === 1) },
     ];
 
     return (
       <div className="flex gap-3">
-        {columns.map((column, columnIndex) => (
-          <div key={columnIndex} className="flex min-w-0 flex-1 flex-col gap-3">
+        {columns.map(({ id, fragments: column }) => (
+          <div key={id} className="flex min-w-0 flex-1 flex-col gap-3">
             {column.map((fragment) => (
               <FragmentCard
                 key={fragment.id}
