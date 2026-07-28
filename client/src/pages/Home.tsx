@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from "react";
-import { Globe, Instagram, Pencil, Pin, Sparkles, Youtube, type LucideIcon } from "lucide-react";
+import { Globe, Instagram, Pencil, Pin, Search, Sparkles, Youtube, type LucideIcon } from "lucide-react";
 import { flushSync } from "react-dom";
 import { Link, useLocation } from "wouter";
 import { FavoriteHeartIcon } from "@/components/FavoriteHeartIcon";
@@ -901,8 +901,8 @@ export const Home = (): JSX.Element => {
           <section className="flex min-h-screen flex-1 flex-col bg-[#faf8f4] pb-[calc(15rem+env(safe-area-inset-bottom))]">
             <header className="border-b border-[#F5F2ED] bg-[#FFFEFB] px-4 py-3">
               <div className="flex h-10 items-center gap-2 rounded-[14px] bg-[rgba(120,112,100,0.05)] px-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
-                <span aria-hidden="true" className="flex h-full w-5 shrink-0 items-center justify-center text-[20px] leading-none text-[rgba(120,112,100,0.5)]">
-                  ⌕
+                <span aria-hidden="true" className="flex h-full w-5 shrink-0 items-center justify-center text-[rgba(120,112,100,0.5)]">
+                  <Search className="h-[22px] w-[22px] max-w-none shrink-0 -translate-y-px" strokeWidth={2} />
                 </span>
                 <input
                   value={searchQuery}
