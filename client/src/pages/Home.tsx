@@ -25,9 +25,6 @@ const saveToastStorageKey = "chaejip-save-toast";
 
 const sourceIconColor = "rgba(120,112,100,0.72)";
 
-const homeInterestSurfaceBackground =
-  "radial-gradient(circle at 28% 8%, rgba(224,217,242,0.24), transparent 42%), radial-gradient(circle at 88% 74%, rgba(244,220,194,0.18), transparent 46%), linear-gradient(180deg, #FFFEFB 0%, #FFFCF9 100%)";
-
 const getInterestStyle = (label: string, count: number) => {
   const token = getPokachipColorToken(label);
   const growthStrength = Math.min(Math.max(count - 5, 0), 5) / 5;
@@ -1029,7 +1026,7 @@ export const Home = (): JSX.Element => {
           <>
 
         {/* Home top area: Header, 조건부 Hero, 작은 포카칩의 연속된 상단 흐름 */}
-        <section style={{ background: homeInterestSurfaceBackground }}>
+        <section className="border-b border-[#F5F2ED] bg-[#FFFEFB]">
         {/* Header: 관심사 장식과 분리된 고정 Surface */}
         <header className="flex items-center justify-between bg-[#FFFEFB] px-4 pb-3 pt-5">
           <h1
@@ -1054,14 +1051,6 @@ export const Home = (): JSX.Element => {
         {/* Hero: 큰 관심사가 충분히 자랐을 때만 장식과 함께 표시 */}
         {hasInterests && (
           <section className="relative overflow-hidden px-4 pb-2 pt-2">
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute -right-12 top-0 z-0 h-[178px] w-[330px] opacity-[0.18] blur-[3px]"
-              style={{
-                background: "linear-gradient(110deg, rgba(255,254,251,0.06) 0%, rgba(226,216,244,0.72) 46%, rgba(255,253,249,0.16) 100%)",
-                clipPath: "polygon(16% 0, 100% 0, 84% 100%, 0 100%)",
-              }}
-            />
             <div className="relative z-10 grid grid-cols-3 gap-2">
               {interests.map((interest) => {
                 const interestStyle = getInterestStyle(interest.label, interest.count);
