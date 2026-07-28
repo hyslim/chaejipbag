@@ -60,7 +60,7 @@ const HomeCardPokachipRow = ({
       {displayPokachips.map((chip, index) => {
         const pill = (
           <span
-            className={`${index === 0 ? "max-w-full" : ""} inline-flex h-6 w-max shrink-0 items-center overflow-hidden rounded-[999px] border py-1 pl-2.5 ${index === 2 ? "pr-[58px]" : "pr-2.5"} text-[11px] font-medium leading-4`}
+            className={`${index === 0 ? "max-w-full" : ""} ${index === 2 ? "min-w-max flex-none" : "shrink-0"} inline-flex h-6 w-max grow-0 items-center overflow-hidden rounded-[999px] border px-2.5 py-1 text-[11px] font-medium leading-4`}
             style={{
               ...getPokachipSmallPillStyle(
                 chip,
@@ -83,7 +83,7 @@ const HomeCardPokachipRow = ({
           <span
             key={`${getPokachipKey(chip)}-${index}`}
             aria-hidden="true"
-            className="min-w-0 flex-1 overflow-hidden"
+            className="pointer-events-none flex h-6 w-7 min-w-0 max-w-7 shrink items-center justify-start overflow-hidden"
           >
             {pill}
           </span>
