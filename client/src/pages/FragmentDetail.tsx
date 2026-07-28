@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Pencil, Pin, Trash2, ExternalLink, Globe, Instagram, Sparkles, Youtube, X, type LucideIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil, Trash2, ExternalLink, Globe, Instagram, Sparkles, Youtube, X, type LucideIcon } from "lucide-react";
+import favoriteHeartInactive from "@/assets/favorite-heart-00.svg";
+import favoriteHeartActive from "@/assets/favorite-heart-01.svg";
 import { getFragmentImageCount, getPokachipSmallPillStyle, normalizePokachipName } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { useFragmentImages } from "@/hooks/useFragmentImage";
@@ -179,9 +181,9 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
     showDetailToast(
       updatedFragment
         ? updatedFragment.pinnedAt
-          ? "기억 조각을 상단에 고정했어요"
-          : "상단 고정을 해제했어요"
-        : "상단 고정을 바꾸지 못했어요"
+          ? "즐겨찾기에 추가했어요"
+          : "즐겨찾기를 해제했어요"
+        : "즐겨찾기 상태를 바꾸지 못했어요"
     );
   };
 
@@ -273,30 +275,35 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
               조각 들여다보기
             </span>
           </button>
-          <div className="-mr-3 flex items-center gap-0">
+          <div className="flex items-center gap-0">
             <button
               type="button"
               onClick={handleToggleFragmentPin}
-              className={`relative flex h-4 w-10 items-center justify-center overflow-visible before:absolute before:inset-x-0 before:-inset-y-3 before:content-[''] hover:text-[rgba(110,103,207,0.82)] ${fragment.pinnedAt ? "text-[rgba(110,103,207,0.76)]" : "text-[rgba(160,152,140,0.65)]"}`}
-              aria-label={fragment.pinnedAt ? "고정 해제" : "상단에 고정"}
+              className="-my-2.5 flex h-11 w-11 items-center justify-center outline-none transition-[opacity,transform] duration-150 hover:opacity-80 focus-visible:rounded-xl focus-visible:ring-2 focus-visible:ring-[rgba(110,103,207,0.28)] active:scale-95"
+              aria-label={fragment.pinnedAt ? "즐겨찾기 해제" : "즐겨찾기에 추가"}
               aria-pressed={Boolean(fragment.pinnedAt)}
-              title={fragment.pinnedAt ? "고정 해제" : "상단에 고정"}
+              title={fragment.pinnedAt ? "즐겨찾기 해제" : "즐겨찾기에 추가"}
             >
-              <Pin size={16} strokeWidth={1.8} fill={fragment.pinnedAt ? "currentColor" : "none"} />
+              <img
+                src={fragment.pinnedAt ? favoriteHeartActive : favoriteHeartInactive}
+                alt=""
+                className="h-auto w-[22px]"
+                draggable={false}
+              />
             </button>
             <button
               onClick={() => navigate(`/fragment/${fragment.id}/edit${window.location.search}`)}
-              className="relative flex h-4 w-10 items-center justify-center overflow-visible text-[rgba(160,152,140,0.65)] before:absolute before:inset-x-0 before:-inset-y-3 before:content-[''] hover:text-[rgba(120,112,100,0.7)]"
+              className="-my-2.5 flex h-11 w-11 items-center justify-center text-[rgba(120,112,100,0.68)] outline-none transition-[color,transform] duration-150 hover:text-[rgba(120,112,100,0.9)] focus-visible:rounded-xl focus-visible:ring-2 focus-visible:ring-[rgba(110,103,207,0.28)] active:scale-95"
               aria-label="수정"
             >
-              <Pencil size={16} strokeWidth={1.8} />
+              <Pencil size={24} strokeWidth={1.8} />
             </button>
             <button
               onClick={() => setIsDeleteOpen(true)}
-              className="relative flex h-4 w-10 items-center justify-center overflow-visible text-[rgba(160,152,140,0.65)] before:absolute before:inset-x-0 before:-inset-y-3 before:content-[''] hover:text-red-400"
+              className="-my-2.5 flex h-11 w-11 items-center justify-center text-[rgba(120,112,100,0.68)] outline-none transition-[color,transform] duration-150 hover:text-[rgba(145,101,96,0.86)] focus-visible:rounded-xl focus-visible:ring-2 focus-visible:ring-[rgba(110,103,207,0.28)] active:scale-95"
               aria-label="삭제"
             >
-              <Trash2 size={16} strokeWidth={1.8} />
+              <Trash2 size={24} strokeWidth={1.8} />
             </button>
           </div>
         </header>

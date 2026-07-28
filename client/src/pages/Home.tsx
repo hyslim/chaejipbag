@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from 
 import { Globe, Instagram, Pencil, Pin, Sparkles, Youtube, type LucideIcon } from "lucide-react";
 import { flushSync } from "react-dom";
 import { Link, useLocation } from "wouter";
+import favoriteHeartActive from "@/assets/favorite-heart-01.svg";
 import { getColorWithAlpha, getFragmentDisplayTime, getFragmentImageCount, getFragmentReferenceAt, getPokachipColorToken, getPokachipKey, getPokachipsInDisplayOrder, getPokachipSmallPillStyle, getRecentPokachips, normalizePokachipName, type Fragment } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { useFragmentImage } from "@/hooks/useFragmentImage";
@@ -234,7 +235,7 @@ const FragmentCard = ({
           }}
           onClick={handleTogglePin}
         >
-          {fragment.pinnedAt ? "고정 해제" : "상단 고정"}
+          {fragment.pinnedAt ? "즐겨찾기 해제" : "즐겨찾기에 추가"}
         </button>
         <button
           type="button"
@@ -364,11 +365,13 @@ const FragmentCard = ({
               {getFragmentDisplayTime(fragment)}
             </span>
             {fragment.pinnedAt && (
-              <Pin
-                size={12}
-                strokeWidth={1.9}
-                className="ml-auto shrink-0 text-[rgba(110,103,207,0.72)]"
-                aria-label="상단 고정됨"
+              <img
+                src={favoriteHeartActive}
+                alt=""
+                className="pointer-events-none ml-auto h-auto w-[15px] shrink-0"
+                aria-label="즐겨찾기됨"
+                role="img"
+                draggable={false}
               />
             )}
           </div>
@@ -449,6 +452,16 @@ const SearchResultCard = ({
         <div className="mt-2 flex min-w-0 items-center gap-1.5 text-[12px] leading-[17px] text-[rgba(120,112,100,0.72)]">
           <SourceIcon size={12} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
           <span className="min-w-0 truncate" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>{getFragmentDisplayTime(fragment)}</span>
+          {fragment.pinnedAt && (
+            <img
+              src={favoriteHeartActive}
+              alt=""
+              className="pointer-events-none ml-auto h-auto w-[15px] shrink-0"
+              aria-label="즐겨찾기됨"
+              role="img"
+              draggable={false}
+            />
+          )}
         </div>
         </div>
       </motion.div>
@@ -1011,10 +1024,10 @@ export const Home = (): JSX.Element => {
           <button
             type="button"
             onClick={openSearchMode}
-            className="text-[#78706480]"
+            className="-my-[9px] flex h-11 w-11 items-center justify-center text-[#78706480] outline-none transition-colors duration-150 hover:text-[#787064b3] focus-visible:rounded-xl focus-visible:ring-2 focus-visible:ring-[rgba(110,103,207,0.28)] active:text-[#787064cc]"
             aria-label="조각 찾기"
           >
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 18 18" fill="none" aria-hidden="true">
               <circle cx="8" cy="8" r="5.25" stroke="currentColor" strokeWidth="1.3" />
               <path d="M12 12L15 15" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
             </svg>
