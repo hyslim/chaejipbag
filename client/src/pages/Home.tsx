@@ -902,7 +902,7 @@ export const Home = (): JSX.Element => {
             <header className="border-b border-[#F5F2ED] bg-[#FFFEFB] px-4 py-3">
               <div className="flex h-10 items-center gap-2 rounded-[14px] bg-[rgba(120,112,100,0.05)] px-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
                 <span aria-hidden="true" className="flex h-full w-5 shrink-0 items-center justify-center text-[rgba(120,112,100,0.5)]">
-                  <Search className="h-[22px] w-[22px] max-w-none shrink-0 -translate-y-px" strokeWidth={2} />
+                  <Search className="h-[18px] w-[18px] shrink-0 -translate-y-px" strokeWidth={2} />
                 </span>
                 <input
                   value={searchQuery}
@@ -916,7 +916,7 @@ export const Home = (): JSX.Element => {
                   placeholder="기억 속에서 찾기..."
                   autoComplete="off"
                   autoFocus
-                  className="h-full min-h-0 min-w-0 flex-1 bg-transparent py-0 text-[13px] font-medium leading-normal text-[rgba(50,44,34,0.8)] outline-none placeholder:text-[rgba(120,112,100,0.4)]"
+                  className="h-full min-h-0 min-w-0 flex-1 bg-transparent py-0 text-[14px] font-medium leading-normal text-[rgba(50,44,34,0.8)] outline-none placeholder:text-[rgba(120,112,100,0.4)]"
                   style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
                 />
                 <button
