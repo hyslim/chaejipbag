@@ -25,6 +25,7 @@ export interface Fragment {
   date: string;
   createdAt?: string;
   updatedAt?: string;
+  pinnedAt?: string;
   pokachips: string[];
   thumbnailColor: string;
   /** @deprecated Legacy single-image pointer. New writes use attachments. */

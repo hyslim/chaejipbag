@@ -83,6 +83,27 @@ export function useFragments() {
     return updatedFragment;
   }, [fragments]);
 
+  const toggleFragmentPin = useCallback((id: string) => {
+    const targetIndex = fragments.findIndex((fragment) => fragment.id === id);
+    const targetFragment = targetIndex >= 0 ? fragments[targetIndex] : undefined;
+    if (!targetFragment) return null;
+
+    const updatedFragment: Fragment = { ...targetFragment };
+    if (updatedFragment.pinnedAt) {
+      delete updatedFragment.pinnedAt;
+    } else {
+      updatedFragment.pinnedAt = new Date().toISOString();
+    }
+
+    const nextFragments = fragments.map((fragment, index) =>
+      index === targetIndex ? updatedFragment : fragment
+    );
+
+    if (!saveToStorage(nextFragments)) return null;
+    setFragments(nextFragments);
+    return updatedFragment;
+  }, [fragments]);
+
   const addFragment = useCallback((fragment: Omit<Fragment, "id">) => {
     const now = new Date().toISOString();
     const newFragment: Fragment = {
@@ -204,6 +225,7 @@ export function useFragments() {
     fragments,
     getFragment,
     updateFragment,
+    toggleFragmentPin,
     updateFragmentImage,
     updateFragmentImages,
     addFragment,

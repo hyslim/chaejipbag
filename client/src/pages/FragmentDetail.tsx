@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Pencil, Trash2, ExternalLink, Globe, Instagram, Sparkles, Youtube, X, type LucideIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil, Pin, Trash2, ExternalLink, Globe, Instagram, Sparkles, Youtube, X, type LucideIcon } from "lucide-react";
 import { getFragmentImageCount, getPokachipColor, normalizePokachipName } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { useFragmentImages } from "@/hooks/useFragmentImage";
@@ -66,7 +66,7 @@ const getSourceMetaLabel = (sourceType?: string, source?: string, url?: string):
 
 export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   const [, navigate] = useLocation();
-  const { fragments, getFragment, deleteFragment } = useFragments();
+  const { fragments, getFragment, toggleFragmentPin, deleteFragment } = useFragments();
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
   const [viewerImageIndex, setViewerImageIndex] = useState(0);
@@ -215,6 +215,17 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
     window.setTimeout(() => setToastMessage(""), 2000);
   };
 
+  const handleToggleFragmentPin = () => {
+    const updatedFragment = toggleFragmentPin(fragment.id);
+    showDetailToast(
+      updatedFragment
+        ? updatedFragment.pinnedAt
+          ? "기억 조각을 상단에 고정했어요"
+          : "상단 고정을 해제했어요"
+        : "상단 고정을 바꾸지 못했어요"
+    );
+  };
+
   const handleShareResult = (result: Awaited<ReturnType<typeof shareFragment>>) => {
     if (result === "shared-and-copied") {
       showDetailToast("이미지를 보냈어요. 글은 복사해뒀어요. 입력창에 붙여넣어 주세요.");
@@ -304,6 +315,16 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
             </span>
           </button>
           <div className="-mr-3 flex items-center gap-0">
+            <button
+              type="button"
+              onClick={handleToggleFragmentPin}
+              className={`relative flex h-4 w-10 items-center justify-center overflow-visible before:absolute before:inset-x-0 before:-inset-y-3 before:content-[''] hover:text-[rgba(110,103,207,0.82)] ${fragment.pinnedAt ? "text-[rgba(110,103,207,0.76)]" : "text-[rgba(160,152,140,0.65)]"}`}
+              aria-label={fragment.pinnedAt ? "고정 해제" : "상단에 고정"}
+              aria-pressed={Boolean(fragment.pinnedAt)}
+              title={fragment.pinnedAt ? "고정 해제" : "상단에 고정"}
+            >
+              <Pin size={16} strokeWidth={1.8} fill={fragment.pinnedAt ? "currentColor" : "none"} />
+            </button>
             <button
               onClick={() => navigate(`/fragment/${fragment.id}/edit${window.location.search}`)}
               className="relative flex h-4 w-10 items-center justify-center overflow-visible text-[rgba(160,152,140,0.65)] before:absolute before:inset-x-0 before:-inset-y-3 before:content-[''] hover:text-[rgba(120,112,100,0.7)]"
