@@ -122,13 +122,6 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
     params.id,
   ]);
 
-  const handleFragmentNavigation = (targetId: string | null) => {
-    if (!targetId || !navigationContext) return;
-
-    updateFragmentNavigationContext(navigationContext, navigationIds, targetId);
-    navigate(getFragmentDetailPath(targetId, navigationContext.token), { replace: true });
-  };
-
   const handleBack = () => {
     navigate(navigationContext?.returnTo ?? "/");
   };
@@ -137,6 +130,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
     const remainingNavigationIds = navigationIds.filter((id) => id !== params.id);
     const targetId = nextFragmentId ?? previousFragmentId;
     if (!deleteFragment(params.id)) return;
+    setIsDeleteOpen(false);
 
     if (navigationContext && targetId) {
       updateFragmentNavigationContext(navigationContext, remainingNavigationIds, targetId);
@@ -447,7 +441,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
                         fontFamily: "'Pretendard Variable', sans-serif",
                         boxShadow: isTemporary
                           ? "0 1px 3px rgba(120,112,100,0.08)"
-                          : `0 2px 4px ${getColorWithAlpha(token.border, usageCount <= 2 ? 0.16 : 0.24)}, inset 0 1px 0 rgba(255,255,255,0.42)`,
+                          : `0 1px 3px ${getColorWithAlpha(token.border, usageCount <= 2 ? 0.08 : 0.14)}, inset 0 1px 0 rgba(255,255,255,0.38)`,
                       }}
                     >
                       <span className="min-w-0 truncate">{normalizedChip}</span>
@@ -488,38 +482,6 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
             </>
           )}
 
-          {navigationContext && currentNavigationIndex >= 0 && (
-            <nav
-              className="mt-9 rounded-[18px] border border-[rgba(120,112,100,0.12)] bg-[#FFFFFF] px-3 py-3 shadow-[0_5px_16px_rgba(74,63,48,0.05)]"
-              aria-label="조각 연속 탐색"
-            >
-              <div className="mb-2 text-center text-[12px] font-medium text-[rgba(120,112,100,0.68)]">
-                {currentNavigationIndex + 1} / {navigationIds.length}
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleFragmentNavigation(previousFragmentId)}
-                  disabled={!previousFragmentId}
-                  className="flex h-11 items-center justify-center gap-1.5 rounded-[14px] bg-[#FAF8F4] text-[13px] font-medium text-[rgba(54,58,105,0.72)] transition active:scale-[0.98] disabled:cursor-default disabled:text-[rgba(160,152,140,0.38)] disabled:active:scale-100"
-                  aria-label="이전 조각"
-                >
-                  <ChevronLeft size={17} strokeWidth={1.9} aria-hidden="true" />
-                  이전 조각
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleFragmentNavigation(nextFragmentId)}
-                  disabled={!nextFragmentId}
-                  className="flex h-11 items-center justify-center gap-1.5 rounded-[14px] bg-[#FAF8F4] text-[13px] font-medium text-[rgba(54,58,105,0.72)] transition active:scale-[0.98] disabled:cursor-default disabled:text-[rgba(160,152,140,0.38)] disabled:active:scale-100"
-                  aria-label="다음 조각"
-                >
-                  다음 조각
-                  <ChevronRight size={17} strokeWidth={1.9} aria-hidden="true" />
-                </button>
-              </div>
-            </nav>
-          )}
         </div>
 
         {/* 하단 공유 버튼 */}

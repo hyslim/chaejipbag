@@ -32,7 +32,7 @@ const getInterestStyle = (label: string, count: number) => {
 
   return {
     gradient: `linear-gradient(145deg, ${getColorWithAlpha("#FFFFFF", softeningAlpha)} 0%, rgba(255,255,255,0) 52%, ${getColorWithAlpha("#FFFFFF", softeningAlpha * 0.6)} 100%), linear-gradient(145deg, ${start} 0%, ${middle} 50%, ${end} 100%)`,
-    shadow: `0 8px 18px ${getColorWithAlpha(token.border, 0.14 + growthStrength * 0.1)}`,
+    shadow: `0 7px 16px ${getColorWithAlpha(token.border, 0.1 + growthStrength * 0.06)}`,
     text: token.text,
   };
 };
@@ -292,28 +292,30 @@ const FragmentCard = ({
         onClick={handleCardClick}
       >
         {displayImageUrl && (
-          <img
-            src={displayImageUrl}
-            alt=""
-            onLoad={(event) => {
-              setImageHeightState({
-                src: displayImageUrl,
-                height: isYouTubeThumbnail
-                  ? 160
-                  : getCardImageHeight(event.currentTarget.naturalWidth, event.currentTarget.naturalHeight),
-              });
-            }}
-            onError={() => {
-              if (!imageUrl) setFailedYouTubeThumbnailUrl(youtubeThumbnailUrl);
-            }}
-            className="w-full object-cover"
-            style={{ height: imageHeight }}
-          />
-        )}
-        {displayImageUrl && imageCount > 1 && (
-          <span className="absolute right-2.5 top-2.5 rounded-full bg-black/55 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
-            +{imageCount - 1}
-          </span>
+          <div className="relative">
+            <img
+              src={displayImageUrl}
+              alt=""
+              onLoad={(event) => {
+                setImageHeightState({
+                  src: displayImageUrl,
+                  height: isYouTubeThumbnail
+                    ? 160
+                    : getCardImageHeight(event.currentTarget.naturalWidth, event.currentTarget.naturalHeight),
+                });
+              }}
+              onError={() => {
+                if (!imageUrl) setFailedYouTubeThumbnailUrl(youtubeThumbnailUrl);
+              }}
+              className="w-full object-cover"
+              style={{ height: imageHeight }}
+            />
+            {imageCount > 1 && (
+              <span className="pointer-events-none absolute right-2.5 top-2.5 z-10 rounded-full bg-[rgba(32,28,24,0.58)] px-2 py-1 text-[11px] font-semibold leading-4 text-white shadow-[0_1px_4px_rgba(0,0,0,0.14)] ring-1 ring-white/35">
+                +{imageCount - 1}
+              </span>
+            )}
+          </div>
         )}
         {showInstagramPlaceholder && (
           <div className="flex h-[140px] w-full flex-col items-center justify-center bg-[#FAF8F4] px-3 text-center">
@@ -340,7 +342,7 @@ const FragmentCard = ({
                   : primaryChipToken.border,
                 boxShadow: isTemporaryPrimaryChip
                   ? "none"
-                  : `0 1px 3px ${getColorWithAlpha(primaryChipToken.border, primaryChipCount <= 2 ? 0.12 : 0.2)}`,
+                  : `0 1px 3px ${getColorWithAlpha(primaryChipToken.border, primaryChipCount <= 2 ? 0.08 : 0.14)}`,
                 fontFamily: "'Pretendard Variable', sans-serif",
               }}
             >
@@ -397,6 +399,8 @@ const SearchResultCard = ({
   navigationReturnTo: string;
 }) => {
   const [, navigate] = useLocation();
+  const imageUrl = useFragmentImage(fragment);
+  const imageCount = getFragmentImageCount(fragment);
   const primaryChip = getFragmentDisplayPokachip(fragment);
   const isTemporaryPrimaryChip = isTemporaryPokachip(primaryChip);
   const primaryChipToken = getPokachipColorToken(primaryChip);
@@ -418,8 +422,19 @@ const SearchResultCard = ({
       <motion.div
         whileTap={{ scale: 0.97 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        className="home-select-none min-h-[104px] min-w-0 select-none overflow-hidden rounded-[14px] border border-[rgba(120,112,100,0.14)] bg-white px-3.5 py-3 shadow-[0_6px_18px_rgba(74,63,48,0.09)]"
+        className="home-select-none min-h-[104px] min-w-0 select-none overflow-hidden rounded-[14px] border border-[rgba(120,112,100,0.14)] bg-white shadow-[0_6px_18px_rgba(74,63,48,0.09)]"
       >
+        {imageUrl && (
+          <div className="relative">
+            <img src={imageUrl} alt="" className="h-[112px] w-full object-cover" />
+            {imageCount > 1 && (
+              <span className="pointer-events-none absolute right-2 top-2 z-10 rounded-full bg-[rgba(32,28,24,0.58)] px-2 py-1 text-[11px] font-semibold leading-4 text-white shadow-[0_1px_4px_rgba(0,0,0,0.14)] ring-1 ring-white/35">
+                +{imageCount - 1}
+              </span>
+            )}
+          </div>
+        )}
+        <div className="px-3.5 py-3">
         {primaryChip && (
           <span
             className="mb-2 inline-flex h-[22px] min-w-0 max-w-full items-center overflow-hidden rounded-full border px-2.5 text-[11px] font-medium"
@@ -435,7 +450,7 @@ const SearchResultCard = ({
                 : primaryChipToken.border,
               boxShadow: isTemporaryPrimaryChip
                 ? "none"
-                : `0 1px 3px ${getColorWithAlpha(primaryChipToken.border, primaryChipCount <= 2 ? 0.12 : 0.2)}`,
+                : `0 1px 3px ${getColorWithAlpha(primaryChipToken.border, primaryChipCount <= 2 ? 0.08 : 0.14)}`,
               fontFamily: "'Pretendard Variable', sans-serif",
             }}
           >
@@ -459,6 +474,7 @@ const SearchResultCard = ({
         <div className="mt-2 flex min-w-0 items-center gap-1.5 text-[12px] leading-[17px] text-[rgba(120,112,100,0.72)]">
           <SourceIcon size={12} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
           <span className="min-w-0 truncate" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>{getFragmentDisplayTime(fragment)}</span>
+        </div>
         </div>
       </motion.div>
     </Link>
@@ -957,7 +973,7 @@ export const Home = (): JSX.Element => {
                         className="home-select-none select-none h-[29px] rounded-full border border-[rgba(255,255,255,0.55)] px-3.5 py-0 text-[11px] font-medium text-[rgba(50,44,34,0.7)]"
                         style={{
                           backgroundColor: getPokachipColor(chip),
-                          boxShadow: "0 1px 4px rgba(200,196,188,0.28), inset 0 1px 1px rgba(255,255,255,0.45)",
+                          boxShadow: "0 1px 3px rgba(200,196,188,0.2), inset 0 1px 1px rgba(255,255,255,0.38)",
                           fontFamily: "'Pretendard Variable', sans-serif",
                         }}
                       >
@@ -1097,6 +1113,7 @@ export const Home = (): JSX.Element => {
                 <span aria-hidden="true" className="w-2 shrink-0 snap-start" />
                 {displayPokachips.map(({ label, count, token, isTemporary }) => {
                   const isEarlyGrowth = count <= 2;
+                  const isSelected = getPokachipKey(label) === getPokachipKey(selectedChip ?? "");
                   return (
                     <motion.button
                       key={label}
@@ -1110,7 +1127,7 @@ export const Home = (): JSX.Element => {
                         borderColor: isTemporary ? "rgba(120,112,100,0.12)" : token.border,
                         boxShadow: isTemporary
                           ? "0 1px 3px rgba(120,112,100,0.08)"
-                          : `0 2px 4px ${getColorWithAlpha(token.border, isEarlyGrowth ? 0.16 : 0.24)}, inset 0 1px 0 rgba(255,255,255,0.42)`,
+                          : `0 ${isSelected ? "2px 5px" : "1px 3px"} ${getColorWithAlpha(token.border, isSelected ? 0.18 : isEarlyGrowth ? 0.08 : 0.12)}, inset 0 1px 0 rgba(255,255,255,0.38)`,
                         fontFamily: "'Pretendard Variable', sans-serif",
                       }}
                     >
