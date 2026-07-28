@@ -83,7 +83,11 @@ const HomeCardPokachipRow = ({
           <span
             key={`${getPokachipKey(chip)}-${index}`}
             aria-hidden="true"
-            className="pointer-events-none flex h-6 w-7 min-w-0 max-w-7 shrink items-center justify-start overflow-hidden"
+            className="pointer-events-none flex h-6 min-w-0 max-w-11 flex-1 items-center justify-start overflow-hidden"
+            style={{
+              maskImage: "linear-gradient(to right, black 0%, black calc(100% - 16px), transparent 100%)",
+              WebkitMaskImage: "linear-gradient(to right, black 0%, black calc(100% - 16px), transparent 100%)",
+            }}
           >
             {pill}
           </span>
