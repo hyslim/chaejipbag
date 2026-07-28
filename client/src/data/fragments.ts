@@ -38,6 +38,7 @@ export interface Fragment {
 export const pokachipColorTokens = [
   {
     name: "lavender",
+    pillColor: "#DDD6F5",
     background: "#E8E3F7",
     text: "#726A84",
     border: "#DFD8F1",
@@ -45,6 +46,7 @@ export const pokachipColorTokens = [
   },
   {
     name: "coral-pink",
+    pillColor: "#F3C8CF",
     background: "#F7D9DD",
     text: "#86676D",
     border: "#F1D0D4",
@@ -52,6 +54,7 @@ export const pokachipColorTokens = [
   },
   {
     name: "butter-yellow",
+    pillColor: "#F3E1A6",
     background: "#F7EAC1",
     text: "#80734E",
     border: "#F0E1B0",
@@ -59,6 +62,7 @@ export const pokachipColorTokens = [
   },
   {
     name: "apricot",
+    pillColor: "#F2C7A5",
     background: "#F6D9C1",
     text: "#856853",
     border: "#EFCDAF",
@@ -66,6 +70,7 @@ export const pokachipColorTokens = [
   },
   {
     name: "mint",
+    pillColor: "#CBE8DD",
     background: "#DCEFE7",
     text: "#607B73",
     border: "#CDE7DC",
@@ -73,6 +78,7 @@ export const pokachipColorTokens = [
   },
   {
     name: "sage",
+    pillColor: "#D5DFBC",
     background: "#E2E9D0",
     text: "#6F785F",
     border: "#D7E0BF",
@@ -80,6 +86,7 @@ export const pokachipColorTokens = [
   },
   {
     name: "sky-blue",
+    pillColor: "#C9E4F1",
     background: "#DAECF4",
     text: "#5F7782",
     border: "#CBE3ED",
@@ -87,6 +94,7 @@ export const pokachipColorTokens = [
   },
   {
     name: "blue-gray",
+    pillColor: "#D0DCE8",
     background: "#DFE7EE",
     text: "#647381",
     border: "#D1DCE5",
@@ -94,6 +102,7 @@ export const pokachipColorTokens = [
   },
   {
     name: "rose-brown",
+    pillColor: "#E3C9C2",
     background: "#ECDAD4",
     text: "#806B65",
     border: "#E3CEC8",
@@ -101,6 +110,7 @@ export const pokachipColorTokens = [
   },
   {
     name: "neutral-beige",
+    pillColor: "#E7DED0",
     background: "#EFE8DE",
     text: "#7A7267",
     border: "#E3DBCE",
@@ -211,6 +221,36 @@ export function getColorWithAlpha(color: string, alpha: number): string {
   }
 
   return color;
+}
+
+export type PokachipPillEmphasis = "regular" | "selected";
+
+export function getPokachipSmallPillStyle(
+  value: string,
+  emphasis: PokachipPillEmphasis = "regular"
+): {
+  backgroundColor: string;
+  color: string;
+  borderColor: string;
+  boxShadow: string;
+} {
+  const isTemporary = getPokachipKey(value) === "임시조각";
+  const token = getPokachipColorToken(value);
+  const fillAlpha = emphasis === "selected" ? 0.6 : 0.55;
+  const shadowAlpha = emphasis === "selected" ? 0.34 : 0.3;
+
+  return {
+    backgroundColor: isTemporary
+      ? temporaryPokachipColor
+      : getColorWithAlpha(token.pillColor, fillAlpha),
+    color: isTemporary
+      ? "rgba(120,112,100,0.64)"
+      : `rgba(50,44,34,${emphasis === "selected" ? 0.68 : 0.64})`,
+    borderColor: "rgba(255,255,255,0.55)",
+    boxShadow: isTemporary
+      ? "0 1px 6px 0 rgba(120,112,100,0.12), inset 0 1px 0 0 rgba(255,255,255,0.58)"
+      : `0 1px 6px 0 ${getColorWithAlpha(token.pillColor, shadowAlpha)}, inset 0 1px 0 0 rgba(255,255,255,0.58)`,
+  };
 }
 const stableFallbackCreatedAtBase = Date.UTC(2026, 0, 1, 9, 0, 0);
 

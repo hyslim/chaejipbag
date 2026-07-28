@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Pencil, Pin, Trash2, ExternalLink, Globe, Instagram, Sparkles, Youtube, X, type LucideIcon } from "lucide-react";
-import { getColorWithAlpha, getFragmentImageCount, getPokachipColorToken, getPokachipKey, normalizePokachipName, temporaryPokachipColor } from "@/data/fragments";
+import { getFragmentImageCount, getPokachipSmallPillStyle, normalizePokachipName } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { useFragmentImages } from "@/hooks/useFragmentImage";
 import { copyFragmentShareText, shareFragment, shouldOfferImageShare } from "@/lib/shareFragment";
@@ -17,9 +17,6 @@ import {
 
 const sourceIconColor = "rgba(120,112,100,0.65)";
 const IMAGE_SHARE_DELAY_MS = 700;
-const isTemporaryPokachip = (label: string): boolean =>
-  getPokachipKey(label) === "임시조각";
-
 const delayImageShare = () => new Promise((resolve) => window.setTimeout(resolve, IMAGE_SHARE_DELAY_MS));
 
 const getSourceMetaIcon = (sourceType?: string, source?: string, url?: string): LucideIcon => {
@@ -165,18 +162,6 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
       </main>
     );
   }
-
-  const pokachipUsageCounts = new Map<string, number>();
-  fragments.forEach((storedFragment) => {
-    const fragmentPokachipKeys = new Set(
-      (storedFragment.pokachips ?? [])
-        .map(getPokachipKey)
-        .filter(Boolean)
-    );
-    fragmentPokachipKeys.forEach((key) => {
-      pokachipUsageCounts.set(key, (pokachipUsageCounts.get(key) ?? 0) + 1);
-    });
-  });
 
   const metaLabel = getSourceMetaLabel(fragment.sourceType, fragment.source, fragment.url);
   const SourceIcon = getSourceMetaIcon(fragment.sourceType, fragment.source, fragment.url);
@@ -426,22 +411,14 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
               <div className="flex min-w-0 flex-wrap gap-1.5">
                 {fragment.pokachips.map((chip) => {
                   const normalizedChip = normalizePokachipName(chip);
-                  const usageCount = pokachipUsageCounts.get(getPokachipKey(normalizedChip)) ?? 0;
-                  const isTemporary = isTemporaryPokachip(normalizedChip);
-                  const token = getPokachipColorToken(normalizedChip);
 
                   return (
                     <span
                       key={chip}
                       className="flex h-[30px] min-w-0 max-w-full items-center overflow-hidden rounded-[999px] border px-3 text-[12px] font-medium leading-[17px]"
                       style={{
-                        backgroundColor: isTemporary ? temporaryPokachipColor : token.background,
-                        color: isTemporary ? "rgba(120,112,100,0.68)" : token.text,
-                        borderColor: isTemporary ? "rgba(120,112,100,0.12)" : token.border,
+                        ...getPokachipSmallPillStyle(normalizedChip),
                         fontFamily: "'Pretendard Variable', sans-serif",
-                        boxShadow: isTemporary
-                          ? "0 1px 3px rgba(120,112,100,0.08)"
-                          : `0 1px 3px ${getColorWithAlpha(token.border, usageCount <= 2 ? 0.08 : 0.14)}, inset 0 1px 0 rgba(255,255,255,0.38)`,
                       }}
                     >
                       <span className="min-w-0 truncate">{normalizedChip}</span>
