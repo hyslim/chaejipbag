@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Pencil, Pin, Trash2, ExternalLink, Globe, Instagram, Sparkles, Youtube, X, type LucideIcon } from "lucide-react";
-import { getFragmentImageCount, getPokachipColor, normalizePokachipName } from "@/data/fragments";
+import { getColorWithAlpha, getFragmentImageCount, getPokachipColorToken, getPokachipKey, normalizePokachipName, temporaryPokachipColor } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { useFragmentImages } from "@/hooks/useFragmentImage";
 import { copyFragmentShareText, shareFragment, shouldOfferImageShare } from "@/lib/shareFragment";
@@ -17,28 +17,8 @@ import {
 
 const sourceIconColor = "rgba(120,112,100,0.65)";
 const IMAGE_SHARE_DELAY_MS = 700;
-const temporaryPokachipColor = "rgba(120,112,100,0.18)";
-
-const getColorWithAlpha = (color: string, alpha: number): string => {
-  const rgbaMatch = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-  if (rgbaMatch) {
-    const [, red, green, blue] = rgbaMatch;
-    return `rgba(${red},${green},${blue},${alpha})`;
-  }
-
-  const hexMatch = color.match(/^#([0-9a-f]{6})$/i);
-  if (hexMatch) {
-    const hex = hexMatch[1];
-    return `rgba(${parseInt(hex.slice(0, 2), 16)},${parseInt(hex.slice(2, 4), 16)},${parseInt(hex.slice(4, 6), 16)},${alpha})`;
-  }
-
-  return color;
-};
-
-const getDisplayPokachipKey = (label: string): string =>
-  normalizePokachipName(label).toLocaleLowerCase("ko-KR");
 const isTemporaryPokachip = (label: string): boolean =>
-  getDisplayPokachipKey(label).replace(/\s+/g, "") === "임시조각";
+  getPokachipKey(label) === "임시조각";
 
 const delayImageShare = () => new Promise((resolve) => window.setTimeout(resolve, IMAGE_SHARE_DELAY_MS));
 
@@ -196,7 +176,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   fragments.forEach((storedFragment) => {
     const fragmentPokachipKeys = new Set(
       (storedFragment.pokachips ?? [])
-        .map(getDisplayPokachipKey)
+        .map(getPokachipKey)
         .filter(Boolean)
     );
     fragmentPokachipKeys.forEach((key) => {
@@ -452,20 +432,22 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
               <div className="flex min-w-0 flex-wrap gap-1.5">
                 {fragment.pokachips.map((chip) => {
                   const normalizedChip = normalizePokachipName(chip);
-                  const usageCount = pokachipUsageCounts.get(getDisplayPokachipKey(normalizedChip)) ?? 0;
+                  const usageCount = pokachipUsageCounts.get(getPokachipKey(normalizedChip)) ?? 0;
                   const isTemporary = isTemporaryPokachip(normalizedChip);
-                  const backgroundColor = isTemporary
-                    ? getColorWithAlpha(temporaryPokachipColor, 0.28)
-                    : getColorWithAlpha(getPokachipColor(normalizedChip), usageCount <= 2 ? 0.48 : 0.6);
+                  const token = getPokachipColorToken(normalizedChip);
 
                   return (
                     <span
                       key={chip}
-                      className={`flex h-[30px] min-w-0 max-w-full items-center overflow-hidden rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3 text-[12px] font-medium leading-[17px] ${isTemporary ? "text-[rgba(120,112,100,0.68)]" : "text-[rgba(50,44,34,0.7)]"}`}
+                      className="flex h-[30px] min-w-0 max-w-full items-center overflow-hidden rounded-[999px] border px-3 text-[12px] font-medium leading-[17px]"
                       style={{
-                        backgroundColor,
+                        backgroundColor: isTemporary ? temporaryPokachipColor : token.background,
+                        color: isTemporary ? "rgba(120,112,100,0.68)" : token.text,
+                        borderColor: isTemporary ? "rgba(120,112,100,0.12)" : token.border,
                         fontFamily: "'Pretendard Variable', sans-serif",
-                        boxShadow: "0 2px 4px 0 rgba(180,196,244,0.28), inset 0 1px 0 0 rgba(255,255,255,0.58)",
+                        boxShadow: isTemporary
+                          ? "0 1px 3px rgba(120,112,100,0.08)"
+                          : `0 2px 4px ${getColorWithAlpha(token.border, usageCount <= 2 ? 0.16 : 0.24)}, inset 0 1px 0 rgba(255,255,255,0.42)`,
                       }}
                     >
                       <span className="min-w-0 truncate">{normalizedChip}</span>

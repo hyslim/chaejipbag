@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from 
 import { Globe, Instagram, Pencil, Pin, Sparkles, Youtube, type LucideIcon } from "lucide-react";
 import { flushSync } from "react-dom";
 import { Link, useLocation } from "wouter";
-import { getFragmentDisplayTime, getFragmentImageCount, getFragmentReferenceAt, getPokachipColor, getRecentPokachips, normalizePokachipName, type Fragment } from "@/data/fragments";
+import { getColorWithAlpha, getFragmentDisplayTime, getFragmentImageCount, getFragmentReferenceAt, getPokachipColor, getPokachipColorToken, getPokachipKey, getPokachipsInDisplayOrder, getRecentPokachips, normalizePokachipName, temporaryPokachipColor, type Fragment } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { useFragmentImage } from "@/hooks/useFragmentImage";
 import { BottomNav } from "@/components/BottomNav";
@@ -17,50 +17,28 @@ const IMAGE_SHARE_DELAY_MS = 700;
 
 const delayImageShare = () => new Promise((resolve) => window.setTimeout(resolve, IMAGE_SHARE_DELAY_MS));
 
-const interestStyles = [
-  { gradient: "linear-gradient(145deg, #c9d9f4 0%, #c5c5ef 48%, #d7c8ed 100%)", shadow: "0 8px 18px rgba(112,126,153,0.18)" },
-  { gradient: "linear-gradient(140deg, #d5bff0 0%, #dec1e8 50%, #edcfc2 100%)", shadow: "0 8px 18px rgba(142,113,128,0.18)" },
-  { gradient: "linear-gradient(145deg, #bfe4db 0%, #b3ddd9 50%, #bddfeb 100%)", shadow: "0 8px 18px rgba(91,135,137,0.18)" },
-  { gradient: "linear-gradient(140deg, #b8ddce 0%, #c9dfc7 50%, #eadfae 100%)", shadow: "0 8px 18px rgba(119,132,103,0.18)" },
-  { gradient: "linear-gradient(145deg, #f3e4b8 0%, #efd28c 52%, #e9c472 100%)", shadow: "0 8px 18px rgba(151,126,73,0.18)" },
-  { gradient: "linear-gradient(140deg, #f0bdc4 0%, #eeaebb 50%, #efc2b3 100%)", shadow: "0 8px 18px rgba(148,99,96,0.18)" },
-];
-
-const existingPokachipPalette = ["#EEC4D0", "#CDEAF3", "#DCD9F3", "#F1DFA7", "#CDEBE4", "#D8E7FA"];
-const temporaryPokachipColor = "rgba(120,112,100,0.18)";
-const getDisplayPokachipKey = (label: string): string =>
-  normalizePokachipName(label).toLocaleLowerCase("ko-KR");
 const isTemporaryPokachip = (label: string): boolean =>
-  getDisplayPokachipKey(label).replace(/\s+/g, "") === "임시조각";
-
-const getComparableColor = (color: string): string => {
-  const hexMatch = color.match(/^#([0-9a-f]{6})$/i);
-  if (hexMatch) return hexMatch[1].match(/.{2}/g)!.join(",").toLocaleLowerCase("en-US");
-  const rgbMatch = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-  return rgbMatch ? rgbMatch.slice(1, 4).join(",") : color.toLocaleLowerCase("en-US");
-};
+  getPokachipKey(label) === "임시조각";
 
 const saveToastStorageKey = "chaejip-save-toast";
 
 const sourceIconColor = "rgba(120,112,100,0.72)";
 
-const getColorWithAlpha = (color: string, alpha: number): string => {
-  const rgbaMatch = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-  if (rgbaMatch) {
-    const [, red, green, blue] = rgbaMatch;
-    return `rgba(${red},${green},${blue},${alpha})`;
-  }
+const getInterestStyle = (label: string, count: number) => {
+  const token = getPokachipColorToken(label);
+  const growthStrength = Math.min(Math.max(count - 5, 0), 5) / 5;
+  const softeningAlpha = 0.16 * (1 - growthStrength);
+  const [start, middle, end] = token.heroGradient;
 
-  const hexMatch = color.match(/^#([0-9a-f]{6})$/i);
-  if (hexMatch) {
-    const hex = hexMatch[1];
-    const red = parseInt(hex.slice(0, 2), 16);
-    const green = parseInt(hex.slice(2, 4), 16);
-    const blue = parseInt(hex.slice(4, 6), 16);
-    return `rgba(${red},${green},${blue},${alpha})`;
-  }
+  return {
+    gradient: `linear-gradient(145deg, ${getColorWithAlpha("#FFFFFF", softeningAlpha)} 0%, rgba(255,255,255,0) 52%, ${getColorWithAlpha("#FFFFFF", softeningAlpha * 0.6)} 100%), linear-gradient(145deg, ${start} 0%, ${middle} 50%, ${end} 100%)`,
+    shadow: `0 8px 18px ${getColorWithAlpha(token.border, 0.14 + growthStrength * 0.1)}`,
+    text: token.text,
+  };
+};
 
-  return color;
+const getFragmentDisplayPokachip = (fragment: Fragment, selectedChip?: string | null): string => {
+  return getPokachipsInDisplayOrder(fragment.pokachips, selectedChip)[0] ?? "";
 };
 const shouldShowMemoPreview = (fragment: Fragment): boolean => {
   const title = fragment.title.trim();
@@ -88,6 +66,7 @@ const getFragmentSourceIcon = (fragment: Fragment): LucideIcon => {
 const FragmentCard = ({
   fragment,
   primaryChipCount,
+  selectedChip,
   isMenuOpen,
   onOpenMenu,
   onCloseMenu,
@@ -100,6 +79,7 @@ const FragmentCard = ({
 }: {
   fragment: Fragment;
   primaryChipCount: number;
+  selectedChip?: string | null;
   isMenuOpen: boolean;
   onOpenMenu: () => void;
   onCloseMenu: () => void;
@@ -131,8 +111,9 @@ const FragmentCard = ({
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
   const didLongPressRef = useRef(false);
   const SourceIcon = getFragmentSourceIcon(fragment);
-  const primaryChip = fragment.pokachips[0] ? normalizePokachipName(fragment.pokachips[0]) : "";
+  const primaryChip = getFragmentDisplayPokachip(fragment, selectedChip);
   const isTemporaryPrimaryChip = isTemporaryPokachip(primaryChip);
+  const primaryChipToken = getPokachipColorToken(primaryChip);
   const hasTitle = Boolean(fragment.title.trim());
   const hasMemo = shouldShowMemoPreview(fragment);
   const chipBottomSpacing = hasTitle || hasMemo ? "mb-2" : "mb-0";
@@ -346,11 +327,20 @@ const FragmentCard = ({
         <div className="flex min-w-0 flex-col p-3">
           {primaryChip && (
             <span
-              className={`${chipBottomSpacing} flex h-6 min-w-0 max-w-full items-center self-start overflow-hidden rounded-[999px] px-2.5 py-1 text-[11px] font-medium leading-4 ${isTemporaryPrimaryChip ? "text-[rgba(120,112,100,0.66)]" : "text-[rgba(50,44,34,0.68)]"}`}
+              className={`${chipBottomSpacing} flex h-6 min-w-0 max-w-full items-center self-start overflow-hidden rounded-[999px] border px-2.5 py-1 text-[11px] font-medium leading-4`}
               style={{
                 backgroundColor: isTemporaryPrimaryChip
-                  ? getColorWithAlpha(temporaryPokachipColor, 0.24)
-                  : getColorWithAlpha(getPokachipColor(primaryChip), primaryChipCount <= 2 ? 0.4 : 0.55),
+                  ? temporaryPokachipColor
+                  : primaryChipToken.background,
+                color: isTemporaryPrimaryChip
+                  ? "rgba(120,112,100,0.66)"
+                  : primaryChipToken.text,
+                borderColor: isTemporaryPrimaryChip
+                  ? "rgba(120,112,100,0.12)"
+                  : primaryChipToken.border,
+                boxShadow: isTemporaryPrimaryChip
+                  ? "none"
+                  : `0 1px 3px ${getColorWithAlpha(primaryChipToken.border, primaryChipCount <= 2 ? 0.12 : 0.2)}`,
                 fontFamily: "'Pretendard Variable', sans-serif",
               }}
             >
@@ -407,8 +397,9 @@ const SearchResultCard = ({
   navigationReturnTo: string;
 }) => {
   const [, navigate] = useLocation();
-  const primaryChip = fragment.pokachips[0] ? normalizePokachipName(fragment.pokachips[0]) : "";
+  const primaryChip = getFragmentDisplayPokachip(fragment);
   const isTemporaryPrimaryChip = isTemporaryPokachip(primaryChip);
+  const primaryChipToken = getPokachipColorToken(primaryChip);
   const SourceIcon = getFragmentSourceIcon(fragment);
 
   return (
@@ -431,11 +422,20 @@ const SearchResultCard = ({
       >
         {primaryChip && (
           <span
-            className={`mb-2 inline-flex h-[22px] min-w-0 max-w-full items-center overflow-hidden rounded-full px-2.5 text-[11px] font-medium ${isTemporaryPrimaryChip ? "text-[rgba(120,112,100,0.66)]" : "text-[#5a5248b0]"}`}
+            className="mb-2 inline-flex h-[22px] min-w-0 max-w-full items-center overflow-hidden rounded-full border px-2.5 text-[11px] font-medium"
             style={{
               backgroundColor: isTemporaryPrimaryChip
-                ? getColorWithAlpha(temporaryPokachipColor, 0.24)
-                : getColorWithAlpha(getPokachipColor(primaryChip), primaryChipCount <= 2 ? 0.4 : 0.55),
+                ? temporaryPokachipColor
+                : primaryChipToken.background,
+              color: isTemporaryPrimaryChip
+                ? "rgba(120,112,100,0.66)"
+                : primaryChipToken.text,
+              borderColor: isTemporaryPrimaryChip
+                ? "rgba(120,112,100,0.12)"
+                : primaryChipToken.border,
+              boxShadow: isTemporaryPrimaryChip
+                ? "none"
+                : `0 1px 3px ${getColorWithAlpha(primaryChipToken.border, primaryChipCount <= 2 ? 0.12 : 0.2)}`,
               fontFamily: "'Pretendard Variable', sans-serif",
             }}
           >
@@ -511,7 +511,7 @@ export const Home = (): JSX.Element => {
     const fragmentPokachips = new Map<string, string>();
     (fragment.pokachips ?? []).forEach((value) => {
       const label = normalizePokachipName(value);
-      const key = getDisplayPokachipKey(label);
+      const key = getPokachipKey(label);
       if (label && !fragmentPokachips.has(key)) fragmentPokachips.set(key, label);
     });
     fragmentPokachips.forEach((label, key) => {
@@ -520,9 +520,9 @@ export const Home = (): JSX.Element => {
     });
   });
   const pokachipUsages = Array.from(pokachipUsage.values());
-  const getPrimaryChipUsageCount = (fragment: Fragment): number => {
-    const primaryChip = fragment.pokachips[0] ?? "";
-    return pokachipUsage.get(getDisplayPokachipKey(primaryChip))?.count ?? 0;
+  const getDisplayChipUsageCount = (fragment: Fragment, selected?: string | null): number => {
+    const displayChip = getFragmentDisplayPokachip(fragment, selected);
+    return pokachipUsage.get(getPokachipKey(displayChip))?.count ?? 0;
   };
   const topPokachips = [...pokachipUsages].sort((a, b) => b.lastUsedAt - a.lastUsedAt);
   const interestCandidates = [...pokachipUsages]
@@ -531,24 +531,16 @@ export const Home = (): JSX.Element => {
     .slice(0, 6);
   const interests = interestCandidates.length >= 3 ? interestCandidates : [];
   const hasInterests = interests.length >= 3;
-  let previousPokachipColor = "";
   const displayPokachips = topPokachips.map((pokachip) => {
     const isTemporary = isTemporaryPokachip(pokachip.label);
-    let color = isTemporary ? temporaryPokachipColor : getPokachipColor(pokachip.label);
-    if (!isTemporary && getComparableColor(color) === getComparableColor(previousPokachipColor)) {
-      const paletteIndex = existingPokachipPalette.findIndex(
-        (paletteColor) => getComparableColor(paletteColor) === getComparableColor(color)
-      );
-      color = existingPokachipPalette[(Math.max(paletteIndex, 0) + 1) % existingPokachipPalette.length];
-    }
-    previousPokachipColor = color;
-    return { ...pokachip, color, isTemporary };
+    const token = getPokachipColorToken(pokachip.label);
+    return { ...pokachip, token, isTemporary };
   });
-  const topPokachipKey = displayPokachips.map(({ label, count, color }) => `${label}:${count}:${color}`).join("|");
+  const topPokachipKey = displayPokachips.map(({ label, count, token }) => `${label}:${count}:${token.name}`).join("|");
   const visibleFragments = selectedChip
     ? fragments.filter((fragment) =>
         (fragment.pokachips ?? []).some(
-          (chip) => normalizePokachipName(chip) === selectedChip
+          (chip) => getPokachipKey(chip) === getPokachipKey(selectedChip)
         )
       )
     : fragments;
@@ -875,7 +867,8 @@ export const Home = (): JSX.Element => {
               <FragmentCard
                 key={fragment.id}
                 fragment={fragment}
-                primaryChipCount={getPrimaryChipUsageCount(fragment)}
+                selectedChip={selectedChip}
+                primaryChipCount={getDisplayChipUsageCount(fragment, selectedChip)}
                 isMenuOpen={openMenuFragmentId === fragment.id}
                 onOpenMenu={() => setOpenMenuFragmentId(fragment.id)}
                 onCloseMenu={() => setOpenMenuFragmentId(null)}
@@ -990,7 +983,7 @@ export const Home = (): JSX.Element => {
                     <SearchResultCard
                       key={fragment.id}
                       fragment={fragment}
-                      primaryChipCount={getPrimaryChipUsageCount(fragment)}
+                      primaryChipCount={getDisplayChipUsageCount(fragment)}
                       navigationIds={searchResultIds}
                       navigationReturnTo={homeSearchReturnTo}
                     />
@@ -1048,20 +1041,20 @@ export const Home = (): JSX.Element => {
           <section
             className="relative overflow-hidden px-4 pb-2 pt-2"
             style={{
-              background: "radial-gradient(circle at 32% 10%, rgba(224,217,242,0.24), transparent 38%), radial-gradient(circle at 88% 78%, rgba(244,220,194,0.22), transparent 42%), #FFFEFB",
+              background: "radial-gradient(circle at 32% 10%, rgba(224,217,242,0.14), transparent 38%), radial-gradient(circle at 88% 78%, rgba(244,220,194,0.12), transparent 42%), #FFFEFB",
             }}
           >
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute -right-12 top-0 z-0 h-[178px] w-[330px] opacity-[0.32] blur-[3px]"
+              className="pointer-events-none absolute -right-12 top-0 z-0 h-[178px] w-[330px] opacity-[0.18] blur-[3px]"
               style={{
                 background: "linear-gradient(110deg, rgba(255,254,251,0.06) 0%, rgba(226,216,244,0.72) 46%, rgba(255,253,249,0.16) 100%)",
                 clipPath: "polygon(16% 0, 100% 0, 84% 100%, 0 100%)",
               }}
             />
             <div className="relative z-10 grid grid-cols-3 gap-2">
-              {interests.map((interest, index) => {
-                const interestStyle = interestStyles[index % interestStyles.length];
+              {interests.map((interest) => {
+                const interestStyle = getInterestStyle(interest.label, interest.count);
                 return (
                   <button
                     key={interest.label}
@@ -1071,8 +1064,8 @@ export const Home = (): JSX.Element => {
                     style={{ background: interestStyle.gradient, boxShadow: interestStyle.shadow }}
                   >
                     <span
-                      className="text-[13px] font-medium text-[rgba(255,255,255,0.82)]"
-                      style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+                      className="text-[13px] font-medium"
+                      style={{ color: interestStyle.text, fontFamily: "'Pretendard Variable', sans-serif" }}
                     >
                       {interest.label}
                     </span>
@@ -1102,7 +1095,7 @@ export const Home = (): JSX.Element => {
                 }}
               >
                 <span aria-hidden="true" className="w-2 shrink-0 snap-start" />
-                {displayPokachips.map(({ label, count, color: backgroundColor, isTemporary }) => {
+                {displayPokachips.map(({ label, count, token, isTemporary }) => {
                   const isEarlyGrowth = count <= 2;
                   return (
                     <motion.button
@@ -1110,10 +1103,14 @@ export const Home = (): JSX.Element => {
                       onClick={() => selectHomeFilter(label)}
                       whileTap={{ scale: 0.9 }}
                       transition={{ type: "spring", stiffness: 500, damping: 20 }}
-                      className={`home-select-none select-none box-border inline-flex h-[29px] min-w-0 max-w-[calc(100%-32px)] shrink-0 snap-start items-center justify-center gap-2.5 overflow-hidden rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3.5 py-[6px] text-[12px] font-medium leading-[17px] ${isTemporary ? "text-[rgba(120,112,100,0.58)]" : isEarlyGrowth ? "text-[rgba(50,44,34,0.52)]" : "text-[rgba(50,44,34,0.7)]"}`}
+                      className="home-select-none select-none box-border inline-flex h-[29px] min-w-0 max-w-[calc(100%-32px)] shrink-0 snap-start items-center justify-center gap-2.5 overflow-hidden rounded-[999px] border px-3.5 py-[6px] text-[12px] font-medium leading-[17px]"
                       style={{
-                        backgroundColor: getColorWithAlpha(backgroundColor, isTemporary ? 0.16 : isEarlyGrowth ? 0.3 : 0.5),
-                        boxShadow: "0 2px 4px 0 rgba(180,196,244,0.30), inset 0 1px 0 0 rgba(255,255,255,0.58)",
+                        backgroundColor: isTemporary ? temporaryPokachipColor : token.background,
+                        color: isTemporary ? "rgba(120,112,100,0.58)" : token.text,
+                        borderColor: isTemporary ? "rgba(120,112,100,0.12)" : token.border,
+                        boxShadow: isTemporary
+                          ? "0 1px 3px rgba(120,112,100,0.08)"
+                          : `0 2px 4px ${getColorWithAlpha(token.border, isEarlyGrowth ? 0.16 : 0.24)}, inset 0 1px 0 rgba(255,255,255,0.42)`,
                         fontFamily: "'Pretendard Variable', sans-serif",
                       }}
                     >

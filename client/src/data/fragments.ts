@@ -35,46 +35,182 @@ export interface Fragment {
   attachments?: FragmentAttachment[];
 }
 
-export const pokachipColorMap: Record<string, string> = {
-  글쓰기: "rgba(238,196,208,0.55)",
-  수조: "rgba(168,220,232,0.55)",
-  조명: "rgba(238,216,152,0.55)",
-  웹앱: "rgba(184,204,242,0.55)",
-  블렌더: "rgba(178,226,248,0.55)",
-  사진: "rgba(200,216,168,0.55)",
-  유리: "rgba(200,220,240,0.55)",
-  파랑: "rgba(180,210,255,0.55)",
-  임시조각: "rgba(220,210,240,0.55)",
+export const pokachipColorTokens = [
+  {
+    name: "lavender",
+    background: "#DDD6F5",
+    text: "#59506F",
+    border: "#C8BDE9",
+    heroGradient: ["#E8E3FA", "#CFC3EE", "#BDAFE3"],
+  },
+  {
+    name: "coral-pink",
+    background: "#F3C8CF",
+    text: "#714C54",
+    border: "#E7AEB8",
+    heroGradient: ["#F9DADF", "#EAB4BE", "#DE9CA8"],
+  },
+  {
+    name: "butter-yellow",
+    background: "#F3E1A6",
+    text: "#6A5A2F",
+    border: "#E5CC79",
+    heroGradient: ["#F9EDC5", "#EDD684", "#DFC264"],
+  },
+  {
+    name: "apricot",
+    background: "#F2C7A5",
+    text: "#704E35",
+    border: "#E3A978",
+    heroGradient: ["#F9DDC6", "#EBB484", "#DD9864"],
+  },
+  {
+    name: "mint",
+    background: "#CBE8DD",
+    text: "#44645B",
+    border: "#A9D6C6",
+    heroGradient: ["#DEF1EA", "#B9DDCF", "#97C9B7"],
+  },
+  {
+    name: "sage",
+    background: "#D5DFBC",
+    text: "#566044",
+    border: "#BACB93",
+    heroGradient: ["#E5EBCF", "#C5D29F", "#A9BD7A"],
+  },
+  {
+    name: "sky-blue",
+    background: "#C9E4F1",
+    text: "#435F6D",
+    border: "#A6CFE2",
+    heroGradient: ["#E0F0F7", "#B8D9E9", "#91C3DA"],
+  },
+  {
+    name: "blue-gray",
+    background: "#D0DCE8",
+    text: "#495B6C",
+    border: "#B0C3D5",
+    heroGradient: ["#E2EAF1", "#BFCFDE", "#9FB7CC"],
+  },
+  {
+    name: "rose-brown",
+    background: "#E3C9C2",
+    text: "#69514B",
+    border: "#CEACA3",
+    heroGradient: ["#F0DDD8", "#D7B7AE", "#C4968B"],
+  },
+  {
+    name: "neutral-beige",
+    background: "#E7DED0",
+    text: "#62594D",
+    border: "#CFC1AE",
+    heroGradient: ["#F2ECE3", "#DCCFBD", "#C5B39B"],
+  },
+] as const;
+
+export type PokachipColorToken = (typeof pokachipColorTokens)[number];
+export type PokachipColorTokenName = PokachipColorToken["name"];
+
+export const pokachipColorMap: Record<string, PokachipColorTokenName> = {
+  글쓰기: "coral-pink",
+  수조: "sky-blue",
+  조명: "butter-yellow",
+  웹앱: "lavender",
+  블렌더: "sky-blue",
+  사진: "sage",
+  유리: "blue-gray",
+  파랑: "sky-blue",
+  임시조각: "neutral-beige",
 };
 
-const generatedPokachipPalette = [
-  "#EEC4D0",
-  "#CDEAF3",
-  "#DCD9F3",
-  "#F1DFA7",
-  "#CDEBE4",
-  "#D8E7FA",
-];
+export const temporaryPokachipColor = "rgba(120,112,100,0.18)";
 
 export function normalizePokachipName(value: string): string {
   return value
     .trim()
-    .replace(/^[+\-#]\s*/, "")
-    .replace(/\s*×$/, "")
+    .replace(/^(?:[+#-]\s*)+/, "")
+    .replace(/(?:\s*[+×])+$/, "")
     .trim();
 }
 
-export function getPokachipColor(value: string): string {
-  const name = normalizePokachipName(value);
-  const mappedColor = pokachipColorMap[name];
-  if (mappedColor) return mappedColor;
+export function getCleanPokachipName(value: string): string {
+  const normalized = normalizePokachipName(value);
+  return normalized && normalized !== "추가" ? normalized : "";
+}
 
-  let hash = 0;
-  for (const character of name) {
-    hash = (hash * 31 + character.codePointAt(0)!) >>> 0;
+export function getPokachipKey(value: string): string {
+  return getCleanPokachipName(value)
+    .replace(/\s+/g, "")
+    .toLocaleLowerCase("ko-KR");
+}
+
+export function getPokachipsInDisplayOrder(values: string[], selectedChip?: string | null): string[] {
+  const normalized = values.map(normalizePokachipName).filter(Boolean);
+  const selectedKey = getPokachipKey(selectedChip ?? "");
+  if (!selectedKey) return normalized;
+
+  const selectedIndex = normalized.findIndex((chip) => getPokachipKey(chip) === selectedKey);
+  if (selectedIndex <= 0) return normalized;
+
+  return [
+    normalized[selectedIndex],
+    ...normalized.slice(0, selectedIndex),
+    ...normalized.slice(selectedIndex + 1),
+  ];
+}
+
+const fnv1aOffsetBasis = 0x811c9dc5;
+const fnv1aPrime = 0x01000193;
+
+export function getPokachipHash(value: string): number {
+  const key = getPokachipKey(value);
+  let hash = fnv1aOffsetBasis;
+
+  for (const byte of new TextEncoder().encode(key)) {
+    hash ^= byte;
+    hash = Math.imul(hash, fnv1aPrime) >>> 0;
   }
 
-  return generatedPokachipPalette[hash % generatedPokachipPalette.length];
+  return hash;
+}
+
+export function getPokachipColorIndex(value: string): number {
+  const key = getPokachipKey(value);
+  const mappedTokenName = Object.entries(pokachipColorMap).find(
+    ([label]) => getPokachipKey(label) === key
+  )?.[1];
+  if (mappedTokenName) {
+    return pokachipColorTokens.findIndex(({ name }) => name === mappedTokenName);
+  }
+
+  return getPokachipHash(key) % pokachipColorTokens.length;
+}
+
+export function getPokachipColorToken(value: string): PokachipColorToken {
+  return pokachipColorTokens[getPokachipColorIndex(value)];
+}
+
+export function getPokachipColor(value: string): string {
+  return getPokachipColorToken(value).background;
+}
+
+export function getColorWithAlpha(color: string, alpha: number): string {
+  const rgbaMatch = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if (rgbaMatch) {
+    const [, red, green, blue] = rgbaMatch;
+    return `rgba(${red},${green},${blue},${alpha})`;
+  }
+
+  const hexMatch = color.match(/^#([0-9a-f]{6})$/i);
+  if (hexMatch) {
+    const hex = hexMatch[1];
+    const red = parseInt(hex.slice(0, 2), 16);
+    const green = parseInt(hex.slice(2, 4), 16);
+    const blue = parseInt(hex.slice(4, 6), 16);
+    return `rgba(${red},${green},${blue},${alpha})`;
+  }
+
+  return color;
 }
 const stableFallbackCreatedAtBase = Date.UTC(2026, 0, 1, 9, 0, 0);
 
@@ -202,15 +338,6 @@ export function normalizeFragmentTimestamps(fragment: Fragment, index = 0): Frag
 export const homeInterestPokachips = ["웹앱", "인테리어", "수조", "루틴", "조명", "요리"];
 export const fallbackRecentPokachips = ["글쓰기", "수조", "조명", "웹앱", "블렌더"];
 
-export function getCleanPokachipName(value: string): string {
-  const normalized = normalizePokachipName(value);
-  return normalized && normalized !== "추가" ? normalized : "";
-}
-
-export function getPokachipKey(value: string): string {
-  return getCleanPokachipName(value).toLocaleLowerCase("ko-KR");
-}
-
 export function parsePokachipInput(value: string): string[] {
   return value
     .split(",")
@@ -241,7 +368,7 @@ export function mergePokachips(current: string[], additions: string[]): string[]
 export function normalizeSavedPokachips(values: string[]): string[] {
   const normalized = getUniquePokachips(values);
   const actualPokachips = normalized.filter((value) =>
-    getPokachipKey(value).replace(/\s+/g, "") !== "임시조각"
+    getPokachipKey(value) !== "임시조각"
   );
 
   return actualPokachips.length > 0 ? actualPokachips : ["임시조각"];
