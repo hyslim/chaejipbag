@@ -228,7 +228,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
       return;
     }
 
-    navigate(`/fragment/${fragment.id}`);
+    navigate(`/fragment/${fragment.id}${window.location.search}`);
   };
 
   return (
@@ -238,7 +238,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
         {/* 헤더 */}
         <header className="flex items-center border-b border-[#F5F2ED] bg-[#FFFEFB] px-4 pb-4 pt-5">
           <button
-            onClick={() => navigate(`/fragment/${fragment.id}`)}
+            onClick={() => navigate(`/fragment/${fragment.id}${window.location.search}`)}
             className="flex items-center gap-1.5 text-[rgba(54,58,105,0.7)]"
             aria-label="뒤로 가기"
           >

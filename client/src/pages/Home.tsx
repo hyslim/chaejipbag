@@ -11,6 +11,7 @@ import { copyFragmentShareText, shareFragment, shouldOfferImageShare } from "@/l
 import { getYouTubeThumbnailUrl } from "@/lib/youtube";
 import { getInstagramUsername, isInstagramUrl } from "@/lib/instagram";
 import { getCardImageHeight, type CardImageHeight } from "@/lib/cardImageHeight";
+import { createFragmentNavigationPath, type FragmentNavigationSource } from "@/lib/fragmentNavigation";
 
 const IMAGE_SHARE_DELAY_MS = 700;
 
@@ -92,6 +93,9 @@ const FragmentCard = ({
   onCloseMenu,
   onDelete,
   onShare,
+  navigationIds,
+  navigationReturnTo,
+  navigationSource,
 }: {
   fragment: Fragment;
   primaryChipCount: number;
@@ -100,6 +104,9 @@ const FragmentCard = ({
   onCloseMenu: () => void;
   onDelete: () => void;
   onShare: () => void | Promise<void>;
+  navigationIds: string[];
+  navigationReturnTo: string;
+  navigationSource: FragmentNavigationSource;
 }) => {
   const [, navigate] = useLocation();
   const imageUrl = useFragmentImage(fragment);
@@ -195,7 +202,12 @@ const FragmentCard = ({
       return;
     }
 
-    navigate(`/fragment/${fragment.id}`);
+    navigate(createFragmentNavigationPath({
+      fragmentId: fragment.id,
+      fragmentIds: navigationIds,
+      returnTo: navigationReturnTo,
+      source: navigationSource,
+    }));
   };
 
   const handleSend = () => {
@@ -355,13 +367,35 @@ const FragmentCard = ({
     </div>
   );
 };
-const SearchResultCard = ({ fragment, primaryChipCount }: { fragment: Fragment; primaryChipCount: number }) => {
+const SearchResultCard = ({
+  fragment,
+  primaryChipCount,
+  navigationIds,
+  navigationReturnTo,
+}: {
+  fragment: Fragment;
+  primaryChipCount: number;
+  navigationIds: string[];
+  navigationReturnTo: string;
+}) => {
+  const [, navigate] = useLocation();
   const primaryChip = fragment.pokachips[0] ? normalizePokachipName(fragment.pokachips[0]) : "";
   const isTemporaryPrimaryChip = isTemporaryPokachip(primaryChip);
   const SourceIcon = getFragmentSourceIcon(fragment);
 
   return (
-    <Link href={`/fragment/${fragment.id}`}>
+    <Link
+      href={`/fragment/${fragment.id}`}
+      onClick={(event) => {
+        event.preventDefault();
+        navigate(createFragmentNavigationPath({
+          fragmentId: fragment.id,
+          fragmentIds: navigationIds,
+          returnTo: navigationReturnTo,
+          source: "home-search",
+        }));
+      }}
+    >
       <motion.div
         whileTap={{ scale: 0.97 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
@@ -429,9 +463,15 @@ export const Home = (): JSX.Element => {
     scrollLeft: 0,
   });
   const topPokachipSnapTimerRef = useRef<number | null>(null);
-  const [selectedChip, setSelectedChip] = useState<string | null>(null);
-  const [isSearchMode, setIsSearchMode] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedChip, setSelectedChip] = useState<string | null>(
+    () => new URLSearchParams(window.location.search).get("chip")
+  );
+  const [isSearchMode, setIsSearchMode] = useState(
+    () => new URLSearchParams(window.location.search).has("search")
+  );
+  const [searchQuery, setSearchQuery] = useState(
+    () => new URLSearchParams(window.location.search).get("search") ?? ""
+  );
   const [openMenuFragmentId, setOpenMenuFragmentId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState("");
   const [shareSheetFragment, setShareSheetFragment] = useState<Fragment | null>(null);
@@ -503,6 +543,16 @@ export const Home = (): JSX.Element => {
         return searchable.includes(normalizedSearchQuery);
       })
     : [];
+  const visibleFragmentIds = visibleFragments.map((fragment) => fragment.id);
+  const searchResultIds = searchResults.map((fragment) => fragment.id);
+  const homeReturnTo = selectedChip ? `/?chip=${encodeURIComponent(selectedChip)}` : "/";
+  const homeNavigationSource: FragmentNavigationSource = selectedChip ? "home-filter" : "home";
+  const homeSearchReturnTo = `/?search=${encodeURIComponent(searchQuery)}`;
+
+  const replaceHomeUrl = (params: URLSearchParams) => {
+    const search = params.toString();
+    window.history.replaceState(window.history.state, "", search ? `/?${search}` : "/");
+  };
 
   const closeLongPressMenu = () => setOpenMenuFragmentId(null);
 
@@ -514,6 +564,9 @@ export const Home = (): JSX.Element => {
   const selectHomeFilter = (chip: string | null) => {
     closeLongPressMenuImmediately();
     setSelectedChip(chip);
+    const params = new URLSearchParams();
+    if (chip) params.set("chip", chip);
+    replaceHomeUrl(params);
   };
 
   const snapTopPokachipRowToNearest = () => {
@@ -608,11 +661,15 @@ export const Home = (): JSX.Element => {
     closeLongPressMenu();
     setSelectedChip(null);
     setIsSearchMode(true);
+    const params = new URLSearchParams();
+    params.set("search", searchQuery);
+    replaceHomeUrl(params);
   };
 
   const closeSearchMode = () => {
     setSearchQuery("");
     setIsSearchMode(false);
+    replaceHomeUrl(new URLSearchParams());
   };
 
   const resetHomeView = () => {
@@ -776,7 +833,13 @@ export const Home = (): JSX.Element => {
                 </span>
                 <input
                   value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
+                  onChange={(event) => {
+                    const nextQuery = event.target.value;
+                    setSearchQuery(nextQuery);
+                    const params = new URLSearchParams();
+                    params.set("search", nextQuery);
+                    replaceHomeUrl(params);
+                  }}
                   placeholder="기억 속에서 찾기..."
                   autoComplete="off"
                   autoFocus
@@ -808,7 +871,12 @@ export const Home = (): JSX.Element => {
                       <button
                         key={chip}
                         type="button"
-                        onClick={() => setSearchQuery(chip)}
+                        onClick={() => {
+                          setSearchQuery(chip);
+                          const params = new URLSearchParams();
+                          params.set("search", chip);
+                          replaceHomeUrl(params);
+                        }}
                         className="home-select-none select-none h-[29px] rounded-full border border-[rgba(255,255,255,0.55)] px-3.5 py-0 text-[11px] font-medium text-[rgba(50,44,34,0.7)]"
                         style={{
                           backgroundColor: getPokachipColor(chip),
@@ -839,6 +907,8 @@ export const Home = (): JSX.Element => {
                       key={fragment.id}
                       fragment={fragment}
                       primaryChipCount={getPrimaryChipUsageCount(fragment)}
+                      navigationIds={searchResultIds}
+                      navigationReturnTo={homeSearchReturnTo}
                     />
                   ))}
                 </div>
@@ -1019,6 +1089,9 @@ export const Home = (): JSX.Element => {
                       onCloseMenu={() => setOpenMenuFragmentId(null)}
                       onDelete={() => handleDeleteFragment(fragment.id)}
                       onShare={() => handleShareFragment(fragment)}
+                      navigationIds={visibleFragmentIds}
+                      navigationReturnTo={homeReturnTo}
+                      navigationSource={homeNavigationSource}
                     />
                   ))}
                 </div>
@@ -1033,6 +1106,9 @@ export const Home = (): JSX.Element => {
                       onCloseMenu={() => setOpenMenuFragmentId(null)}
                       onDelete={() => handleDeleteFragment(fragment.id)}
                       onShare={() => handleShareFragment(fragment)}
+                      navigationIds={visibleFragmentIds}
+                      navigationReturnTo={homeReturnTo}
+                      navigationSource={homeNavigationSource}
                     />
                   ))}
                 </div>

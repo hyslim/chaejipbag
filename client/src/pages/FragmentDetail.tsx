@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Pencil, Trash2, ExternalLink, Globe, Instagram, Sparkles, Youtube, X, type LucideIcon } from "lucide-react";
@@ -8,6 +8,12 @@ import { useFragmentImages } from "@/hooks/useFragmentImage";
 import { copyFragmentShareText, shareFragment, shouldOfferImageShare } from "@/lib/shareFragment";
 import { getYouTubeThumbnailUrl } from "@/lib/youtube";
 import { getInstagramUsername, isInstagramUrl } from "@/lib/instagram";
+import {
+  getFragmentDetailPath,
+  getFragmentNavigationToken,
+  readFragmentNavigationContext,
+  updateFragmentNavigationContext,
+} from "@/lib/fragmentNavigation";
 
 const sourceIconColor = "rgba(120,112,100,0.65)";
 const IMAGE_SHARE_DELAY_MS = 700;
@@ -68,6 +74,33 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   const [isShareSheetOpen, setIsShareSheetOpen] = useState(false);
   const [shareSheetStatus, setShareSheetStatus] = useState<"idle" | "copying" | "copied">("idle");
   const fragment = getFragment(params.id);
+  const navigationToken = getFragmentNavigationToken();
+  const navigationContext = useMemo(
+    () => readFragmentNavigationContext(navigationToken),
+    [navigationToken]
+  );
+  const existingFragmentIds = useMemo(
+    () => new Set(fragments.map((storedFragment) => storedFragment.id)),
+    [fragments]
+  );
+  const navigationIds = useMemo(
+    () => navigationContext?.fragmentIds.filter((id) => existingFragmentIds.has(id)) ?? [],
+    [existingFragmentIds, navigationContext]
+  );
+  const currentNavigationIndex = navigationIds.indexOf(params.id);
+  const previousFragmentId = currentNavigationIndex > 0
+    ? navigationIds[currentNavigationIndex - 1]
+    : null;
+  const nextFragmentId = currentNavigationIndex >= 0 && currentNavigationIndex < navigationIds.length - 1
+    ? navigationIds[currentNavigationIndex + 1]
+    : null;
+  const missingContextIndex = navigationContext?.fragmentIds.indexOf(params.id) ?? -1;
+  const missingFragmentFallbackId = !fragment && navigationContext && missingContextIndex >= 0
+    ? [
+        ...navigationContext.fragmentIds.slice(missingContextIndex + 1),
+        ...navigationContext.fragmentIds.slice(0, missingContextIndex).reverse(),
+      ].find((id) => existingFragmentIds.has(id)) ?? null
+    : null;
   const storedImages = useFragmentImages(fragment);
   const imageUrl = storedImages[0]?.url;
   const [failedYouTubeThumbnailUrl, setFailedYouTubeThumbnailUrl] = useState<string | null>(null);
@@ -82,8 +115,56 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   const instagramUsername = getInstagramUsername(fragment?.title, fragment?.url);
   const showInstagramPlaceholder = !hasStoredImage && !youtubeThumbnailUrl && isInstagramUrl(fragment?.url);
 
+  useEffect(() => {
+    setIsImageViewerOpen(false);
+    setViewerImageIndex(0);
+    setFailedYouTubeThumbnailUrl(null);
+  }, [params.id]);
+
+  useEffect(() => {
+    if (fragment || !navigationContext || !missingFragmentFallbackId) return;
+
+    updateFragmentNavigationContext(
+      navigationContext,
+      navigationIds,
+      missingFragmentFallbackId
+    );
+    navigate(
+      getFragmentDetailPath(missingFragmentFallbackId, navigationContext.token),
+      { replace: true }
+    );
+  }, [
+    fragment,
+    missingFragmentFallbackId,
+    navigate,
+    navigationContext,
+    navigationIds,
+    params.id,
+  ]);
+
+  const handleFragmentNavigation = (targetId: string | null) => {
+    if (!targetId || !navigationContext) return;
+
+    updateFragmentNavigationContext(navigationContext, navigationIds, targetId);
+    navigate(getFragmentDetailPath(targetId, navigationContext.token), { replace: true });
+  };
+
+  const handleBack = () => {
+    navigate(navigationContext?.returnTo ?? "/");
+  };
+
   const handleDelete = () => {
-    if (deleteFragment(params.id)) navigate("/");
+    const remainingNavigationIds = navigationIds.filter((id) => id !== params.id);
+    const targetId = nextFragmentId ?? previousFragmentId;
+    if (!deleteFragment(params.id)) return;
+
+    if (navigationContext && targetId) {
+      updateFragmentNavigationContext(navigationContext, remainingNavigationIds, targetId);
+      navigate(getFragmentDetailPath(targetId, navigationContext.token), { replace: true });
+      return;
+    }
+
+    navigate(navigationContext?.returnTo ?? "/");
   };
 
   if (!fragment) {
@@ -92,7 +173,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
         <section className="flex min-h-screen w-full flex-col sm:max-w-[390px] bg-[#FAF8F4]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
           <header className="border-b border-[#F5F2ED] bg-[#FFFEFB] px-5 pb-4 pt-6">
             <button
-              onClick={() => navigate("/")}
+              onClick={handleBack}
               className="flex items-center gap-1.5 text-[rgba(54,58,105,0.7)]"
             >
               <ChevronLeft size={16} />
@@ -210,7 +291,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
         {/* 헤더 */}
         <header className="flex items-center justify-between border-b border-[#F5F2ED] bg-[#FFFEFB] px-5 pb-4 pt-6">
           <button
-            onClick={() => navigate("/")}
+            onClick={handleBack}
             className="flex items-center gap-1.5 text-[rgba(54,58,105,0.7)]"
             aria-label="뒤로 가기"
           >
@@ -224,7 +305,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
           </button>
           <div className="-mr-3 flex items-center gap-0">
             <button
-              onClick={() => navigate(`/fragment/${fragment.id}/edit`)}
+              onClick={() => navigate(`/fragment/${fragment.id}/edit${window.location.search}`)}
               className="relative flex h-4 w-10 items-center justify-center overflow-visible text-[rgba(160,152,140,0.65)] before:absolute before:inset-x-0 before:-inset-y-3 before:content-[''] hover:text-[rgba(120,112,100,0.7)]"
               aria-label="수정"
             >
@@ -402,6 +483,39 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
                 </a>
               </section>
             </>
+          )}
+
+          {navigationContext && currentNavigationIndex >= 0 && (
+            <nav
+              className="mt-9 rounded-[18px] border border-[rgba(120,112,100,0.12)] bg-[#FFFFFF] px-3 py-3 shadow-[0_5px_16px_rgba(74,63,48,0.05)]"
+              aria-label="조각 연속 탐색"
+            >
+              <div className="mb-2 text-center text-[12px] font-medium text-[rgba(120,112,100,0.68)]">
+                {currentNavigationIndex + 1} / {navigationIds.length}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleFragmentNavigation(previousFragmentId)}
+                  disabled={!previousFragmentId}
+                  className="flex h-11 items-center justify-center gap-1.5 rounded-[14px] bg-[#FAF8F4] text-[13px] font-medium text-[rgba(54,58,105,0.72)] transition active:scale-[0.98] disabled:cursor-default disabled:text-[rgba(160,152,140,0.38)] disabled:active:scale-100"
+                  aria-label="이전 조각"
+                >
+                  <ChevronLeft size={17} strokeWidth={1.9} aria-hidden="true" />
+                  이전 조각
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleFragmentNavigation(nextFragmentId)}
+                  disabled={!nextFragmentId}
+                  className="flex h-11 items-center justify-center gap-1.5 rounded-[14px] bg-[#FAF8F4] text-[13px] font-medium text-[rgba(54,58,105,0.72)] transition active:scale-[0.98] disabled:cursor-default disabled:text-[rgba(160,152,140,0.38)] disabled:active:scale-100"
+                  aria-label="다음 조각"
+                >
+                  다음 조각
+                  <ChevronRight size={17} strokeWidth={1.9} aria-hidden="true" />
+                </button>
+              </div>
+            </nav>
           )}
         </div>
 

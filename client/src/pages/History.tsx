@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { ArrowRight, ArrowUp, Download, Link2, RotateCcw, Sparkles, type LucideIcon } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { getPokachipColor, normalizePokachipName, type Fragment } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { BottomNav } from "@/components/BottomNav";
 import { downloadChaejipbagBackup } from "@/lib/exportBackup";
+import { createFragmentNavigationPath } from "@/lib/fragmentNavigation";
 
 const HISTORY_FILTERS = [
   { label: "첫 등장", Icon: Sparkles },
@@ -51,7 +52,16 @@ function getHistoryEventKind(fragment: Fragment, fragments: Fragment[]): History
   return "first";
 }
 
-const HistoryCard = ({ fragment, eventIcon: EventIcon }: { fragment: Fragment; eventIcon: LucideIcon }) => {
+const HistoryCard = ({
+  fragment,
+  eventIcon: EventIcon,
+  navigationIds,
+}: {
+  fragment: Fragment;
+  eventIcon: LucideIcon;
+  navigationIds: string[];
+}) => {
+  const [, navigate] = useLocation();
   const chips = fragment.pokachips.map((chip) => normalizePokachipName(chip));
   const primaryChip = chips[0];
   const historyText = primaryChip
@@ -59,7 +69,18 @@ const HistoryCard = ({ fragment, eventIcon: EventIcon }: { fragment: Fragment; e
     : `${fragment.title} 조각을 다시 꺼내봤어요`;
 
   return (
-    <Link href={`/fragment/${fragment.id}`}>
+    <Link
+      href={`/fragment/${fragment.id}`}
+      onClick={(event) => {
+        event.preventDefault();
+        navigate(createFragmentNavigationPath({
+          fragmentId: fragment.id,
+          fragmentIds: navigationIds,
+          returnTo: "/history",
+          source: "history",
+        }));
+      }}
+    >
       <div className="overflow-hidden rounded-[18px] border border-[rgba(120,112,100,0.14)] bg-white px-4 py-3.5 shadow-[0_6px_18px_rgba(74,63,48,0.09)]">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
@@ -188,6 +209,8 @@ const HistorySection = ({
   fragments: Fragment[];
   allFragments: Fragment[];
 }) => {
+  const navigationIds = allFragments.map((fragment) => fragment.id);
+
   return (
     <section className="flex flex-col">
       <div className="mb-3 flex items-center gap-3">
@@ -202,6 +225,7 @@ const HistorySection = ({
             key={fragment.id}
             fragment={fragment}
             eventIcon={HISTORY_EVENT_ICONS[getHistoryEventKind(fragment, allFragments)]}
+            navigationIds={navigationIds}
           />
         ))}
       </div>

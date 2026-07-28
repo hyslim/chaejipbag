@@ -1,42 +1,68 @@
 import { useRef, useState, type FormEvent } from "react";
 import { X } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { getPokachipColor, normalizePokachipName, type Fragment } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
+import { createFragmentNavigationPath } from "@/lib/fragmentNavigation";
 
-const SearchCard = ({ fragment }: { fragment: Fragment }) => (
-  <Link href={`/fragment/${fragment.id}`}>
-    <div className="min-w-0 overflow-hidden rounded-2xl border border-[rgba(120,112,100,0.14)] bg-white p-4 shadow-[0_6px_18px_rgba(74,63,48,0.09)]">
-      <h2
-        className="line-clamp-2 break-words text-[14px] font-medium leading-snug text-[#3a3228]"
-        style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
-      >
-        {fragment.title}
-      </h2>
-      {fragment.memo && <p className="mt-2 line-clamp-2 break-words text-[12px] leading-[18px] text-[rgba(50,44,34,0.7)]">{fragment.memo}</p>}
-      <div className="mt-3 flex min-w-0 flex-wrap gap-1.5 overflow-hidden">
-        {(fragment.pokachips ?? []).map((chip) => {
-          const name = normalizePokachipName(chip);
-          if (!name) return null;
-          return (
-            <span
-              key={chip}
-              className="max-w-full truncate rounded-full px-2.5 py-1 text-[11px] font-medium text-[#5a5248b0]"
-              style={{ backgroundColor: getPokachipColor(name) }}
-            >
-              {name}
-            </span>
-          );
-        })}
+const SearchCard = ({
+  fragment,
+  navigationIds,
+  returnTo,
+}: {
+  fragment: Fragment;
+  navigationIds: string[];
+  returnTo: string;
+}) => {
+  const [, navigate] = useLocation();
+
+  return (
+    <Link
+      href={`/fragment/${fragment.id}`}
+      onClick={(event) => {
+        event.preventDefault();
+        navigate(createFragmentNavigationPath({
+          fragmentId: fragment.id,
+          fragmentIds: navigationIds,
+          returnTo,
+          source: "search",
+        }));
+      }}
+    >
+      <div className="min-w-0 overflow-hidden rounded-2xl border border-[rgba(120,112,100,0.14)] bg-white p-4 shadow-[0_6px_18px_rgba(74,63,48,0.09)]">
+        <h2
+          className="line-clamp-2 break-words text-[14px] font-medium leading-snug text-[#3a3228]"
+          style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
+        >
+          {fragment.title}
+        </h2>
+        {fragment.memo && <p className="mt-2 line-clamp-2 break-words text-[12px] leading-[18px] text-[rgba(50,44,34,0.7)]">{fragment.memo}</p>}
+        <div className="mt-3 flex min-w-0 flex-wrap gap-1.5 overflow-hidden">
+          {(fragment.pokachips ?? []).map((chip) => {
+            const name = normalizePokachipName(chip);
+            if (!name) return null;
+            return (
+              <span
+                key={chip}
+                className="max-w-full truncate rounded-full px-2.5 py-1 text-[11px] font-medium text-[#5a5248b0]"
+                style={{ backgroundColor: getPokachipColor(name) }}
+              >
+                {name}
+              </span>
+            );
+          })}
+        </div>
       </div>
-    </div>
-  </Link>
-);
+    </Link>
+  );
+};
 
 export const Search = () => {
   const { fragments } = useFragments();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(
+    () => new URLSearchParams(window.location.search).get("q") ?? ""
+  );
   const normalizedQuery = query.trim().toLocaleLowerCase("ko-KR");
   const recentMemoryPieces = Array.from(
     new Set(
@@ -53,6 +79,7 @@ export const Search = () => {
 
   const clearQuery = () => {
     setQuery("");
+    window.history.replaceState(window.history.state, "", "/search");
   };
 
   const results = normalizedQuery
@@ -70,6 +97,14 @@ export const Search = () => {
         return searchable.includes(normalizedQuery);
       })
     : [];
+  const resultIds = results.map((fragment) => fragment.id);
+  const searchReturnTo = normalizedQuery ? `/search?q=${encodeURIComponent(query)}` : "/search";
+
+  const updateQuery = (nextQuery: string) => {
+    setQuery(nextQuery);
+    const nextPath = nextQuery ? `/search?q=${encodeURIComponent(nextQuery)}` : "/search";
+    window.history.replaceState(window.history.state, "", nextPath);
+  };
 
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#FAF8F4] sm:bg-[#f3f0ec]">
@@ -83,7 +118,7 @@ export const Search = () => {
             ref={inputRef}
             type="search"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => updateQuery(event.target.value)}
             placeholder="그 파란 거, 조명, 블렌더..."
             autoComplete="off"
             enterKeyHint="search"
@@ -111,7 +146,7 @@ export const Search = () => {
                   <button
                     key={chip}
                     type="button"
-                    onClick={() => setQuery(chip)}
+                    onClick={() => updateQuery(chip)}
                     className="max-w-full truncate rounded-full border border-white/70 px-3.5 py-1.5 text-[12px] font-medium text-[#5a5248b0]"
                     style={{ backgroundColor: getPokachipColor(chip) }}
                   >
@@ -125,7 +160,14 @@ export const Search = () => {
           </div>
         ) : results.length > 0 ? (
           <div className="mt-6 flex min-w-0 flex-col gap-3">
-            {results.map((fragment) => <SearchCard key={fragment.id} fragment={fragment} />)}
+            {results.map((fragment) => (
+              <SearchCard
+                key={fragment.id}
+                fragment={fragment}
+                navigationIds={resultIds}
+                returnTo={searchReturnTo}
+              />
+            ))}
           </div>
         ) : (
           <div className="mt-10 text-center">
