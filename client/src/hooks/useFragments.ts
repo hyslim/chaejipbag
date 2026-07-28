@@ -1,8 +1,29 @@
 import { useState, useEffect, useCallback } from "react";
-import { deleteImage, saveImage } from "@/data/imageStore";
-import { getFallbackCreatedAt, normalizeFragmentTimestamps, normalizeSavedPokachips, sampleFragments, type Fragment } from "@/data/fragments";
+import { deleteImage, saveImageAttachment } from "@/data/imageStore";
+import {
+  MAX_FRAGMENT_IMAGE_ATTACHMENTS,
+  getFallbackCreatedAt,
+  getFragmentImageAttachments,
+  normalizeFragmentTimestamps,
+  normalizeSavedPokachips,
+  sampleFragments,
+  type Fragment,
+  type FragmentAttachment,
+} from "@/data/fragments";
 
 const STORAGE_KEY = "chaejip-fragments";
+
+export type ImageAttachmentInput = {
+  dataUrl: string;
+  filename?: string;
+};
+
+const normalizeImageInputs = (
+  images: Array<ImageAttachmentInput | string>
+): ImageAttachmentInput[] =>
+  images.slice(0, MAX_FRAGMENT_IMAGE_ATTACHMENTS).map((image) =>
+    typeof image === "string" ? { dataUrl: image } : image
+  );
 
 function loadFromStorage(): Fragment[] {
   try {
@@ -23,6 +44,12 @@ function saveToStorage(fragments: Fragment[]): boolean {
   }
 }
 
+const deleteAttachments = async (attachments: FragmentAttachment[]): Promise<void> => {
+  await Promise.all(attachments.map((attachment) =>
+    deleteImage(attachment.blobKey).catch(() => undefined)
+  ));
+};
+
 export function useFragments() {
   const [fragments, setFragments] = useState<Fragment[]>(loadFromStorage);
 
@@ -31,7 +58,7 @@ export function useFragments() {
   }, [fragments]);
 
   const getFragment = useCallback(
-    (id: string) => fragments.find((f) => f.id === id),
+    (id: string) => fragments.find((fragment) => fragment.id === id),
     [fragments]
   );
 
@@ -71,62 +98,93 @@ export function useFragments() {
 
     if (!saveToStorage(nextFragments)) return null;
     setFragments(nextFragments);
-
     return newFragment;
   }, [fragments]);
 
-  const addFragmentWithImage = useCallback(async (
-    fragment: Omit<Fragment, "id" | "imageKey" | "imageDataUrl">,
-    imageDataUrl: string
+  const addFragmentWithImages = useCallback(async (
+    fragment: Omit<Fragment, "id" | "attachments" | "imageKey" | "imageDataUrl">,
+    images: Array<ImageAttachmentInput | string>
   ) => {
-    let imageKey: string | undefined;
+    const savedAttachments: FragmentAttachment[] = [];
 
     try {
-      imageKey = await saveImage(imageDataUrl);
-      const savedFragment = addFragment({ ...fragment, imageKey });
+      for (const image of normalizeImageInputs(images)) {
+        savedAttachments.push(await saveImageAttachment(image.dataUrl, image.filename));
+      }
+
+      const savedFragment = addFragment({ ...fragment, attachments: savedAttachments });
       if (!savedFragment) {
-        await deleteImage(imageKey).catch(() => undefined);
+        await deleteAttachments(savedAttachments);
         return null;
       }
       return savedFragment;
     } catch {
-      if (imageKey) await deleteImage(imageKey).catch(() => undefined);
+      await deleteAttachments(savedAttachments);
       return null;
     }
   }, [addFragment]);
+
+  const addFragmentWithImage = useCallback((
+    fragment: Omit<Fragment, "id" | "attachments" | "imageKey" | "imageDataUrl">,
+    imageDataUrl: string
+  ) => addFragmentWithImages(fragment, [imageDataUrl]), [addFragmentWithImages]);
+
+  const updateFragmentImages = useCallback(async (
+    id: string,
+    patch: Partial<Fragment>,
+    keptAttachmentIds: string[],
+    newImages: Array<ImageAttachmentInput | string>
+  ) => {
+    const targetFragment = fragments.find((fragment) => fragment.id === id);
+    if (!targetFragment) return null;
+
+    const currentAttachments = getFragmentImageAttachments(targetFragment);
+    const otherAttachments = (targetFragment.attachments ?? []).filter((attachment) => attachment.kind !== "image");
+    const keepIds = new Set(keptAttachmentIds);
+    const keptAttachments = currentAttachments.filter((attachment) => keepIds.has(attachment.id));
+    const removedAttachments = currentAttachments.filter((attachment) => !keepIds.has(attachment.id));
+    const newAttachments: FragmentAttachment[] = [];
+
+    try {
+      if (
+        keepIds.has("legacy-data-url")
+        && targetFragment.imageDataUrl
+        && keptAttachments.length < MAX_FRAGMENT_IMAGE_ATTACHMENTS
+      ) {
+        newAttachments.push(await saveImageAttachment(targetFragment.imageDataUrl));
+      }
+
+      const availableSlots = MAX_FRAGMENT_IMAGE_ATTACHMENTS - keptAttachments.length - newAttachments.length;
+      for (const image of normalizeImageInputs(newImages).slice(0, Math.max(0, availableSlots))) {
+        newAttachments.push(await saveImageAttachment(image.dataUrl, image.filename));
+      }
+
+      const updatedFragment = updateFragment(id, {
+        ...patch,
+        attachments: [...otherAttachments, ...keptAttachments, ...newAttachments],
+        imageKey: undefined,
+        imageDataUrl: undefined,
+      });
+
+      if (!updatedFragment) {
+        await deleteAttachments(newAttachments);
+        return null;
+      }
+
+      await deleteAttachments(removedAttachments);
+      return updatedFragment;
+    } catch {
+      await deleteAttachments(newAttachments);
+      return null;
+    }
+  }, [fragments, updateFragment]);
 
   const updateFragmentImage = useCallback(async (
     id: string,
     patch: Partial<Fragment>,
     nextImageDataUrl: string | null
-  ) => {
-    const targetFragment = fragments.find((fragment) => fragment.id === id);
-    if (!targetFragment) return null;
-
-    let nextImageKey: string | undefined;
-
-    try {
-      if (nextImageDataUrl) nextImageKey = await saveImage(nextImageDataUrl);
-      const updatedFragment = updateFragment(id, {
-        ...patch,
-        imageKey: nextImageKey,
-        imageDataUrl: undefined,
-      });
-
-      if (!updatedFragment) {
-        if (nextImageKey) await deleteImage(nextImageKey).catch(() => undefined);
-        return null;
-      }
-
-      if (targetFragment.imageKey && targetFragment.imageKey !== nextImageKey) {
-        await deleteImage(targetFragment.imageKey).catch(() => undefined);
-      }
-      return updatedFragment;
-    } catch {
-      if (nextImageKey) await deleteImage(nextImageKey).catch(() => undefined);
-      return null;
-    }
-  }, [fragments, updateFragment]);
+  ) => updateFragmentImages(id, patch, [], nextImageDataUrl ? [nextImageDataUrl] : []),
+  [updateFragmentImages]);
 
   const deleteFragment = useCallback((id: string) => {
     const targetFragment = fragments.find((fragment) => fragment.id === id);
@@ -134,8 +192,10 @@ export function useFragments() {
 
     if (!saveToStorage(nextFragments)) return false;
     setFragments(nextFragments);
-    if (targetFragment?.imageKey) {
-      void deleteImage(targetFragment.imageKey).catch(() => undefined);
+
+    if (targetFragment) {
+      const attachments = getFragmentImageAttachments(targetFragment);
+      void deleteAttachments(attachments);
     }
     return true;
   }, [fragments]);
@@ -145,8 +205,10 @@ export function useFragments() {
     getFragment,
     updateFragment,
     updateFragmentImage,
+    updateFragmentImages,
     addFragment,
     addFragmentWithImage,
+    addFragmentWithImages,
     deleteFragment,
   };
 }

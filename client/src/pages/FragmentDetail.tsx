@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { ChevronLeft, Pencil, Trash2, ExternalLink, Globe, Instagram, Sparkles, Youtube, X, type LucideIcon } from "lucide-react";
-import { getPokachipColor, normalizePokachipName } from "@/data/fragments";
+import { ChevronLeft, ChevronRight, Pencil, Trash2, ExternalLink, Globe, Instagram, Sparkles, Youtube, X, type LucideIcon } from "lucide-react";
+import { getFragmentImageCount, getPokachipColor, normalizePokachipName } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
-import { useFragmentImage } from "@/hooks/useFragmentImage";
+import { useFragmentImages } from "@/hooks/useFragmentImage";
 import { copyFragmentShareText, shareFragment, shouldOfferImageShare } from "@/lib/shareFragment";
 import { getYouTubeThumbnailUrl } from "@/lib/youtube";
 import { getInstagramUsername, isInstagramUrl } from "@/lib/instagram";
@@ -63,15 +63,22 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   const { fragments, getFragment, deleteFragment } = useFragments();
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
+  const [viewerImageIndex, setViewerImageIndex] = useState(0);
   const [toastMessage, setToastMessage] = useState("");
   const [isShareSheetOpen, setIsShareSheetOpen] = useState(false);
   const [shareSheetStatus, setShareSheetStatus] = useState<"idle" | "copying" | "copied">("idle");
   const fragment = getFragment(params.id);
-  const imageUrl = useFragmentImage(fragment);
+  const storedImages = useFragmentImages(fragment);
+  const imageUrl = storedImages[0]?.url;
   const [failedYouTubeThumbnailUrl, setFailedYouTubeThumbnailUrl] = useState<string | null>(null);
   const youtubeThumbnailUrl = getYouTubeThumbnailUrl(fragment?.url);
-  const hasStoredImage = Boolean(fragment?.imageKey || fragment?.imageDataUrl);
+  const imageCount = getFragmentImageCount(fragment);
+  const hasStoredImage = imageCount > 0;
   const displayImageUrl = imageUrl || (!hasStoredImage && youtubeThumbnailUrl !== failedYouTubeThumbnailUrl ? youtubeThumbnailUrl : null);
+  const viewerImageUrls = hasStoredImage
+    ? storedImages.map((image) => image.url)
+    : displayImageUrl ? [displayImageUrl] : [];
+  const viewerImageUrl = viewerImageUrls[viewerImageIndex] ?? viewerImageUrls[0];
   const instagramUsername = getInstagramUsername(fragment?.title, fragment?.url);
   const showInstagramPlaceholder = !hasStoredImage && !youtubeThumbnailUrl && isInstagramUrl(fragment?.url);
 
@@ -276,20 +283,48 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
               </p>
             </section>
           )}
-          {displayImageUrl && (
+          {hasStoredImage && storedImages.length > 0 && (
+            <section className="mt-8">
+              <div className="grid grid-cols-2 gap-2">
+                {storedImages.map((image, index) => (
+                  <button
+                    key={image.id}
+                    type="button"
+                    onClick={() => {
+                      setViewerImageIndex(index);
+                      setIsImageViewerOpen(true);
+                    }}
+                    className={`group block overflow-hidden rounded-[16px] border border-[rgba(120,112,100,0.08)] bg-transparent ${index === 0 && storedImages.length % 2 === 1 ? "col-span-2" : ""}`}
+                    aria-label={`이미지 ${index + 1} 전체보기 열기`}
+                  >
+                    <img
+                      src={image.url}
+                      alt=""
+                      className={`w-full object-cover transition-transform duration-200 group-active:scale-[0.99] ${index === 0 && storedImages.length % 2 === 1 ? "h-[236px]" : "h-[150px]"}`}
+                    />
+                  </button>
+                ))}
+              </div>
+              {storedImages.length > 1 && (
+                <p className="mt-2 text-center text-[11px] font-medium text-[rgba(120,112,100,0.6)]">{storedImages.length}장의 이미지</p>
+              )}
+            </section>
+          )}
+          {!hasStoredImage && displayImageUrl && (
             <section className="mt-8">
               <button
                 type="button"
-                onClick={() => setIsImageViewerOpen(true)}
+                onClick={() => {
+                  setViewerImageIndex(0);
+                  setIsImageViewerOpen(true);
+                }}
                 className="group block w-full overflow-hidden rounded-[18px] border border-[rgba(120,112,100,0.08)] bg-transparent"
                 aria-label="이미지 전체보기 열기"
               >
                 <img
                   src={displayImageUrl}
                   alt=""
-                  onError={() => {
-                    if (!imageUrl) setFailedYouTubeThumbnailUrl(youtubeThumbnailUrl);
-                  }}
+                  onError={() => setFailedYouTubeThumbnailUrl(youtubeThumbnailUrl)}
                   className="h-[236px] w-full object-cover transition-transform duration-200 group-active:scale-[0.99]"
                 />
               </button>
@@ -391,7 +426,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
             공유하기
           </button>
         </div>
-        {isImageViewerOpen && displayImageUrl && (
+        {isImageViewerOpen && viewerImageUrl && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(32,28,24,0.72)] px-4 py-8 backdrop-blur-[2px]"
             role="dialog"
@@ -399,7 +434,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
             aria-label="이미지 전체보기"
             onClick={() => setIsImageViewerOpen(false)}
           >
-            <div className="relative flex h-full w-full items-center sm:max-w-[390px] justify-center" onClick={(event) => event.stopPropagation()}>
+            <div className="relative flex h-full w-full items-center justify-center sm:max-w-[390px]" onClick={(event) => event.stopPropagation()}>
               <button
                 type="button"
                 onClick={() => setIsImageViewerOpen(false)}
@@ -408,12 +443,30 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
               >
                 <X size={18} strokeWidth={2} />
               </button>
-              {/* TODO: If single-image storage expands to images[], add n/n counter and prev/next controls here. */}
-              <img
-                src={displayImageUrl}
-                alt=""
-                className="max-h-full max-w-full rounded-[18px] object-contain shadow-[0_18px_60px_rgba(0,0,0,0.28)]"
-              />
+              {viewerImageUrls.length > 1 && (
+                <>
+                  <span className="absolute left-1/2 top-1.5 z-10 -translate-x-1/2 rounded-full bg-black/45 px-3 py-1 text-[12px] font-semibold text-white">
+                    {viewerImageIndex + 1}/{viewerImageUrls.length}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setViewerImageIndex((current) => (current - 1 + viewerImageUrls.length) % viewerImageUrls.length)}
+                    className="absolute left-0 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-[#FFFEFB]/90 text-[rgba(50,44,34,0.72)] shadow-lg"
+                    aria-label="이전 이미지"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewerImageIndex((current) => (current + 1) % viewerImageUrls.length)}
+                    className="absolute right-0 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-[#FFFEFB]/90 text-[rgba(50,44,34,0.72)] shadow-lg"
+                    aria-label="다음 이미지"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                </>
+              )}
+              <img src={viewerImageUrl} alt="" className="max-h-full max-w-full rounded-[18px] object-contain shadow-[0_18px_60px_rgba(0,0,0,0.28)]" />
             </div>
           </div>
         )}

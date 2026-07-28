@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { X } from "lucide-react";
 import { getCleanPokachipName, getPokachipColor, getPokachipCandidates, getPokachipKey, getRecentPokachips, mergePokachips, normalizePokachipName, parsePokachipInput } from "@/data/fragments";
-import { useFragments } from "@/hooks/useFragments";
+import { useFragments, type ImageAttachmentInput } from "@/hooks/useFragments";
 import { processSelectedImage } from "@/data/imageProcessing";
 
 const thumbnailColors = ["#f0e8d0", "#f0dce4", "#d4eef4", "#d8eef8", "#dce8f8"];
@@ -107,12 +107,12 @@ const parseFragmentInput = (value: string, hasImage: boolean): ParsedFragmentInp
 };
 export const FragmentCreate = () => {
   const [, navigate] = useLocation();
-  const { addFragment, addFragmentWithImage, fragments } = useFragments();
+  const { addFragment, addFragmentWithImages, fragments } = useFragments();
   const [memo, setMemo] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
   const [isInputActive, setIsInputActive] = useState(false);
-  const [imageDataUrl, setImageDataUrl] = useState<string | undefined>();
+  const [selectedImages, setSelectedImages] = useState<ImageAttachmentInput[]>([]);
   const [imageError, setImageError] = useState("");
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -190,27 +190,41 @@ export const FragmentCreate = () => {
   };
 
   const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const files = Array.from(event.target.files ?? []);
     event.target.value = "";
-    if (!file) return;
+    if (files.length === 0) return;
 
-    setImageError("");
-    setIsProcessingImage(true);
-    try {
-      setImageDataUrl(await processSelectedImage(file));
-    } catch (error) {
-      setImageError(error instanceof Error ? error.message : "이미지를 줄이거나 불러오지 못했어요.");
-    } finally {
-      setIsProcessingImage(false);
+    const availableSlots = Math.max(0, 5 - selectedImages.length);
+    if (availableSlots === 0) {
+      setImageError("이미지는 최대 5장까지 담을 수 있어요.");
+      return;
     }
+
+    setImageError(files.length > availableSlots ? "최대 5장까지만 추가했어요." : "");
+    setIsProcessingImage(true);
+    const processedImages: ImageAttachmentInput[] = [];
+
+    for (const file of files.slice(0, availableSlots)) {
+      try {
+        processedImages.push({
+          dataUrl: await processSelectedImage(file),
+          filename: file.name,
+        });
+      } catch (error) {
+        setImageError(error instanceof Error ? error.message : "일부 이미지를 줄이거나 불러오지 못했어요.");
+      }
+    }
+
+    setSelectedImages((current) => [...current, ...processedImages].slice(0, 5));
+    setIsProcessingImage(false);
   };
 
-  const canSave = Boolean(memo.trim() || imageDataUrl);
+  const canSave = Boolean(memo.trim() || selectedImages.length > 0);
 
   const handleSave = async () => {
     if (!canSave || isSaving || isProcessingImage) return;
 
-    const parsedInput = parseFragmentInput(memo, Boolean(imageDataUrl));
+    const parsedInput = parseFragmentInput(memo, selectedImages.length > 0);
     const enteredTags = mergePokachips(selectedChipsRef.current, parsePokachipInput(tagInput));
     const pokachips = enteredTags.length > 0 ? [...enteredTags] : ["임시조각"];
     const now = new Date();
@@ -231,8 +245,8 @@ export const FragmentCreate = () => {
       pokachips,
       thumbnailColor: thumbnailColors[now.getTime() % thumbnailColors.length],
     };
-    const savedFragment = imageDataUrl
-      ? await addFragmentWithImage(fragmentInput, imageDataUrl)
+    const savedFragment = selectedImages.length > 0
+      ? await addFragmentWithImages(fragmentInput, selectedImages)
       : addFragment(fragmentInput);
 
     if (!savedFragment) {
@@ -281,60 +295,40 @@ export const FragmentCreate = () => {
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             />
             <div className="border-t border-[#FAF7F2] p-2.5">
-              {imageDataUrl ? (
-                <div className="overflow-hidden rounded-[16px] border border-white/70 bg-[#FFFFFF] shadow-[0_6px_18px_rgba(80,70,55,0.06)]">
-                  <img
-                    src={imageDataUrl}
-                    alt=""
-                    className="h-[148px] w-full object-cover"
-                  />
-                  <div className="flex items-center justify-between gap-2 border-t border-[rgba(120,112,100,0.08)] bg-[#FAF8F4]/70 px-2.5 py-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setImageDataUrl(undefined);
-                        setImageError("");
-                      }}
-                      disabled={isProcessingImage}
-                      className="flex h-9 w-[74px] items-center justify-center rounded-xl text-[12px] font-semibold text-[rgba(50,44,34,0.68)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.60),inset_0_1px_0_rgba(255,255,255,0.24)]"
-                      style={{ background: "linear-gradient(135deg, rgba(244,224,216,0.54), rgba(224,196,190,0.42))", fontFamily: "'Pretendard Variable', sans-serif" }}
-                    >
-                      삭제
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => imageInputRef.current?.click()}
-                      disabled={isProcessingImage}
-                      className="flex h-9 flex-1 items-center justify-center rounded-xl border border-[rgba(120,112,100,0.16)] bg-[#FAF8F4] text-[12px] font-medium text-[rgba(120,112,100,0.75)]"
-                      style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
-                    >
-                      이미지 바꾸기
-                    </button>
-                  </div>
+              {selectedImages.length > 0 && (
+                <div className="grid grid-cols-2 gap-2">
+                  {selectedImages.map((image, index) => (
+                    <div key={`${index}-${image.filename ?? "image"}`} className="relative overflow-hidden rounded-[14px] border border-white/70 bg-[#FFFFFF] shadow-[0_6px_18px_rgba(80,70,55,0.06)]">
+                      <img src={image.dataUrl} alt={`선택된 이미지 ${index + 1}`} className="h-[112px] w-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setSelectedImages((current) => current.filter((_, currentIndex) => currentIndex !== index))}
+                        disabled={isProcessingImage}
+                        className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/55 text-white"
+                        aria-label={`이미지 ${index + 1} 삭제`}
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              ) : (
+              )}
+              {selectedImages.length < 5 && (
                 <button
                   type="button"
                   onClick={() => imageInputRef.current?.click()}
                   disabled={isProcessingImage}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#FAF8F4] py-3 text-[13px] font-medium text-[rgba(120,112,100,0.6)]"
+                  className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-[#FAF8F4] py-3 text-[13px] font-medium text-[rgba(120,112,100,0.6)]"
                 >
                   <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
                     <rect x="2" y="2.5" width="11" height="10" rx="2" stroke="currentColor" strokeWidth="1.2" />
                     <circle cx="5" cy="5.5" r="1" fill="currentColor" />
                     <path d="m3.8 10 2.3-2.3 1.7 1.6 1.4-1.2 2 1.9" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  이미지
+                  이미지 추가 ({selectedImages.length}/5)
                 </button>
               )}
-              <input
-                ref={imageInputRef}
-              disabled={isProcessingImage}
-              type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageChange}
-              />
+              <input ref={imageInputRef} disabled={isProcessingImage} type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
               {isProcessingImage && (
                 <p className="mt-2 px-1 text-[12px] leading-[17px] text-[rgba(120,112,100,0.72)]">이미지를 줄이고 있어요…</p>
               )}
