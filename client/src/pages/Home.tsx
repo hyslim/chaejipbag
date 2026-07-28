@@ -308,7 +308,7 @@ const FragmentCard = ({
               style={{ height: imageHeight }}
             />
             {imageCount > 1 && (
-              <span className="pointer-events-none absolute right-2.5 top-2.5 z-10 rounded-full bg-[rgba(32,28,24,0.58)] px-2 py-1 text-[11px] font-semibold leading-4 text-white shadow-[0_1px_4px_rgba(0,0,0,0.14)] ring-1 ring-white/35">
+              <span className="pointer-events-none absolute right-2.5 top-2.5 z-10 rounded-full bg-[rgba(32,28,24,0.58)] px-1.5 py-0.5 text-[11px] font-semibold leading-4 text-white shadow-[0_1px_4px_rgba(0,0,0,0.14)] ring-1 ring-white/35">
                 +{imageCount - 1}
               </span>
             )}
@@ -415,7 +415,7 @@ const SearchResultCard = ({
           <div className="relative">
             <img src={imageUrl} alt="" className="h-[112px] w-full object-cover" />
             {imageCount > 1 && (
-              <span className="pointer-events-none absolute right-2 top-2 z-10 rounded-full bg-[rgba(32,28,24,0.58)] px-2 py-1 text-[11px] font-semibold leading-4 text-white shadow-[0_1px_4px_rgba(0,0,0,0.14)] ring-1 ring-white/35">
+              <span className="pointer-events-none absolute right-2 top-2 z-10 rounded-full bg-[rgba(32,28,24,0.58)] px-1.5 py-0.5 text-[11px] font-semibold leading-4 text-white shadow-[0_1px_4px_rgba(0,0,0,0.14)] ring-1 ring-white/35">
                 +{imageCount - 1}
               </span>
             )}
