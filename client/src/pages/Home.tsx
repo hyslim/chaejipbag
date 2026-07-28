@@ -25,16 +25,37 @@ const saveToastStorageKey = "chaejip-save-toast";
 
 const sourceIconColor = "rgba(120,112,100,0.72)";
 
+const homeInterestSurfaceBackground =
+  "radial-gradient(circle at 28% 8%, rgba(224,217,242,0.24), transparent 42%), radial-gradient(circle at 88% 74%, rgba(244,220,194,0.18), transparent 46%), linear-gradient(180deg, #FFFEFB 0%, #FFFCF9 100%)";
+
 const getInterestStyle = (label: string, count: number) => {
   const token = getPokachipColorToken(label);
   const growthStrength = Math.min(Math.max(count - 5, 0), 5) / 5;
-  const softeningAlpha = 0.16 * (1 - growthStrength);
   const [start, middle, end] = token.heroGradient;
 
   return {
-    gradient: `linear-gradient(145deg, ${getColorWithAlpha("#FFFFFF", softeningAlpha)} 0%, rgba(255,255,255,0) 52%, ${getColorWithAlpha("#FFFFFF", softeningAlpha * 0.6)} 100%), linear-gradient(145deg, ${start} 0%, ${middle} 50%, ${end} 100%)`,
-    shadow: `0 7px 16px ${getColorWithAlpha(token.border, 0.1 + growthStrength * 0.06)}`,
+    gradient: `radial-gradient(circle at 22% 12%, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.22) 40%, transparent 62%), linear-gradient(145deg, ${getColorWithAlpha(start, 0.78)} 0%, ${getColorWithAlpha(middle, 0.72)} 54%, ${getColorWithAlpha(end, 0.64)} 100%)`,
+    shadow: `0 10px 24px ${getColorWithAlpha(token.pillColor, 0.2 + growthStrength * 0.03)}, 0 3px 10px ${getColorWithAlpha(token.border, 0.16)}, inset 0 1px 0 rgba(255,255,255,0.76), inset 0 -1px 0 rgba(255,255,255,0.2)`,
     text: token.text,
+  };
+};
+
+const getHomeTopPokachipStyle = (label: string, selected: boolean) => {
+  const token = getPokachipColorToken(label);
+  const temporary = isTemporaryPokachip(label);
+  const glowColor = temporary ? "#D8D1C7" : token.pillColor;
+
+  return {
+    backgroundColor: temporary
+      ? "rgba(231,226,218,0.52)"
+      : getColorWithAlpha(token.pillColor, selected ? 0.58 : 0.52),
+    backgroundImage:
+      "linear-gradient(145deg, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.16) 58%, rgba(255,255,255,0.34) 100%)",
+    color: temporary
+      ? "rgba(120,112,100,0.62)"
+      : getColorWithAlpha(token.text, selected ? 0.86 : 0.8),
+    borderColor: "rgba(255,255,255,0.7)",
+    boxShadow: `0 4px 12px ${getColorWithAlpha(glowColor, selected ? 0.3 : 0.24)}, 0 1px 4px ${getColorWithAlpha(token.border, 0.18)}, inset 0 1px 0 rgba(255,255,255,0.82), inset 0 -1px 0 rgba(255,255,255,0.18)`,
   };
 };
 
@@ -1008,7 +1029,7 @@ export const Home = (): JSX.Element => {
           <>
 
         {/* Home top area: Header, 조건부 Hero, 작은 포카칩의 연속된 상단 흐름 */}
-        <section className="bg-[#FFFEFB]">
+        <section style={{ background: homeInterestSurfaceBackground }}>
         {/* Header: 관심사 장식과 분리된 고정 Surface */}
         <header className="flex items-center justify-between bg-[#FFFEFB] px-4 pb-3 pt-5">
           <h1
@@ -1032,12 +1053,7 @@ export const Home = (): JSX.Element => {
 
         {/* Hero: 큰 관심사가 충분히 자랐을 때만 장식과 함께 표시 */}
         {hasInterests && (
-          <section
-            className="relative overflow-hidden px-4 pb-2 pt-2"
-            style={{
-              background: "radial-gradient(circle at 32% 10%, rgba(224,217,242,0.14), transparent 38%), radial-gradient(circle at 88% 78%, rgba(244,220,194,0.12), transparent 42%), #FFFEFB",
-            }}
-          >
+          <section className="relative overflow-hidden px-4 pb-2 pt-2">
             <div
               aria-hidden="true"
               className="pointer-events-none absolute -right-12 top-0 z-0 h-[178px] w-[330px] opacity-[0.18] blur-[3px]"
@@ -1072,7 +1088,7 @@ export const Home = (): JSX.Element => {
 
         {/* Small chips: Hero gradient 밖에서 Header 흐름을 마무리하는 독립 row */}
         {displayPokachips.length > 0 && (
-          <section className="w-full overflow-hidden bg-[#FFFEFB] pb-3 pt-2">
+          <section className="w-full overflow-hidden pb-3 pt-2">
             <div className="relative flex w-full min-w-0 items-center gap-2 overflow-hidden py-[3px]">
               <div
                 ref={topPokachipScrollRef}
@@ -1099,10 +1115,7 @@ export const Home = (): JSX.Element => {
                       transition={{ type: "spring", stiffness: 500, damping: 20 }}
                       className="home-select-none select-none box-border inline-flex h-[29px] min-w-0 max-w-[calc(100%-32px)] shrink-0 snap-start items-center justify-center gap-2.5 overflow-hidden rounded-[999px] border px-3.5 py-[6px] text-[12px] font-medium leading-[17px]"
                       style={{
-                        ...getPokachipSmallPillStyle(
-                          label,
-                          isSelected ? "selected" : "regular"
-                        ),
+                        ...getHomeTopPokachipStyle(label, isSelected),
                         fontFamily: "'Pretendard Variable', sans-serif",
                       }}
                     >
