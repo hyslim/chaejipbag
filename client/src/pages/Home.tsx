@@ -1026,7 +1026,7 @@ export const Home = (): JSX.Element => {
           <>
 
         {/* Home top area: Header, 조건부 Hero, 작은 포카칩의 연속된 상단 흐름 */}
-        <section className="border-b border-[#F5F2ED] bg-[#FFFEFB]">
+        <section className="bg-[#FFFEFB]">
         {/* Header: 관심사 장식과 분리된 고정 Surface */}
         <header className="flex items-center justify-between bg-[#FFFEFB] px-4 pb-3 pt-5">
           <h1
