@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { ChevronLeft, Globe, Instagram, Pencil, Sparkles, Youtube, X, type LucideIcon } from "lucide-react";
-import { getCleanPokachipName, getFragmentImageAttachments, getPokachipColor, getPokachipCandidates, getPokachipKey, getRecentPokachips, getUniquePokachips, mergePokachips, normalizePokachipName } from "@/data/fragments";
+import { MAX_FRAGMENT_IMAGE_ATTACHMENTS, getCleanPokachipName, getFragmentImageAttachments, getPokachipColor, getPokachipCandidates, getPokachipKey, getRecentPokachips, getUniquePokachips, mergePokachips, normalizePokachipName } from "@/data/fragments";
 import { useFragments, type ImageAttachmentInput } from "@/hooks/useFragments";
 import { useFragmentImages } from "@/hooks/useFragmentImage";
 import { processSelectedImage } from "@/data/imageProcessing";
@@ -147,7 +147,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
     event.target.value = "";
     if (files.length === 0) return;
 
-    const availableSlots = Math.max(0, 5 - totalImageCount);
+    const availableSlots = Math.max(0, MAX_FRAGMENT_IMAGE_ATTACHMENTS - totalImageCount);
     if (availableSlots === 0) {
       setImageError("이미지는 최대 5장까지 담을 수 있어요.");
       return;
@@ -168,7 +168,9 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
       }
     }
 
-    setPendingImages((current) => [...current, ...processedImages].slice(0, 5));
+    setPendingImages((current) =>
+      [...current, ...processedImages].slice(0, MAX_FRAGMENT_IMAGE_ATTACHMENTS)
+    );
     setIsProcessingImage(false);
   };
 
@@ -351,16 +353,20 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
                 ))}
               </div>
             )}
-            {totalImageCount < 5 && (
+            {totalImageCount < MAX_FRAGMENT_IMAGE_ATTACHMENTS && (
               <button
                 type="button"
                 onClick={() => imageInputRef.current?.click()}
                 disabled={isProcessingImage}
                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#0000000a] bg-white px-4 py-3 text-[13px] font-medium text-[rgba(120,112,100,0.6)] shadow-[0px_1px_4px_#0000000a]"
               >
-                이미지 추가 ({totalImageCount}/5)
+                이미지 추가 ({totalImageCount}/{MAX_FRAGMENT_IMAGE_ATTACHMENTS})
               </button>
             )}
+
+            <p className="px-1 text-[12px] leading-[17px] text-[rgba(120,112,100,0.62)]">
+              이미지는 최대 {MAX_FRAGMENT_IMAGE_ATTACHMENTS}장까지 추가할 수 있어요. ({totalImageCount}/{MAX_FRAGMENT_IMAGE_ATTACHMENTS})
+            </p>
 
             <input ref={imageInputRef} disabled={isProcessingImage} type="file" accept="image/*" multiple className="hidden" onChange={handleImageChange} />
             {isProcessingImage && (
