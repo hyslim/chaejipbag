@@ -48,7 +48,7 @@ export const BottomNav = ({ activeTab, onHomeClick }: BottomNavProps) => {
         >
           <img src="/figmaAssets/chart-pie-portfolio-no-coral.svg" alt="가방" className="h-5 w-5" />
           <span
-            className={`text-[14px] font-medium leading-5 ${isHomeActive ? "text-[#353a69d9]" : "text-[#787064b5]"}`}
+            className={`text-[15px] font-semibold leading-5 tracking-[0.02em] ${isHomeActive ? "text-[#353a69d9]" : "text-[#787064b5]"}`}
             style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
           >
             가방
@@ -82,7 +82,7 @@ export const BottomNav = ({ activeTab, onHomeClick }: BottomNavProps) => {
         >
           <img src="/figmaAssets/heart.png" alt="기록" className="h-[30px] w-[30px]" />
           <span
-            className={`text-[14px] font-medium leading-5 ${isHistoryActive ? "text-[#353a69d9]" : "text-[#787064b5]"}`}
+            className={`text-[15px] font-semibold leading-5 tracking-[0.02em] ${isHistoryActive ? "text-[#353a69d9]" : "text-[#787064b5]"}`}
             style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
           >
             기록
