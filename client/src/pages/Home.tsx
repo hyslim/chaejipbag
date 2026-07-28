@@ -37,25 +37,6 @@ const getInterestStyle = (label: string, count: number) => {
   };
 };
 
-const getHomeTopPokachipStyle = (label: string, selected: boolean) => {
-  const token = getPokachipColorToken(label);
-  const temporary = isTemporaryPokachip(label);
-  const glowColor = temporary ? "#D8D1C7" : token.pillColor;
-
-  return {
-    backgroundColor: temporary
-      ? "rgba(231,226,218,0.52)"
-      : getColorWithAlpha(token.pillColor, selected ? 0.58 : 0.52),
-    backgroundImage:
-      "linear-gradient(145deg, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.16) 58%, rgba(255,255,255,0.34) 100%)",
-    color: temporary
-      ? "rgba(120,112,100,0.62)"
-      : getColorWithAlpha(token.text, selected ? 0.86 : 0.8),
-    borderColor: "rgba(255,255,255,0.7)",
-    boxShadow: `0 4px 12px ${getColorWithAlpha(glowColor, selected ? 0.3 : 0.24)}, 0 1px 4px ${getColorWithAlpha(token.border, 0.18)}, inset 0 1px 0 rgba(255,255,255,0.82), inset 0 -1px 0 rgba(255,255,255,0.18)`,
-  };
-};
-
 const getFragmentDisplayPokachip = (fragment: Fragment, selectedChip?: string | null): string => {
   return getPokachipsInDisplayOrder(fragment.pokachips, selectedChip)[0] ?? "";
 };
@@ -1104,7 +1085,10 @@ export const Home = (): JSX.Element => {
                       transition={{ type: "spring", stiffness: 500, damping: 20 }}
                       className="home-select-none select-none box-border inline-flex h-[29px] min-w-0 max-w-[calc(100%-32px)] shrink-0 snap-start items-center justify-center gap-2.5 overflow-hidden rounded-[999px] border px-3.5 py-[6px] text-[12px] font-medium leading-[17px]"
                       style={{
-                        ...getHomeTopPokachipStyle(label, isSelected),
+                        ...getPokachipSmallPillStyle(
+                          label,
+                          isSelected ? "selected" : "regular"
+                        ),
                         fontFamily: "'Pretendard Variable', sans-serif",
                       }}
                     >
