@@ -296,14 +296,14 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
               className="-my-2.5 flex h-11 w-11 items-center justify-center text-[rgba(120,112,100,0.68)] outline-none transition-[color,transform] duration-150 hover:text-[rgba(120,112,100,0.9)] focus-visible:rounded-xl focus-visible:ring-2 focus-visible:ring-[rgba(110,103,207,0.28)] active:scale-95"
               aria-label="수정"
             >
-              <Pencil size={24} strokeWidth={1.8} />
+              <Pencil size={20} strokeWidth={1.8} />
             </button>
             <button
               onClick={() => setIsDeleteOpen(true)}
               className="-my-2.5 flex h-11 w-11 items-center justify-center text-[rgba(120,112,100,0.68)] outline-none transition-[color,transform] duration-150 hover:text-[rgba(145,101,96,0.86)] focus-visible:rounded-xl focus-visible:ring-2 focus-visible:ring-[rgba(110,103,207,0.28)] active:scale-95"
               aria-label="삭제"
             >
-              <Trash2 size={24} strokeWidth={1.8} />
+              <Trash2 size={20} strokeWidth={1.8} />
             </button>
           </div>
         </header>
