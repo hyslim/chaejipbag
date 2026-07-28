@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Pencil, Trash2, ExternalLink, Globe, Instagram, Sparkles, Youtube, X, type LucideIcon } from "lucide-react";
-import favoriteHeartInactive from "@/assets/favorite-heart-00.svg";
-import favoriteHeartActive from "@/assets/favorite-heart-01.svg";
+import { FavoriteHeartIcon } from "@/components/FavoriteHeartIcon";
 import { getFragmentImageCount, getPokachipSmallPillStyle, normalizePokachipName } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { useFragmentImages } from "@/hooks/useFragmentImage";
@@ -284,11 +283,10 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
               aria-pressed={Boolean(fragment.pinnedAt)}
               title={fragment.pinnedAt ? "즐겨찾기 해제" : "즐겨찾기에 추가"}
             >
-              <img
-                src={fragment.pinnedAt ? favoriteHeartActive : favoriteHeartInactive}
-                alt=""
+              <FavoriteHeartIcon
+                active={Boolean(fragment.pinnedAt)}
                 className="h-auto w-[22px]"
-                draggable={false}
+                aria-hidden="true"
               />
             </button>
             <button

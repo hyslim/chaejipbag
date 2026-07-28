@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from 
 import { Globe, Instagram, Pencil, Pin, Sparkles, Youtube, type LucideIcon } from "lucide-react";
 import { flushSync } from "react-dom";
 import { Link, useLocation } from "wouter";
-import favoriteHeartActive from "@/assets/favorite-heart-01.svg";
+import { FavoriteHeartIcon } from "@/components/FavoriteHeartIcon";
 import { getColorWithAlpha, getFragmentDisplayTime, getFragmentImageCount, getFragmentReferenceAt, getPokachipColorToken, getPokachipKey, getPokachipsInDisplayOrder, getPokachipSmallPillStyle, getRecentPokachips, normalizePokachipName, type Fragment } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { useFragmentImage } from "@/hooks/useFragmentImage";
@@ -365,13 +365,11 @@ const FragmentCard = ({
               {getFragmentDisplayTime(fragment)}
             </span>
             {fragment.pinnedAt && (
-              <img
-                src={favoriteHeartActive}
-                alt=""
+              <FavoriteHeartIcon
+                active
                 className="pointer-events-none ml-auto h-auto w-[15px] shrink-0"
                 aria-label="즐겨찾기됨"
                 role="img"
-                draggable={false}
               />
             )}
           </div>
@@ -453,13 +451,11 @@ const SearchResultCard = ({
           <SourceIcon size={12} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
           <span className="min-w-0 truncate" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>{getFragmentDisplayTime(fragment)}</span>
           {fragment.pinnedAt && (
-            <img
-              src={favoriteHeartActive}
-              alt=""
+            <FavoriteHeartIcon
+              active
               className="pointer-events-none ml-auto h-auto w-[15px] shrink-0"
               aria-label="즐겨찾기됨"
               role="img"
-              draggable={false}
             />
           )}
         </div>
