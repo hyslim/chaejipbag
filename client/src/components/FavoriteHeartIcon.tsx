@@ -30,5 +30,5 @@ export function FavoriteHeartIcon({ active, className, role, "aria-hidden": aria
     );
   }
 
-  return <img src={favoriteHeartActive} alt="" className={className} draggable={false} {...accessibilityProps} />;
+  return <img src={favoriteHeartActive} alt="" className={`${className ?? ""} scale-[1.09]`} draggable={false} {...accessibilityProps} />;
 }
