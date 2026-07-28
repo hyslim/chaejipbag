@@ -285,7 +285,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
             >
               <FavoriteHeartIcon
                 active={Boolean(fragment.pinnedAt)}
-                className="h-auto w-[22px]"
+                className="h-auto w-[24px]"
                 aria-hidden="true"
               />
             </button>
