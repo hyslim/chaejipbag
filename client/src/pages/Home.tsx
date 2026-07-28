@@ -1128,7 +1128,7 @@ export const Home = (): JSX.Element => {
           <div className="px-4 mb-3 flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-1.5">
               {!selectedChip && pinnedFragments.length > 0 ? (
-                <Pin size={13} strokeWidth={1.9} className="shrink-0 text-[rgba(110,103,207,0.68)]" aria-hidden="true" />
+                <Pin size={13} strokeWidth={2.4} className="shrink-0 text-[rgba(110,103,207,0.68)]" aria-hidden="true" />
               ) : (
                 <img src="/figmaAssets/glass.svg" alt="" className="h-[14px] w-[10px]" />
               )}
@@ -1160,7 +1160,7 @@ export const Home = (): JSX.Element => {
             <div className="px-4 pb-[calc(18rem+env(safe-area-inset-bottom))]">
               {selectedChip && pinnedFragments.length > 0 && (
                 <div className="mb-3 flex items-center gap-1.5">
-                  <Pin size={13} strokeWidth={1.9} className="shrink-0 text-[rgba(110,103,207,0.68)]" aria-hidden="true" />
+                  <Pin size={13} strokeWidth={2.4} className="shrink-0 text-[rgba(110,103,207,0.68)]" aria-hidden="true" />
                   <span className="text-[12px] font-semibold text-[rgba(120,112,100,0.72)]">
                     상단 고정
                   </span>
