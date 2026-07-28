@@ -37,8 +37,60 @@ const getInterestStyle = (label: string, count: number) => {
   };
 };
 
-const getFragmentDisplayPokachip = (fragment: Fragment, selectedChip?: string | null): string => {
-  return getPokachipsInDisplayOrder(fragment.pokachips, selectedChip)[0] ?? "";
+const getFragmentDisplayPokachips = (fragment: Fragment, selectedChip?: string | null): string[] =>
+  getPokachipsInDisplayOrder(fragment.pokachips, selectedChip);
+
+const HomeCardPokachipRow = ({
+  fragment,
+  selectedChip,
+  className = "",
+}: {
+  fragment: Fragment;
+  selectedChip?: string | null;
+  className?: string;
+}) => {
+  const displayPokachips = getFragmentDisplayPokachips(fragment, selectedChip).slice(0, 3);
+
+  if (displayPokachips.length === 0) return null;
+
+  return (
+    <div
+      className={`${className} pointer-events-none flex h-[30px] w-full min-w-0 flex-nowrap items-center gap-1.5 overflow-hidden py-[3px]`}
+    >
+      {displayPokachips.map((chip, index) => {
+        const pill = (
+          <span
+            className={`${index === 0 ? "max-w-full" : ""} inline-flex h-6 w-max shrink-0 items-center overflow-hidden rounded-[999px] border py-1 pl-2.5 ${index === 2 ? "pr-[58px]" : "pr-2.5"} text-[11px] font-medium leading-4`}
+            style={{
+              ...getPokachipSmallPillStyle(
+                chip,
+                index === 0 && getPokachipKey(chip) === getPokachipKey(selectedChip ?? "")
+                  ? "selected"
+                  : "regular"
+              ),
+              fontFamily: "'Pretendard Variable', sans-serif",
+            }}
+          >
+            <span className={`${index === 0 ? "min-w-0 truncate" : ""}`}>{chip}</span>
+          </span>
+        );
+
+        if (index < 2) {
+          return <span key={`${getPokachipKey(chip)}-${index}`} className="contents">{pill}</span>;
+        }
+
+        return (
+          <span
+            key={`${getPokachipKey(chip)}-${index}`}
+            aria-hidden="true"
+            className="min-w-0 flex-1 overflow-hidden"
+          >
+            {pill}
+          </span>
+        );
+      })}
+    </div>
+  );
 };
 const shouldShowMemoPreview = (fragment: Fragment): boolean => {
   const title = fragment.title.trim();
@@ -109,11 +161,11 @@ const FragmentCard = ({
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
   const didLongPressRef = useRef(false);
   const SourceIcon = getFragmentSourceIcon(fragment);
-  const primaryChip = getFragmentDisplayPokachip(fragment, selectedChip);
+  const displayPokachips = getFragmentDisplayPokachips(fragment, selectedChip);
   const hasTitle = Boolean(fragment.title.trim());
   const hasMemo = shouldShowMemoPreview(fragment);
   const chipBottomSpacing = hasTitle || hasMemo ? "mb-2" : "mb-0";
-  const metaTopSpacing = hasTitle || hasMemo ? "mt-1" : primaryChip ? "mt-2" : "";
+  const metaTopSpacing = hasTitle || hasMemo ? "mt-1" : displayPokachips.length > 0 ? "mt-2" : "";
 
   const clearLongPressTimer = () => {
     if (longPressTimerRef.current) {
@@ -323,22 +375,11 @@ const FragmentCard = ({
         )}
 
         <div className="flex min-w-0 flex-col p-3">
-          {primaryChip && (
-            <span
-              className={`${chipBottomSpacing} flex h-6 min-w-0 max-w-full items-center self-start overflow-hidden rounded-[999px] border px-2.5 py-1 text-[11px] font-medium leading-4`}
-              style={{
-                ...getPokachipSmallPillStyle(
-                  primaryChip,
-                  getPokachipKey(primaryChip) === getPokachipKey(selectedChip ?? "")
-                    ? "selected"
-                    : "regular"
-                ),
-                fontFamily: "'Pretendard Variable', sans-serif",
-              }}
-            >
-              <span className="min-w-0 truncate">{primaryChip}</span>
-            </span>
-          )}
+          <HomeCardPokachipRow
+            fragment={fragment}
+            selectedChip={selectedChip}
+            className={chipBottomSpacing}
+          />
 
           {hasTitle && (
             <p
@@ -389,7 +430,6 @@ const SearchResultCard = ({
   const [, navigate] = useLocation();
   const imageUrl = useFragmentImage(fragment);
   const imageCount = getFragmentImageCount(fragment);
-  const primaryChip = getFragmentDisplayPokachip(fragment);
   const SourceIcon = getFragmentSourceIcon(fragment);
 
   return (
@@ -421,17 +461,7 @@ const SearchResultCard = ({
           </div>
         )}
         <div className="px-3.5 py-3">
-        {primaryChip && (
-          <span
-            className="mb-2 inline-flex h-[22px] min-w-0 max-w-full items-center overflow-hidden rounded-full border px-2.5 text-[11px] font-medium"
-            style={{
-              ...getPokachipSmallPillStyle(primaryChip),
-              fontFamily: "'Pretendard Variable', sans-serif",
-            }}
-          >
-            {primaryChip}
-          </span>
-        )}
+        <HomeCardPokachipRow fragment={fragment} className="mb-2" />
         <p
           className="min-w-0 overflow-hidden break-words line-clamp-2 text-[14px] font-semibold leading-[20px] text-[#3a3228]"
           style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
