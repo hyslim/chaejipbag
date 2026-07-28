@@ -900,8 +900,8 @@ export const Home = (): JSX.Element => {
         {isSearchMode ? (
           <section className="flex min-h-screen flex-1 flex-col bg-[#faf8f4] pb-[calc(15rem+env(safe-area-inset-bottom))]">
             <header className="border-b border-[#F5F2ED] bg-[#FFFEFB] px-4 py-3">
-              <div className="flex h-[42px] items-center gap-2 rounded-[14px] bg-[rgba(120,112,100,0.05)] px-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
-                <span aria-hidden="true" className="text-[15px] text-[rgba(120,112,100,0.5)]">
+              <div className="flex h-10 items-center gap-2 rounded-[14px] bg-[rgba(120,112,100,0.05)] px-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
+                <span aria-hidden="true" className="flex h-full w-5 shrink-0 items-center justify-center text-[20px] leading-none text-[rgba(120,112,100,0.5)]">
                   ⌕
                 </span>
                 <input
@@ -916,7 +916,7 @@ export const Home = (): JSX.Element => {
                   placeholder="기억 속에서 찾기..."
                   autoComplete="off"
                   autoFocus
-                  className="min-w-0 flex-1 bg-transparent text-[13px] font-medium text-[rgba(50,44,34,0.8)] outline-none placeholder:text-[rgba(120,112,100,0.4)]"
+                  className="h-full min-h-0 min-w-0 flex-1 bg-transparent py-0 text-[13px] font-medium leading-normal text-[rgba(50,44,34,0.8)] outline-none placeholder:text-[rgba(120,112,100,0.4)]"
                   style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
                 />
                 <button
