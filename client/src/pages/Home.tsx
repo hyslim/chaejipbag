@@ -35,7 +35,7 @@ const getInterestStyle = (label: string, count: number) => {
   return {
     gradient: `linear-gradient(145deg, ${heroStart} 0%, ${heroEnd} 100%)`,
     border: "1px solid rgba(255,255,255,0.82)",
-    shadow: `0 8px 22px ${getColorWithAlpha(token.glow, 0.18 + growthStrength * 0.02)}, inset 0 1px 0 rgba(255,255,255,0.04)`,
+    shadow: `0 8px 22px ${getColorWithAlpha(token.glow, 0.14 + growthStrength * 0.02)}, inset 0 1px 0 rgba(255,255,255,0.04)`,
     text: "rgba(255,255,255,0.94)",
     textShadow: "0 1px 2px rgba(80,70,55,0.12)",
   };
@@ -1042,7 +1042,7 @@ export const Home = (): JSX.Element => {
           <>
 
         {/* Home top area: Header, 조건부 Hero, 작은 포카칩의 연속된 상단 흐름 */}
-        <section className="bg-[#FFFEFB]">
+        <section className="bg-[#FFFEFB] shadow-[inset_0_-1px_0_#F5F2ED]">
         {/* Header: 관심사 장식과 분리된 고정 Surface */}
         <header className="flex items-center justify-between bg-[#FFFEFB] px-4 pb-3 pt-5">
           <h1
