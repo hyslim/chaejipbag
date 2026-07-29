@@ -1,4 +1,5 @@
 import { Globe, Instagram, Pencil, Sparkles, Youtube } from "lucide-react";
+import { PinterestIcon } from "@/components/PinterestIcon";
 import type { Fragment } from "@/data/fragments";
 
 export type FragmentSourceKind =
@@ -18,6 +19,7 @@ export const getFragmentSourceMeta = (fragment: FragmentSourceFields): {
 } => {
   const sourceText = `${fragment.source ?? ""} ${fragment.url ?? ""}`.toLocaleLowerCase("en-US");
   const provider = fragment.linkMetadata?.provider?.toLocaleLowerCase("en-US") ?? "";
+  const siteName = fragment.linkMetadata?.siteName?.toLocaleLowerCase("en-US") ?? "";
 
   if (fragment.sourceType === "text") return { kind: "text", label: "직접 입력" };
   if (
@@ -32,7 +34,8 @@ export const getFragmentSourceMeta = (fragment: FragmentSourceFields): {
     return { kind: "instagram", label: "Instagram" };
   }
   if (
-    provider === "pinterest"
+    provider.includes("pinterest")
+    || siteName.includes("pinterest")
     || sourceText.includes("pinterest.com")
     || sourceText.includes("pin.it")
   ) {
@@ -58,26 +61,6 @@ type FragmentSourceIconProps = {
   strokeWidth?: number;
   className?: string;
 };
-
-const PinterestIcon = ({
-  size,
-  color,
-  className,
-}: Omit<FragmentSourceIconProps, "fragment" | "strokeWidth">) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    className={className}
-    aria-hidden="true"
-  >
-    <path
-      fill={color}
-      d="M7.6 21V3.2h5.3c4 0 6.5 2.3 6.5 5.9 0 3.7-2.7 6.2-6.7 6.2h-1.8V21H7.6Zm3.3-8.7h1.6c2.2 0 3.5-1.1 3.5-3.1 0-1.9-1.2-3-3.4-3h-1.7v6.1Z"
-    />
-  </svg>
-);
 
 export const FragmentSourceIcon = ({
   fragment,
