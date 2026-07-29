@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Pencil, Trash2, ExternalLink, Globe, Instagram, Sparkles, Youtube, X, type LucideIcon } from "lucide-react";
 import { FavoriteHeartIcon } from "@/components/FavoriteHeartIcon";
+import { TransientToast, useTransientToast } from "@/components/TransientToast";
 import { getFragmentImageCount, getPokachipSmallPillStyle, normalizePokachipName } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { useFragmentImages } from "@/hooks/useFragmentImage";
@@ -48,7 +49,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
   const [viewerImageIndex, setViewerImageIndex] = useState(0);
-  const [toastMessage, setToastMessage] = useState("");
+  const { message: toastMessage, showToast: showDetailToast } = useTransientToast();
   const [isShareSheetOpen, setIsShareSheetOpen] = useState(false);
   const [shareSheetStatus, setShareSheetStatus] = useState<"idle" | "copying" | "copied">("idle");
   const fragment = getFragment(params.id);
@@ -170,10 +171,6 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   const trimmedMemo = fragment.memo?.trim() ?? "";
   const shouldShowMemo = Boolean(trimmedMemo && trimmedMemo !== trimmedTitle);
 
-  const showDetailToast = (message: string) => {
-    setToastMessage(message);
-    window.setTimeout(() => setToastMessage(""), 2000);
-  };
 
   const handleToggleFragmentPin = () => {
     const updatedFragment = toggleFragmentPin(fragment.id);
@@ -247,18 +244,10 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
         className="relative flex min-h-screen w-full flex-col sm:max-w-[390px] bg-[#FAF8F4]"
         style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
       >
-        <div className="pointer-events-none absolute inset-x-0 top-[31px] z-[70] flex justify-center px-4">
-          <motion.div
-            aria-live="polite"
-            initial={false}
-            animate={toastMessage ? { opacity: 1, y: 0 } : { opacity: 0, y: -6 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className={`${toastMessage ? "pointer-events-auto" : "pointer-events-none"} flex min-h-9 max-w-full min-w-[164px] items-center justify-center rounded-[8px] py-2 text-center leading-[18px] border border-[rgba(255,255,255,0.78)] bg-[#FFFEFB]/95 px-6 text-[13px] font-semibold text-[rgba(54,58,105,0.66)] shadow-[0_4px_14px_rgba(74,63,48,0.09),inset_0_1px_0_rgba(255,255,255,0.72)] backdrop-blur-[12px]`}
-            style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
-          >
-            {toastMessage}
-          </motion.div>
-        </div>
+        <TransientToast
+          message={toastMessage}
+          bottom="calc(max(2rem, env(safe-area-inset-bottom)) + 4.6875rem)"
+        />
         {/* 헤더 */}
         <header className="flex items-center justify-between border-b border-[#F5F2ED] bg-[#FFFEFB] px-5 pb-4 pt-6">
           <button

@@ -8,6 +8,7 @@ import { getColorWithAlpha, getFragmentDisplayTime, getFragmentImageCount, getFr
 import { useFragments } from "@/hooks/useFragments";
 import { useFragmentImage } from "@/hooks/useFragmentImage";
 import { BottomNav } from "@/components/BottomNav";
+import { TransientToast, useTransientToast } from "@/components/TransientToast";
 import { copyFragmentShareText, shareFragment, shouldOfferImageShare } from "@/lib/shareFragment";
 import { getYouTubeThumbnailUrl } from "@/lib/youtube";
 import { getInstagramUsername, isInstagramUrl } from "@/lib/instagram";
@@ -534,7 +535,7 @@ export const Home = (): JSX.Element => {
     () => new URLSearchParams(window.location.search).get("search") ?? ""
   );
   const [openMenuFragmentId, setOpenMenuFragmentId] = useState<string | null>(null);
-  const [toastMessage, setToastMessage] = useState("");
+  const { message: toastMessage, showToast: showHomeToast } = useTransientToast();
   const [shareSheetFragment, setShareSheetFragment] = useState<Fragment | null>(null);
   const [shareSheetStatus, setShareSheetStatus] = useState<"idle" | "copying" | "copied">("idle");
   const storedPokachips = getRecentPokachips(fragments, { includeFallback: false });
@@ -744,11 +745,6 @@ export const Home = (): JSX.Element => {
     setOpenMenuFragmentId(null);
   };
 
-  const showHomeToast = (message: string) => {
-    setToastMessage(message);
-    window.setTimeout(() => setToastMessage(""), 2000);
-  };
-
   const handleToggleFragmentPin = (fragment: Fragment) => {
     const updatedFragment = toggleFragmentPin(fragment.id);
 
@@ -826,10 +822,7 @@ export const Home = (): JSX.Element => {
     if (!shouldShowSaveToast) return;
 
     sessionStorage.removeItem(saveToastStorageKey);
-    setToastMessage("\uAC00\uBC29\uC5D0 \uB2F4\uC558\uC5B4\uC694");
-
-    const toastTimer = window.setTimeout(() => setToastMessage(""), 2000);
-    return () => window.clearTimeout(toastTimer);
+    showHomeToast("\uAC00\uBC29\uC5D0 \uB2F4\uC558\uC5B4\uC694");
   }, []);
   useEffect(() => {
     const scrollContainer = topPokachipScrollRef.current;
@@ -918,18 +911,10 @@ export const Home = (): JSX.Element => {
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#faf8f4] sm:bg-[#f3f0ec]">
       <section className="relative flex min-h-screen w-full flex-col bg-[#faf8f4] sm:max-w-[390px]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
-        <div className="pointer-events-none absolute inset-x-0 top-[31px] z-[70] flex justify-center px-4">
-          <motion.div
-            aria-live="polite"
-            initial={false}
-            animate={toastMessage ? { opacity: 1, y: 0 } : { opacity: 0, y: -6 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className={`${toastMessage ? "pointer-events-auto" : "pointer-events-none"} flex min-h-9 max-w-full min-w-[164px] items-center justify-center rounded-[8px] py-2 text-center leading-[18px] border border-[rgba(255,255,255,0.78)] bg-[#FFFEFB]/95 px-6 text-[13px] font-semibold text-[rgba(54,58,105,0.66)] shadow-[0_4px_14px_rgba(74,63,48,0.09),inset_0_1px_0_rgba(255,255,255,0.72)] backdrop-blur-[12px]`}
-            style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
-          >
-            {toastMessage}
-          </motion.div>
-        </div>
+        <TransientToast
+          message={toastMessage}
+          bottom="calc(max(1.5rem, env(safe-area-inset-bottom)) + 6.625rem)"
+        />
         {isSearchMode ? (
           <section className="flex min-h-screen flex-1 flex-col bg-[#faf8f4] pb-[calc(15rem+env(safe-area-inset-bottom))]">
             <header className="border-b border-[#F5F2ED] bg-[#FFFEFB] px-4 py-3">
