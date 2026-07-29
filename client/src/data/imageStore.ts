@@ -10,6 +10,8 @@ type StoredImage = {
   createdAt: string;
 };
 
+export type StoredImageInput = StoredImage;
+
 const openDatabase = (): Promise<IDBDatabase> =>
   new Promise((resolve, reject) => {
     const request = indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
@@ -117,6 +119,33 @@ export const deleteImage = async (key: string): Promise<void> => {
     const transaction = database.transaction(STORE_NAME, "readwrite");
     transaction.objectStore(STORE_NAME).delete(key);
     await completeTransaction(transaction);
+  } finally {
+    database.close();
+  }
+};
+
+export const replaceAllImages = async (
+  images: StoredImageInput[],
+  commitFragments: () => void
+): Promise<void> => {
+  const database = await openDatabase();
+  const transaction = database.transaction(STORE_NAME, "readwrite");
+  const completion = completeTransaction(transaction);
+
+  try {
+    const store = transaction.objectStore(STORE_NAME);
+    store.clear();
+    images.forEach((image) => store.add(image));
+
+    try {
+      commitFragments();
+    } catch (error) {
+      transaction.abort();
+      await completion.catch(() => undefined);
+      throw error;
+    }
+
+    await completion;
   } finally {
     database.close();
   }

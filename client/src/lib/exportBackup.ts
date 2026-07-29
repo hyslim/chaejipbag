@@ -30,37 +30,38 @@ export const createChaejipbagBackup = async (
   let imageCount = 0;
   let imageFailureCount = 0;
   const attachmentDataUrls: Record<string, string> = {};
+  const backupFragments: Fragment[] = [];
 
-  const backupFragments = await Promise.all(
-    fragments.map(async (fragment): Promise<Fragment> => {
-      const attachments = getFragmentImageAttachments(fragment);
+  // Read one fragment at a time so large bags do not start every FileReader at once.
+  for (const fragment of fragments) {
+    const attachments = getFragmentImageAttachments(fragment);
 
-      if (attachments.length === 0) {
-        if (fragment.imageDataUrl) imageCount += 1;
-        return { ...fragment };
+    if (attachments.length === 0) {
+      if (fragment.imageDataUrl) imageCount += 1;
+      backupFragments.push({ ...fragment });
+      continue;
+    }
+
+    let legacyFirstImageDataUrl = fragment.imageDataUrl;
+    for (const [index, attachment] of attachments.entries()) {
+      try {
+        const imageBlob = await getImageBlob(attachment.blobKey);
+        if (!imageBlob) throw new Error("Stored image was not found.");
+
+        const imageDataUrl = await blobToDataUrl(imageBlob);
+        attachmentDataUrls[attachment.blobKey] = imageDataUrl;
+        if (index === 0 && !legacyFirstImageDataUrl) legacyFirstImageDataUrl = imageDataUrl;
+        imageCount += 1;
+      } catch {
+        imageFailureCount += 1;
       }
+    }
 
-      let legacyFirstImageDataUrl = fragment.imageDataUrl;
-      for (const [index, attachment] of attachments.entries()) {
-        try {
-          const imageBlob = await getImageBlob(attachment.blobKey);
-          if (!imageBlob) throw new Error("Stored image was not found.");
-
-          const imageDataUrl = await blobToDataUrl(imageBlob);
-          attachmentDataUrls[attachment.blobKey] = imageDataUrl;
-          if (index === 0 && !legacyFirstImageDataUrl) legacyFirstImageDataUrl = imageDataUrl;
-          imageCount += 1;
-        } catch {
-          imageFailureCount += 1;
-        }
-      }
-
-      return {
-        ...fragment,
-        ...(legacyFirstImageDataUrl ? { imageDataUrl: legacyFirstImageDataUrl } : {}),
-      };
-    })
-  );
+    backupFragments.push({
+      ...fragment,
+      ...(legacyFirstImageDataUrl ? { imageDataUrl: legacyFirstImageDataUrl } : {}),
+    });
+  }
 
   return {
     format: "chaejipbag-backup",
@@ -73,7 +74,6 @@ export const createChaejipbagBackup = async (
     attachmentDataUrls,
   };
 };
-
 const getBackupFileName = (exportedAt: string): string =>
   `chaejipbag-backup-${exportedAt.slice(0, 10)}.json`;
 

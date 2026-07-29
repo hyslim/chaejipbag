@@ -1,10 +1,15 @@
-import { useState } from "react";
-import { ArrowRight, ArrowUp, Download, Link2, RotateCcw, Sparkles, type LucideIcon } from "lucide-react";
+import { useRef, useState } from "react";
+import { ArrowRight, ArrowUp, Download, Link2, RotateCcw, Sparkles, Upload, type LucideIcon } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { getPokachipColor, normalizePokachipName, type Fragment } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { BottomNav } from "@/components/BottomNav";
 import { downloadChaejipbagBackup } from "@/lib/exportBackup";
+import {
+  BackupValidationError,
+  parseAndValidateBackupFile,
+  restoreValidatedBackup,
+} from "@/lib/importBackup";
 import { createFragmentNavigationPath } from "@/lib/fragmentNavigation";
 
 const HISTORY_FILTERS = [
@@ -245,7 +250,10 @@ const EmptyHistory = () => (
 export const History = () => {
   const { fragments } = useFragments();
   const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const [backupMessage, setBackupMessage] = useState("");
+  const backupInputRef = useRef<HTMLInputElement>(null);
+  const backupActionRef = useRef<"export" | "import" | null>(null);
   const fragmentOrder = new Map(fragments.map((fragment, index) => [fragment.id, index]));
   const sortedFragments = [...fragments].sort(
     (a, b) =>
@@ -258,7 +266,8 @@ export const History = () => {
   }));
 
   const handleBackupExport = async () => {
-    if (isExporting) return;
+    if (backupActionRef.current) return;
+    backupActionRef.current = "export";
 
     setIsExporting(true);
     setBackupMessage("");
@@ -273,11 +282,50 @@ export const History = () => {
     } catch {
       setBackupMessage("백업 파일을 만들지 못했어요. 다시 시도해 주세요.");
     } finally {
+      backupActionRef.current = null;
       setIsExporting(false);
       window.setTimeout(() => setBackupMessage(""), 3000);
     }
   };
 
+  const handleBackupImport = async (file?: File) => {
+    if (!file || backupActionRef.current) return;
+    backupActionRef.current = "import";
+
+    setIsImporting(true);
+    setBackupMessage("백업 파일을 확인하고 있어요.");
+
+    try {
+      const validated = await parseAndValidateBackupFile(file);
+      const exportedDate = new Intl.DateTimeFormat("ko-KR", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }).format(new Date(validated.backup.exportedAt));
+      const confirmed = window.confirm(
+        `${file.name}\n${exportedDate}에 만든 백업이에요.\n\n현재 가방의 모든 조각과 이미지를 이 백업으로 바꿀까요?`
+      );
+      if (!confirmed) {
+        setBackupMessage("복원을 취소했어요. 현재 가방은 그대로예요.");
+        return;
+      }
+
+      setBackupMessage("가방을 안전하게 복원하고 있어요.");
+      await restoreValidatedBackup(validated);
+      setBackupMessage(`${file.name}에서 조각 ${validated.fragments.length}개와 이미지 ${validated.images.length}개를 복원했어요.`);
+      window.setTimeout(() => window.location.reload(), 1200);
+    } catch (error) {
+      setBackupMessage(
+        error instanceof BackupValidationError
+          ? error.userMessage
+          : "백업을 확인하지 못했어요. 파일을 다시 선택해 주세요."
+      );
+    } finally {
+      backupActionRef.current = null;
+      setIsImporting(false);
+      if (backupInputRef.current) backupInputRef.current.value = "";
+    }
+  };
   return (
     <main className="flex min-h-screen w-full justify-center bg-[#FAF8F4] sm:bg-[#f3f0ec]">
       <section className="min-h-screen w-full bg-[#FAF8F4] pb-[calc(220px+env(safe-area-inset-bottom))] sm:max-w-[390px]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
@@ -291,16 +339,35 @@ export const History = () => {
               기록
             </h1>
           </div>
-          <button
-            type="button"
-            onClick={() => void handleBackupExport()}
-            disabled={isExporting}
-            className="mb-0.5 inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-[rgba(120,112,100,0.14)] bg-white px-3 text-[12px] font-medium text-[rgba(53,58,105,0.72)] shadow-[0_3px_10px_rgba(74,63,48,0.05)] disabled:opacity-55"
-            aria-label="가방 백업 JSON 내보내기"
-          >
-            <Download size={14} strokeWidth={1.8} aria-hidden="true" />
-            {isExporting ? "준비 중" : "백업"}
-          </button>
+          <div className="mb-0.5 flex shrink-0 items-center gap-2">
+            <input
+              ref={backupInputRef}
+              type="file"
+              accept=".json,application/json"
+              className="hidden"
+              aria-label="가방 백업 JSON 가져오기"
+              onChange={(event) => void handleBackupImport(event.target.files?.[0])}
+            />
+            <button
+              type="button"
+              onClick={() => backupInputRef.current?.click()}
+              disabled={isImporting || isExporting}
+              className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[rgba(120,112,100,0.14)] bg-white px-3 text-[12px] font-medium text-[rgba(53,58,105,0.72)] shadow-[0_3px_10px_rgba(74,63,48,0.05)] disabled:opacity-55"
+            >
+              <Upload size={14} strokeWidth={1.8} aria-hidden="true" />
+              {isImporting ? "확인 중" : "복원"}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleBackupExport()}
+              disabled={isExporting || isImporting}
+              className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[rgba(120,112,100,0.14)] bg-white px-3 text-[12px] font-medium text-[rgba(53,58,105,0.72)] shadow-[0_3px_10px_rgba(74,63,48,0.05)] disabled:opacity-55"
+              aria-label="가방 백업 JSON 내보내기"
+            >
+              <Download size={14} strokeWidth={1.8} aria-hidden="true" />
+              {isExporting ? "준비 중" : "백업"}
+            </button>
+          </div>
         </header>
 
         {backupMessage && (
