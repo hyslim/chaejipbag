@@ -262,6 +262,7 @@ export const QuickSave = () => {
   const [isInstagramThumbnailHidden, setIsInstagramThumbnailHidden] = useState(false);
   const [linkMetadata, setLinkMetadata] = useState<LinkMetadataPreview | null>(null);
   const [isLinkMetadataLoading, setIsLinkMetadataLoading] = useState(false);
+  const [resolvedLinkMetadataUrl, setResolvedLinkMetadataUrl] = useState("");
   const [isLinkThumbnailHidden, setIsLinkThumbnailHidden] = useState(false);
   const [imageError, setImageError] = useState("");
   const [saveError, setSaveError] = useState("");
@@ -277,6 +278,12 @@ export const QuickSave = () => {
   const [title, setTitle] = useState(fallbackTitle);
   const isInstagram = isInstagramUrl(sharedUrl);
   const isYoutube = Boolean(getYouTubeVideoId(sharedUrl));
+  const isLinkMetadataPending = Boolean(
+    sharedUrl
+    && !isInstagram
+    && !isYoutube
+    && resolvedLinkMetadataUrl !== sharedUrl
+  );
 
   useEffect(() => {
     if (!shareId) return;
@@ -405,7 +412,6 @@ export const QuickSave = () => {
         });
         const metadata = await response.json() as LinkMetadataPreview | { ok: false };
         if (isDisposed) return;
-        setIsLinkMetadataLoading(false);
         if (!response.ok || metadata.ok !== true) return;
 
         setLinkMetadata(metadata);
@@ -417,8 +423,12 @@ export const QuickSave = () => {
           setMemo((current) => current.trim() ? current : normalizeSingleLineText(metadata.description ?? ""));
         }
       } catch {
-        if (!isDisposed) setIsLinkMetadataLoading(false);
+        // A failed metadata request intentionally falls back to a text link save.
       } finally {
+        if (!isDisposed) {
+          setIsLinkMetadataLoading(false);
+          setResolvedLinkMetadataUrl(sharedUrl);
+        }
         window.clearTimeout(timeout);
       }
     };
@@ -487,7 +497,7 @@ export const QuickSave = () => {
   };
 
   const handleSave = async () => {
-    if (!canSave || isSaving) return;
+    if (!canSave || isSaving || isLinkMetadataPending) return;
 
     const inputChips = parsePokachipInput(chipInput);
     const pokachips = mergePokachips(selectedChips, inputChips);
@@ -816,8 +826,8 @@ export const QuickSave = () => {
           <button
             type="button"
             onClick={handleSave}
-            disabled={!canSave || isSaving}
-            aria-disabled={!canSave || isSaving}
+            disabled={!canSave || isSaving || isLinkMetadataPending}
+            aria-disabled={!canSave || isSaving || isLinkMetadataPending}
             className="h-[51px] w-[180px] rounded-full border-0 px-[50px] py-[14px] text-[15px] font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
             style={{
               background: "linear-gradient(135deg, rgba(130,207,255,0.60) 12%, rgba(90,144,255,0.60) 54%, rgba(139,112,255,0.60) 100%)",
