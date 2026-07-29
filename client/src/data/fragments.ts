@@ -54,7 +54,7 @@ export const pokachipColorTokens = [
     background: "#E8E3F7",
     text: "#726A84",
     border: "#DFD8F1",
-    heroGradient: ["#EDE9FA", "#DAD0F1", "#CCC0E8"],
+    heroGradient: ["#C5D3F5", "#C6C8F2", "#D0BFF0"],
   },
   {
     name: "coral-pink",
@@ -62,7 +62,7 @@ export const pokachipColorTokens = [
     background: "#F7D9DD",
     text: "#86676D",
     border: "#F1D0D4",
-    heroGradient: ["#FAE2E5", "#EFC4CB", "#E5B2BA"],
+    heroGradient: ["#EEB0A8", "#EEADBA", "#EEAAC4"],
   },
   {
     name: "butter-yellow",
@@ -70,7 +70,7 @@ export const pokachipColorTokens = [
     background: "#F7EAC1",
     text: "#80734E",
     border: "#F0E1B0",
-    heroGradient: ["#FAF1D1", "#F1DF9E", "#E6CF85"],
+    heroGradient: ["#EED898", "#EED098", "#EEC888"],
   },
   {
     name: "apricot",
@@ -78,7 +78,7 @@ export const pokachipColorTokens = [
     background: "#F6D9C1",
     text: "#856853",
     border: "#EFCDAF",
-    heroGradient: ["#FAE4D2", "#EFC49E", "#E4AE85"],
+    heroGradient: ["#F3CEAA", "#F0C1A5", "#EDB4AE"],
   },
   {
     name: "mint",
@@ -86,7 +86,7 @@ export const pokachipColorTokens = [
     background: "#DCEFE7",
     text: "#607B73",
     border: "#CDE7DC",
-    heroGradient: ["#E5F4EE", "#C8E4D9", "#AED5C6"],
+    heroGradient: ["#AEDAC8", "#ABD7D5", "#A8D4E2"],
   },
   {
     name: "sage",
@@ -94,7 +94,7 @@ export const pokachipColorTokens = [
     background: "#E2E9D0",
     text: "#6F785F",
     border: "#D7E0BF",
-    heroGradient: ["#EBEFD9", "#D2DCB3", "#BCCB96"],
+    heroGradient: ["#DCE8B9", "#CDE2B0", "#BBD9AE"],
   },
   {
     name: "sky-blue",
@@ -102,7 +102,7 @@ export const pokachipColorTokens = [
     background: "#DAECF4",
     text: "#5F7782",
     border: "#CBE3ED",
-    heroGradient: ["#E7F3F8", "#C8E1ED", "#A9D0E1"],
+    heroGradient: ["#A8DCE8", "#ACD8EB", "#B2D4EE"],
   },
   {
     name: "blue-gray",
@@ -110,7 +110,7 @@ export const pokachipColorTokens = [
     background: "#DFE7EE",
     text: "#647381",
     border: "#D1DCE5",
-    heroGradient: ["#E8EEF3", "#CDD9E4", "#B4C7D6"],
+    heroGradient: ["#CBB8EE", "#D3BDF0", "#DCC6F3"],
   },
   {
     name: "rose-brown",
@@ -118,7 +118,7 @@ export const pokachipColorTokens = [
     background: "#ECDAD4",
     text: "#806B65",
     border: "#E3CEC8",
-    heroGradient: ["#F3E4E0", "#E0C7BF", "#D1ADA4"],
+    heroGradient: ["#EDC4BA", "#E9B8BC", "#E5AEC6"],
   },
   {
     name: "neutral-beige",
@@ -126,7 +126,7 @@ export const pokachipColorTokens = [
     background: "#EFE8DE",
     text: "#7A7267",
     border: "#E3DBCE",
-    heroGradient: ["#F5F0E8", "#E4D9CB", "#D2C4B0"],
+    heroGradient: ["#ECE6DE", "#E4DED8", "#DDD7D2"],
   },
 ] as const;
 

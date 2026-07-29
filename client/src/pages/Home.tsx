@@ -33,8 +33,8 @@ const getInterestStyle = (label: string, count: number) => {
   const [start, middle, end] = token.heroGradient;
 
   return {
-    gradient: `linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%), linear-gradient(145deg, ${start} 0%, ${middle} 54%, ${end} 100%)`,
-    shadow: `0 10px 24px ${getColorWithAlpha(token.pillColor, 0.2 + growthStrength * 0.03)}, 0 3px 10px ${getColorWithAlpha(token.border, 0.16)}, inset 0 1px 0 rgba(255,255,255,0.34), inset 0 -1px 0 rgba(255,255,255,0.12)`,
+    gradient: `linear-gradient(145deg, ${start} 0%, ${middle} 54%, ${end} 100%)`,
+    shadow: `0 8px 18px ${getColorWithAlpha(token.pillColor, 0.14 + growthStrength * 0.02)}, 0 2px 7px ${getColorWithAlpha(token.border, 0.12)}, inset 0 1px 0 rgba(255,255,255,0.24), inset 0 -1px 0 rgba(255,255,255,0.08)`,
     text: token.text,
   };
 };
