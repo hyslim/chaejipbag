@@ -146,7 +146,8 @@ const FragmentCard = ({
   const imageCount = getFragmentImageCount(fragment);
   const hasStoredImage = imageCount > 0;
   const externalPreviewImageUrl = linkMetadataImageUrl ?? youtubeThumbnailUrl;
-  const displayImageUrl = imageUrl || (!hasStoredImage && externalPreviewImageUrl !== failedPreviewImageUrl ? externalPreviewImageUrl : null);
+  const canUseExternalPreview = !hasStoredImage || isInstagramUrl(fragment.url);
+  const displayImageUrl = imageUrl || (canUseExternalPreview && externalPreviewImageUrl !== failedPreviewImageUrl ? externalPreviewImageUrl : null);
   const isYouTubeThumbnail = Boolean(displayImageUrl && !hasStoredImage && displayImageUrl === youtubeThumbnailUrl);
   const [imageHeightState, setImageHeightState] = useState<{ src: string; height: CardImageHeight } | null>(null);
   const imageHeight = isYouTubeThumbnail
@@ -155,7 +156,7 @@ const FragmentCard = ({
       ? imageHeightState.height
       : 200;
   const instagramUsername = getInstagramUsername(fragment.title, fragment.url);
-  const showInstagramPlaceholder = !hasStoredImage && !displayImageUrl && isInstagramUrl(fragment.url);
+  const showInstagramPlaceholder = !displayImageUrl && isInstagramUrl(fragment.url);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const longPressTimerRef = useRef<number | null>(null);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -433,8 +434,9 @@ const SearchResultCard = ({
   const imageCount = getFragmentImageCount(fragment);
   const hasStoredImage = imageCount > 0;
   const externalPreviewImageUrl = fragment.linkMetadata?.imageUrl ?? getYouTubeThumbnailUrl(fragment.url);
-  const displayImageUrl = imageUrl || (!hasStoredImage && externalPreviewImageUrl !== failedPreviewImageUrl ? externalPreviewImageUrl : null);
-  const showInstagramPlaceholder = !hasStoredImage && !displayImageUrl && isInstagramUrl(fragment.url);
+  const canUseExternalPreview = !hasStoredImage || isInstagramUrl(fragment.url);
+  const displayImageUrl = imageUrl || (canUseExternalPreview && externalPreviewImageUrl !== failedPreviewImageUrl ? externalPreviewImageUrl : null);
+  const showInstagramPlaceholder = !displayImageUrl && isInstagramUrl(fragment.url);
 
   return (
     <Link

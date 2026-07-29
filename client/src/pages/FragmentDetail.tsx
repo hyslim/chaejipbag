@@ -68,13 +68,14 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   const imageCount = getFragmentImageCount(fragment);
   const hasStoredImage = imageCount > 0;
   const externalPreviewImageUrl = linkMetadataImageUrl ?? youtubeThumbnailUrl;
-  const displayImageUrl = imageUrl || (!hasStoredImage && externalPreviewImageUrl !== failedPreviewImageUrl ? externalPreviewImageUrl : null);
-  const viewerImageUrls = hasStoredImage
+  const canUseExternalPreview = !hasStoredImage || isInstagramUrl(fragment?.url);
+  const displayImageUrl = imageUrl || (canUseExternalPreview && externalPreviewImageUrl !== failedPreviewImageUrl ? externalPreviewImageUrl : null);
+  const viewerImageUrls = storedImages.length > 0
     ? storedImages.map((image) => image.url)
     : displayImageUrl ? [displayImageUrl] : [];
   const viewerImageUrl = viewerImageUrls[viewerImageIndex] ?? viewerImageUrls[0];
   const instagramUsername = getInstagramUsername(fragment?.title, fragment?.url);
-  const showInstagramPlaceholder = !hasStoredImage && !displayImageUrl && isInstagramUrl(fragment?.url);
+  const showInstagramPlaceholder = !displayImageUrl && isInstagramUrl(fragment?.url);
 
   useEffect(() => {
     setIsImageViewerOpen(false);
@@ -346,7 +347,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
               )}
             </section>
           )}
-          {!hasStoredImage && displayImageUrl && (
+          {storedImages.length === 0 && displayImageUrl && (
             <section className="mt-8">
               <button
                 type="button"
