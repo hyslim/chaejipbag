@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Pencil, Trash2, ExternalLink, Globe, Instagram, Sparkles, Youtube, X, type LucideIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil, Trash2, ExternalLink, X } from "lucide-react";
+import { FragmentSourceIcon, getFragmentSourceMeta } from "@/components/FragmentSourceMeta";
 import { FavoriteHeartIcon } from "@/components/FavoriteHeartIcon";
 import { TransientToast, useTransientToast } from "@/components/TransientToast";
 import { getFragmentImageCount, getPokachipSmallPillStyle, normalizePokachipName } from "@/data/fragments";
@@ -21,27 +22,6 @@ const sourceIconColor = "rgba(120,112,100,0.65)";
 const IMAGE_SHARE_DELAY_MS = 700;
 const delayImageShare = () => new Promise((resolve) => window.setTimeout(resolve, IMAGE_SHARE_DELAY_MS));
 
-const getSourceMetaIcon = (sourceType?: string, source?: string, url?: string): LucideIcon => {
-  const sourceText = `${source ?? ""} ${url ?? ""}`.toLocaleLowerCase("en-US");
-
-  if (sourceType === "text") return Pencil;
-  if (sourceType === "youtube" || sourceText.includes("youtube") || sourceText.includes("youtu.be")) return Youtube;
-  if (sourceText.includes("instagram")) return Instagram;
-  if (sourceText.includes("chatgpt") || sourceText.includes("chat.openai")) return Sparkles;
-
-  return Globe;
-};
-const getSourceMetaLabel = (sourceType?: string, source?: string, url?: string): string => {
-  const sourceText = `${source ?? ""} ${url ?? ""}`.toLocaleLowerCase("en-US");
-
-  if (sourceType === "text") return "직접 입력";
-  if (sourceType === "youtube" || sourceText.includes("youtube") || sourceText.includes("youtu.be")) return "YouTube";
-  if (sourceText.includes("instagram")) return "Instagram";
-  if (sourceText.includes("pinterest")) return "Pinterest";
-  if (sourceType === "link" || url) return "웹사이트";
-
-  return source || "기록";
-};
 
 export const FragmentDetail = ({ params }: { params: { id: string } }) => {
   const [, navigate] = useLocation();
@@ -94,7 +74,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
     : displayImageUrl ? [displayImageUrl] : [];
   const viewerImageUrl = viewerImageUrls[viewerImageIndex] ?? viewerImageUrls[0];
   const instagramUsername = getInstagramUsername(fragment?.title, fragment?.url);
-  const showInstagramPlaceholder = !hasStoredImage && !linkMetadataImageUrl && !youtubeThumbnailUrl && isInstagramUrl(fragment?.url);
+  const showInstagramPlaceholder = !hasStoredImage && !displayImageUrl && isInstagramUrl(fragment?.url);
 
   useEffect(() => {
     setIsImageViewerOpen(false);
@@ -167,8 +147,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
     );
   }
 
-  const metaLabel = getSourceMetaLabel(fragment.sourceType, fragment.source, fragment.url);
-  const SourceIcon = getSourceMetaIcon(fragment.sourceType, fragment.source, fragment.url);
+  const metaLabel = getFragmentSourceMeta(fragment).label;
   const trimmedTitle = fragment.title.trim();
   const trimmedMemo = fragment.memo?.trim() ?? "";
   const shouldShowMemo = Boolean(trimmedMemo && trimmedMemo !== trimmedTitle);
@@ -301,7 +280,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]">
             {metaLabel && (
               <div className="inline-flex h-7 max-w-[160px] items-center gap-1.5 rounded-[999px] border border-[rgba(120,112,100,0.16)] bg-transparent px-3">
-                <SourceIcon size={14} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
+                <FragmentSourceIcon fragment={fragment} size={14} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" />
                 <span className="min-w-0 truncate text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>{metaLabel}</span>
               </div>
             )}

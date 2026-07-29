@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useLocation } from "wouter";
-import { ChevronLeft, Globe, Instagram, Pencil, Sparkles, Youtube, X, type LucideIcon } from "lucide-react";
+import { ChevronLeft, X } from "lucide-react";
+import { FragmentSourceIcon, getFragmentSourceMeta } from "@/components/FragmentSourceMeta";
 import { MAX_FRAGMENT_IMAGE_ATTACHMENTS, getCleanPokachipName, getFragmentImageAttachments, getPokachipColor, getPokachipCandidates, getPokachipKey, getRecentPokachips, getUniquePokachips, mergePokachips, normalizePokachipName } from "@/data/fragments";
 import { useFragments, type ImageAttachmentInput } from "@/hooks/useFragments";
 import { useFragmentImages } from "@/hooks/useFragmentImage";
@@ -23,27 +24,6 @@ const getKoreanInitials = (value: string) =>
 
 const sourceIconColor = "rgba(120,112,100,0.65)";
 
-const getSourceMetaIcon = (sourceType?: string, source?: string, url?: string): LucideIcon => {
-  const sourceText = `${source ?? ""} ${url ?? ""}`.toLocaleLowerCase("en-US");
-
-  if (sourceType === "text") return Pencil;
-  if (sourceType === "youtube" || sourceText.includes("youtube") || sourceText.includes("youtu.be")) return Youtube;
-  if (sourceText.includes("instagram")) return Instagram;
-  if (sourceText.includes("chatgpt") || sourceText.includes("chat.openai")) return Sparkles;
-
-  return Globe;
-};
-const getSourceMetaLabel = (sourceType?: string, source?: string, url?: string): string => {
-  const sourceText = `${source ?? ""} ${url ?? ""}`.toLocaleLowerCase("en-US");
-
-  if (sourceType === "text") return "직접 입력";
-  if (sourceType === "youtube" || sourceText.includes("youtube") || sourceText.includes("youtu.be")) return "YouTube";
-  if (sourceText.includes("instagram")) return "Instagram";
-  if (sourceText.includes("pinterest")) return "Pinterest";
-  if (sourceType === "link" || url) return "웹사이트";
-
-  return source || "기록";
-};
 
 export const FragmentEdit = ({ params }: { params: { id: string } }) => {
   const [, navigate] = useLocation();
@@ -206,8 +186,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
     || hasImageChanges
     || hasChipChanges;
   const canSave = hasChanges && Boolean(title.trim() || memo.trim() || trimmedUrl || hasImage);
-  const metaLabel = getSourceMetaLabel(fragment.sourceType, fragment.source, fragment.url);
-  const SourceIcon = getSourceMetaIcon(fragment.sourceType, fragment.source, fragment.url);
+  const metaLabel = getFragmentSourceMeta(fragment).label;
 
   const handleConfirm = async () => {
     if (!canSave || isSaving || isProcessingImage) return;
@@ -260,7 +239,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
           <div className="mb-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]">
             {metaLabel && (
               <div className="inline-flex h-7 max-w-[160px] items-center gap-1.5 rounded-[999px] border border-[rgba(120,112,100,0.16)] bg-transparent px-3">
-                <SourceIcon size={14} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
+                <FragmentSourceIcon fragment={fragment} size={14} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" />
                 <span className="min-w-0 truncate text-[12px] font-normal leading-[17px] text-[rgba(120,112,100,0.75)]" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
                   {metaLabel}
                 </span>

@@ -123,12 +123,14 @@ const getFirstMeaningfulSentence = (value: string) => {
 
 type InstagramMetadataPreview = {
   ok: boolean;
+  normalizedUrl?: string;
   type?: "post" | "reel" | "carousel";
   typeCandidates?: Array<"post" | "reel" | "carousel">;
   username?: string;
   caption?: string;
   title?: string;
   thumbnailUrl?: string;
+  fetchedAt?: string;
   reason?: string;
 };
 
@@ -259,6 +261,7 @@ export const QuickSave = () => {
   const [isYoutubeThumbnailHidden, setIsYoutubeThumbnailHidden] = useState(false);
   const [instagramMetadata, setInstagramMetadata] = useState<InstagramMetadataPreview | null>(null);
   const [isInstagramMetadataLoading, setIsInstagramMetadataLoading] = useState(false);
+  const [resolvedInstagramMetadataUrl, setResolvedInstagramMetadataUrl] = useState("");
   const [isInstagramThumbnailHidden, setIsInstagramThumbnailHidden] = useState(false);
   const [linkMetadata, setLinkMetadata] = useState<LinkMetadataPreview | null>(null);
   const [isLinkMetadataLoading, setIsLinkMetadataLoading] = useState(false);
@@ -283,6 +286,11 @@ export const QuickSave = () => {
     && !isInstagram
     && !isYoutube
     && resolvedLinkMetadataUrl !== sharedUrl
+  );
+  const isInstagramMetadataPending = Boolean(
+    sharedUrl
+    && isInstagram
+    && resolvedInstagramMetadataUrl !== sharedUrl
   );
 
   useEffect(() => {
@@ -361,13 +369,12 @@ export const QuickSave = () => {
         const metadata = await response.json() as InstagramMetadataPreview;
         if (isDisposed) return;
 
-        if (!response.ok || metadata.ok !== true) {
-          setIsInstagramMetadataLoading(false);
-          return;
-        }
+        if (!response.ok || metadata.ok !== true) return;
 
-        setInstagramMetadata(metadata);
-        setIsInstagramMetadataLoading(false);
+        setInstagramMetadata({
+          ...metadata,
+          fetchedAt: new Date().toISOString(),
+        });
 
         if (!hasUserEditedTitleRef.current) {
           const metadataTitle = getInstagramMetadataTitle(metadata, fallbackTitle);
@@ -375,8 +382,12 @@ export const QuickSave = () => {
           setTitle(metadataTitle);
         }
       } catch {
-        if (!isDisposed) setIsInstagramMetadataLoading(false);
+        // A failed Instagram metadata request intentionally falls back to a text link save.
       } finally {
+        if (!isDisposed) {
+          setIsInstagramMetadataLoading(false);
+          setResolvedInstagramMetadataUrl(sharedUrl);
+        }
         window.clearTimeout(timeout);
       }
     };
@@ -497,7 +508,7 @@ export const QuickSave = () => {
   };
 
   const handleSave = async () => {
-    if (!canSave || isSaving || isLinkMetadataPending) return;
+    if (!canSave || isSaving || isLinkMetadataPending || isInstagramMetadataPending) return;
 
     const inputChips = parsePokachipInput(chipInput);
     const pokachips = mergePokachips(selectedChips, inputChips);
@@ -505,22 +516,33 @@ export const QuickSave = () => {
 
     setSaveError("");
     setIsSaving(true);
+    const metadataToSave: FragmentLinkMetadata | null = linkMetadata
+      ?? (instagramMetadata && resolvedInstagramMetadataUrl === sharedUrl ? {
+        canonicalUrl: instagramMetadata.normalizedUrl ?? sharedUrl,
+        ...(instagramMetadata.title ? { title: instagramMetadata.title } : {}),
+        ...(instagramMetadata.caption ? { description: instagramMetadata.caption } : {}),
+        ...(instagramMetadata.thumbnailUrl ? { imageUrl: instagramMetadata.thumbnailUrl } : {}),
+        siteName: "Instagram",
+        provider: "instagram",
+        contentType: "text/html",
+        fetchedAt: instagramMetadata.fetchedAt ?? new Date().toISOString(),
+      } : null);
     const fragmentInput = {
       title: title.trim() || fallbackTitle,
       memo: trimmedMemo || undefined,
       url: sharedUrl || undefined,
       source: sharedHostname || undefined,
       sourceType: sharedUrl ? ("link" as const) : ("text" as const),
-      ...(linkMetadata ? {
+      ...(metadataToSave ? {
         linkMetadata: {
-          canonicalUrl: linkMetadata.canonicalUrl,
-          ...(linkMetadata.title ? { title: linkMetadata.title } : {}),
-          ...(linkMetadata.description ? { description: linkMetadata.description } : {}),
-          ...(linkMetadata.imageUrl ? { imageUrl: linkMetadata.imageUrl } : {}),
-          ...(linkMetadata.siteName ? { siteName: linkMetadata.siteName } : {}),
-          provider: linkMetadata.provider,
-          contentType: linkMetadata.contentType,
-          fetchedAt: linkMetadata.fetchedAt,
+          canonicalUrl: metadataToSave.canonicalUrl,
+          ...(metadataToSave.title ? { title: metadataToSave.title } : {}),
+          ...(metadataToSave.description ? { description: metadataToSave.description } : {}),
+          ...(metadataToSave.imageUrl ? { imageUrl: metadataToSave.imageUrl } : {}),
+          ...(metadataToSave.siteName ? { siteName: metadataToSave.siteName } : {}),
+          provider: metadataToSave.provider,
+          contentType: metadataToSave.contentType,
+          fetchedAt: metadataToSave.fetchedAt,
         },
       } : {}),
       time: "\uBC29\uAE08",
@@ -826,8 +848,8 @@ export const QuickSave = () => {
           <button
             type="button"
             onClick={handleSave}
-            disabled={!canSave || isSaving || isLinkMetadataPending}
-            aria-disabled={!canSave || isSaving || isLinkMetadataPending}
+            disabled={!canSave || isSaving || isLinkMetadataPending || isInstagramMetadataPending}
+            aria-disabled={!canSave || isSaving || isLinkMetadataPending || isInstagramMetadataPending}
             className="h-[51px] w-[180px] rounded-full border-0 px-[50px] py-[14px] text-[15px] font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
             style={{
               background: "linear-gradient(135deg, rgba(130,207,255,0.60) 12%, rgba(90,144,255,0.60) 54%, rgba(139,112,255,0.60) 100%)",

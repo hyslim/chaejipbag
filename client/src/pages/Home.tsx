@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from "react";
-import { Globe, Instagram, Pencil, Pin, Search, Sparkles, Youtube, type LucideIcon } from "lucide-react";
+import { Pin, Search } from "lucide-react";
+import { FragmentSourceIcon } from "@/components/FragmentSourceMeta";
 import { flushSync } from "react-dom";
 import { Link, useLocation } from "wouter";
 import { FavoriteHeartIcon } from "@/components/FavoriteHeartIcon";
@@ -109,16 +110,6 @@ const shouldShowMemoPreview = (fragment: Fragment): boolean => {
 
   return true;
 };
-const getFragmentSourceIcon = (fragment: Fragment): LucideIcon => {
-  const sourceText = `${fragment.source ?? ""} ${fragment.url ?? ""}`.toLocaleLowerCase("en-US");
-
-  if (fragment.sourceType === "text") return Pencil;
-  if (fragment.sourceType === "youtube" || sourceText.includes("youtube") || sourceText.includes("youtu.be")) return Youtube;
-  if (sourceText.includes("instagram")) return Instagram;
-  if (sourceText.includes("chatgpt") || sourceText.includes("chat.openai")) return Sparkles;
-
-  return Globe;
-};
 
 const FragmentCard = ({
   fragment,
@@ -162,12 +153,12 @@ const FragmentCard = ({
       ? imageHeightState.height
       : 200;
   const instagramUsername = getInstagramUsername(fragment.title, fragment.url);
-  const showInstagramPlaceholder = !hasStoredImage && !linkMetadataImageUrl && !youtubeThumbnailUrl && isInstagramUrl(fragment.url);
+  const showInstagramPlaceholder = !hasStoredImage && !displayImageUrl && isInstagramUrl(fragment.url);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const longPressTimerRef = useRef<number | null>(null);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
   const didLongPressRef = useRef(false);
-  const SourceIcon = getFragmentSourceIcon(fragment);
+
   const displayPokachips = getFragmentDisplayPokachips(fragment, selectedChip);
   const hasTitle = Boolean(fragment.title.trim());
   const hasMemo = shouldShowMemoPreview(fragment);
@@ -407,7 +398,7 @@ const FragmentCard = ({
           )}
 
           <div className={`${metaTopSpacing} flex min-w-0 items-center gap-1.5 text-[12px] leading-[17px] text-[rgba(120,112,100,0.72)]`}>
-            <SourceIcon size={12} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
+            <FragmentSourceIcon fragment={fragment} size={12} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" />
             <span className="min-w-0 truncate" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>
               {getFragmentDisplayTime(fragment)}
             </span>
@@ -441,7 +432,7 @@ const SearchResultCard = ({
   const hasStoredImage = imageCount > 0;
   const externalPreviewImageUrl = fragment.linkMetadata?.imageUrl ?? getYouTubeThumbnailUrl(fragment.url);
   const displayImageUrl = imageUrl || (!hasStoredImage && externalPreviewImageUrl !== failedPreviewImageUrl ? externalPreviewImageUrl : null);
-  const SourceIcon = getFragmentSourceIcon(fragment);
+  const showInstagramPlaceholder = !hasStoredImage && !displayImageUrl && isInstagramUrl(fragment.url);
 
   return (
     <Link
@@ -478,6 +469,16 @@ const SearchResultCard = ({
             )}
           </div>
         )}
+        {showInstagramPlaceholder && (
+          <div className="flex h-[112px] w-full flex-col items-center justify-center bg-[#FAF8F4] px-3 text-center">
+            <span className="text-[11px] font-medium text-[rgba(120,112,100,0.66)]">Instagram</span>
+            <span className="mt-1.5 max-w-full truncate text-[13px] font-medium text-[rgba(50,44,34,0.72)]">
+              {getInstagramUsername(fragment.title, fragment.url)
+                ? `@${getInstagramUsername(fragment.title, fragment.url)}`
+                : "저장한 게시물"}
+            </span>
+          </div>
+        )}
         <div className="px-3.5 py-3">
         <HomeCardPokachipRow fragment={fragment} className="mb-2" />
         <p
@@ -495,7 +496,7 @@ const SearchResultCard = ({
           </p>
         )}
         <div className="mt-2 flex min-w-0 items-center gap-1.5 text-[12px] leading-[17px] text-[rgba(120,112,100,0.72)]">
-          <SourceIcon size={12} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
+          <FragmentSourceIcon fragment={fragment} size={12} color={sourceIconColor} strokeWidth={1.8} className="shrink-0" />
           <span className="min-w-0 truncate" style={{ fontFamily: "'Pretendard Variable', sans-serif" }}>{getFragmentDisplayTime(fragment)}</span>
           {fragment.pinnedAt && (
             <FavoriteHeartIcon
