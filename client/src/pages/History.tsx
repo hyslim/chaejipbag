@@ -1,7 +1,8 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ArrowRight, ArrowUp, Download, Link2, RotateCcw, Sparkles, Upload, type LucideIcon } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { getPokachipColor, normalizePokachipName, type Fragment } from "@/data/fragments";
+import { getPokachipColor } from "@/data/fragments";
+import { getHistoryEvents, type HistoryEvent, type HistoryEventKind } from "@/data/history";
 import { useFragments } from "@/hooks/useFragments";
 import { BottomNav } from "@/components/BottomNav";
 import { downloadChaejipbagBackup } from "@/lib/exportBackup";
@@ -21,8 +22,6 @@ const HISTORY_FILTERS = [
 const HISTORY_SECTIONS = ["오늘", "이번 주", "이번 달", "더 이전"] as const;
 
 type HistorySectionLabel = (typeof HISTORY_SECTIONS)[number];
-type HistoryEventKind = "first" | "together" | "frequent" | "again";
-
 const HISTORY_EVENT_ICONS: Record<HistoryEventKind, LucideIcon> = {
   first: Sparkles,
   together: Link2,
@@ -30,48 +29,16 @@ const HISTORY_EVENT_ICONS: Record<HistoryEventKind, LucideIcon> = {
   again: RotateCcw,
 };
 
-function getHistoryEventKind(fragment: Fragment, fragments: Fragment[]): HistoryEventKind {
-  const chips = fragment.pokachips.map((chip) => normalizePokachipName(chip)).filter(Boolean);
-  const primaryChip = chips[0];
-
-  if (chips.length > 1) {
-    return "together";
-  }
-
-  if (!primaryChip) {
-    return "again";
-  }
-
-  const sameChipCount = fragments.filter((item) =>
-    item.pokachips.some((chip) => normalizePokachipName(chip) === primaryChip)
-  ).length;
-
-  if (sameChipCount >= 3) {
-    return "frequent";
-  }
-
-  if (sameChipCount > 1) {
-    return "again";
-  }
-
-  return "first";
-}
-
 const HistoryCard = ({
-  fragment,
-  eventIcon: EventIcon,
+  event,
   navigationIds,
 }: {
-  fragment: Fragment;
-  eventIcon: LucideIcon;
+  event: HistoryEvent;
   navigationIds: string[];
 }) => {
   const [, navigate] = useLocation();
-  const chips = fragment.pokachips.map((chip) => normalizePokachipName(chip));
-  const primaryChip = chips[0];
-  const historyText = primaryChip
-    ? `${primaryChip} 조각이 처음 나타났어요`
-    : `${fragment.title} 조각을 다시 꺼내봤어요`;
+  const { fragment, chips, text } = event;
+  const EventIcon = HISTORY_EVENT_ICONS[event.kind];
 
   return (
     <Link
@@ -99,7 +66,7 @@ const HistoryCard = ({
               className="min-w-0 flex-1 overflow-hidden break-words line-clamp-2 text-[14px] font-medium leading-snug text-[rgba(50,44,34,0.86)]"
               style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
             >
-              {historyText}
+              {text}
             </p>
             <ArrowRight
               size={14}
@@ -132,40 +99,6 @@ const HistoryCard = ({
   );
 };
 
-function getCreatedAtSortValue(fragment: Fragment, index: number): number {
-  const createdAtTime = Date.parse(fragment.createdAt ?? "");
-
-  if (!Number.isNaN(createdAtTime)) {
-    return createdAtTime;
-  }
-
-  const dateParts = fragment.date.match(/\d+/g)?.map(Number);
-
-  if (dateParts && dateParts.length >= 3) {
-    const [year, month, day] = dateParts;
-    return Date.UTC(year, month - 1, day) - index;
-  }
-
-  return -index;
-}
-
-function getFragmentDate(fragment: Fragment): Date | null {
-  const createdAtTime = Date.parse(fragment.createdAt ?? "");
-
-  if (!Number.isNaN(createdAtTime)) {
-    return new Date(createdAtTime);
-  }
-
-  const dateParts = fragment.date.match(/\d+/g)?.map(Number);
-
-  if (dateParts && dateParts.length >= 3) {
-    const [year, month, day] = dateParts;
-    return new Date(year, month - 1, day);
-  }
-
-  return null;
-}
-
 function startOfDay(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
@@ -178,14 +111,8 @@ function startOfWeek(date: Date): Date {
   return weekStart;
 }
 
-function getHistorySection(fragment: Fragment, now = new Date()): HistorySectionLabel {
-  const fragmentDate = getFragmentDate(fragment);
-
-  if (!fragmentDate) {
-    return "더 이전";
-  }
-
-  const itemDay = startOfDay(fragmentDate).getTime();
+function getHistorySection(event: HistoryEvent, now = new Date()): HistorySectionLabel {
+  const itemDay = startOfDay(new Date(event.occurredAt)).getTime();
   const today = startOfDay(now);
   const thisWeek = startOfWeek(now).getTime();
   const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
@@ -207,14 +134,13 @@ function getHistorySection(fragment: Fragment, now = new Date()): HistorySection
 
 const HistorySection = ({
   label,
-  fragments,
-  allFragments,
+  events,
+  navigationIds,
 }: {
   label: HistorySectionLabel;
-  fragments: Fragment[];
-  allFragments: Fragment[];
+  events: HistoryEvent[];
+  navigationIds: string[];
 }) => {
-  const navigationIds = allFragments.map((fragment) => fragment.id);
 
   return (
     <section className="flex flex-col">
@@ -225,11 +151,10 @@ const HistorySection = ({
         <div className="h-px flex-1 bg-[rgba(120,112,100,0.16)]" />
       </div>
       <div className="flex flex-col gap-2.5">
-        {fragments.map((fragment) => (
+        {events.map((event) => (
           <HistoryCard
-            key={fragment.id}
-            fragment={fragment}
-            eventIcon={HISTORY_EVENT_ICONS[getHistoryEventKind(fragment, allFragments)]}
+            key={event.id}
+            event={event}
             navigationIds={navigationIds}
           />
         ))}
@@ -254,15 +179,11 @@ export const History = () => {
   const [backupMessage, setBackupMessage] = useState("");
   const backupInputRef = useRef<HTMLInputElement>(null);
   const backupActionRef = useRef<"export" | "import" | null>(null);
-  const fragmentOrder = new Map(fragments.map((fragment, index) => [fragment.id, index]));
-  const sortedFragments = [...fragments].sort(
-    (a, b) =>
-      getCreatedAtSortValue(b, fragmentOrder.get(b.id) ?? 0) -
-      getCreatedAtSortValue(a, fragmentOrder.get(a.id) ?? 0)
-  );
-  const groupedFragments = HISTORY_SECTIONS.map((label) => ({
+  const historyEvents = useMemo(() => getHistoryEvents(fragments), [fragments]);
+  const navigationIds = Array.from(new Set(historyEvents.map((event) => event.fragment.id)));
+  const groupedEvents = HISTORY_SECTIONS.map((label) => ({
     label,
-    fragments: sortedFragments.filter((fragment) => getHistorySection(fragment) === label),
+    events: historyEvents.filter((event) => getHistorySection(event) === label),
   }));
 
   const handleBackupExport = async () => {
@@ -390,10 +311,10 @@ export const History = () => {
           </div>
         </div>
 
-        {sortedFragments.length > 0 ? (
+        {historyEvents.length > 0 ? (
           <div className="flex flex-col gap-5 bg-[#FAF8F4] px-5 pb-4 pt-5">
-            {groupedFragments.map(({ label, fragments }) => (
-              <HistorySection key={label} label={label} fragments={fragments} allFragments={sortedFragments} />
+            {groupedEvents.map(({ label, events }) => (
+              <HistorySection key={label} label={label} events={events} navigationIds={navigationIds} />
             ))}
           </div>
         ) : (

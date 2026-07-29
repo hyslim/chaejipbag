@@ -1,7 +1,7 @@
-import { useRef, useState, type FormEvent } from "react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
 import { X } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { getPokachipColor, normalizePokachipName, type Fragment } from "@/data/fragments";
+import { getPokachipColor, getRecentPokachips, normalizePokachipName, type Fragment } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { createFragmentNavigationPath } from "@/lib/fragmentNavigation";
 
@@ -64,14 +64,11 @@ export const Search = () => {
     () => new URLSearchParams(window.location.search).get("q") ?? ""
   );
   const normalizedQuery = query.trim().toLocaleLowerCase("ko-KR");
-  const recentMemoryPieces = Array.from(
-    new Set(
-      fragments
-        .flatMap((fragment) => fragment.pokachips ?? [])
-        .map(normalizePokachipName)
-        .filter(Boolean)
-    )
-  ).slice(0, 8);
+  const recentMemoryPieces = useMemo(() => getRecentPokachips(fragments, {
+    limit: 8,
+    exclude: ["임시조각"],
+    includeFallback: false,
+  }), [fragments]);
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     inputRef.current?.blur();
@@ -141,7 +138,7 @@ export const Search = () => {
           <div className="mt-6">
             <p className="text-[12px] font-medium text-[rgba(120,112,100,0.75)]">최근 기억 조각</p>
             {recentMemoryPieces.length > 0 ? (
-              <div className="mt-3 flex min-w-0 flex-wrap gap-2 overflow-hidden">
+              <div className="mt-3 flex max-h-[68px] min-w-0 flex-wrap gap-2 overflow-hidden">
                 {recentMemoryPieces.map((chip) => (
                   <button
                     key={chip}
