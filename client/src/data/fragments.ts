@@ -14,6 +14,17 @@ export interface FragmentAttachment {
 
 export const MAX_FRAGMENT_IMAGE_ATTACHMENTS = 5;
 
+export interface FragmentLinkMetadata {
+  canonicalUrl: string;
+  title?: string;
+  description?: string;
+  imageUrl?: string;
+  siteName?: string;
+  provider: string;
+  contentType: string;
+  fetchedAt: string;
+}
+
 export interface Fragment {
   id: string;
   title: string;
@@ -21,6 +32,7 @@ export interface Fragment {
   sourceType?: "link" | "text" | "youtube";
   memo?: string;
   url?: string;
+  linkMetadata?: FragmentLinkMetadata;
   time: string;
   date: string;
   createdAt?: string;

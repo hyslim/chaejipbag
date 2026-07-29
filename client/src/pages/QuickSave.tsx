@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { X } from "lucide-react";
-import { getCleanPokachipName, getPokachipColor, getPokachipCandidates, getPokachipKey, getRecentPokachips, mergePokachips, parsePokachipInput } from "@/data/fragments";
+import { getCleanPokachipName, getPokachipColor, getPokachipCandidates, getPokachipKey, getRecentPokachips, mergePokachips, parsePokachipInput, type FragmentLinkMetadata } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { getYouTubeThumbnailUrl, getYouTubeVideoId } from "@/lib/youtube";
 import { getInstagramSuggestedTitle, isInstagramUrl } from "@/lib/instagram";
@@ -85,6 +85,9 @@ const fixedSharePhrases = new Set([
   "shared a link",
   "instagram",
   "youtube",
+  "take a look",
+  "take a look! - take a look",
+  "pinterest",
 ]);
 
 const isFixedSharePhrase = (value: string) =>
@@ -129,7 +132,13 @@ type InstagramMetadataPreview = {
   reason?: string;
 };
 
+type LinkMetadataPreview = FragmentLinkMetadata & {
+  ok: true;
+  url: string;
+};
+
 const instagramMetadataTimeoutMs = 6_000;
+const linkMetadataTimeoutMs = 7_000;
 
 const getInstagramMetadataTitle = (
   metadata: InstagramMetadataPreview,
@@ -225,7 +234,8 @@ const getQuickSaveDefaults = (sharedTitle: string, sharedText: string, urlParam:
       || textSentence
       || (youtubeVideoId ? "YouTube 조각" : getDomainFallbackTitle(sharedUrl))
       || "새 조각";
-  const initialMemo = removeDuplicateTitleLine(cleanSharedText, fallbackTitle);
+  const memoCandidate = removeDuplicateTitleLine(cleanSharedText, fallbackTitle);
+  const initialMemo = isFixedSharePhrase(memoCandidate) ? "" : memoCandidate;
   const youtubeThumbnailUrl = getYouTubeThumbnailUrl(sharedUrl) ?? "";
 
   return { sharedUrl, sharedHostname, fallbackTitle, initialMemo, youtubeThumbnailUrl };
@@ -250,6 +260,9 @@ export const QuickSave = () => {
   const [instagramMetadata, setInstagramMetadata] = useState<InstagramMetadataPreview | null>(null);
   const [isInstagramMetadataLoading, setIsInstagramMetadataLoading] = useState(false);
   const [isInstagramThumbnailHidden, setIsInstagramThumbnailHidden] = useState(false);
+  const [linkMetadata, setLinkMetadata] = useState<LinkMetadataPreview | null>(null);
+  const [isLinkMetadataLoading, setIsLinkMetadataLoading] = useState(false);
+  const [isLinkThumbnailHidden, setIsLinkThumbnailHidden] = useState(false);
   const [imageError, setImageError] = useState("");
   const [saveError, setSaveError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -257,11 +270,13 @@ export const QuickSave = () => {
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
   const [isInputActive, setIsInputActive] = useState(false);
   const hasUserEditedTitleRef = useRef(false);
+  const hasUserEditedMemoRef = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const trimmedMemo = memo.trim();
   const canSave = Boolean(sharedUrl || trimmedMemo || fallbackTitle || imageDataUrls.length > 0);
   const [title, setTitle] = useState(fallbackTitle);
   const isInstagram = isInstagramUrl(sharedUrl);
+  const isYoutube = Boolean(getYouTubeVideoId(sharedUrl));
 
   useEffect(() => {
     if (!shareId) return;
@@ -293,7 +308,7 @@ export const QuickSave = () => {
         setSharedHostname(nextShare.sharedHostname);
         setFallbackTitle(nextShare.fallbackTitle);
         if (!hasUserEditedTitleRef.current) setTitle(nextShare.fallbackTitle);
-        setMemo(nextShare.initialMemo);
+        if (!hasUserEditedMemoRef.current) setMemo(nextShare.initialMemo);
         setImageDataUrls(
           (payload.imageDataUrls?.length ? payload.imageDataUrls : payload.imageDataUrl ? [payload.imageDataUrl] : [])
             .slice(0, 5)
@@ -368,6 +383,55 @@ export const QuickSave = () => {
     };
   }, [isInstagram, sharedUrl]);
 
+  useEffect(() => {
+    setLinkMetadata(null);
+    setIsLinkThumbnailHidden(false);
+
+    if (!sharedUrl || isInstagram || isYoutube) {
+      setIsLinkMetadataLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    let isDisposed = false;
+    const timeout = window.setTimeout(() => controller.abort(), linkMetadataTimeoutMs);
+    setIsLinkMetadataLoading(true);
+
+    const loadLinkMetadata = async () => {
+      try {
+        const response = await fetch(`/api/link-metadata?url=${encodeURIComponent(sharedUrl)}`, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        const metadata = await response.json() as LinkMetadataPreview | { ok: false };
+        if (isDisposed) return;
+        setIsLinkMetadataLoading(false);
+        if (!response.ok || metadata.ok !== true) return;
+
+        setLinkMetadata(metadata);
+        if (!hasUserEditedTitleRef.current && metadata.title && !isFixedSharePhrase(metadata.title)) {
+          setFallbackTitle(metadata.title);
+          setTitle(metadata.title);
+        }
+        if (!hasUserEditedMemoRef.current && metadata.description) {
+          setMemo((current) => current.trim() ? current : normalizeSingleLineText(metadata.description ?? ""));
+        }
+      } catch {
+        if (!isDisposed) setIsLinkMetadataLoading(false);
+      } finally {
+        window.clearTimeout(timeout);
+      }
+    };
+
+    void loadLinkMetadata();
+
+    return () => {
+      isDisposed = true;
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [isInstagram, isYoutube, sharedUrl]);
+
   const visibleRecentChips = getRecentPokachips(fragments, {
     limit: 5,
     exclude: selectedChips,
@@ -437,6 +501,18 @@ export const QuickSave = () => {
       url: sharedUrl || undefined,
       source: sharedHostname || undefined,
       sourceType: sharedUrl ? ("link" as const) : ("text" as const),
+      ...(linkMetadata ? {
+        linkMetadata: {
+          canonicalUrl: linkMetadata.canonicalUrl,
+          ...(linkMetadata.title ? { title: linkMetadata.title } : {}),
+          ...(linkMetadata.description ? { description: linkMetadata.description } : {}),
+          ...(linkMetadata.imageUrl ? { imageUrl: linkMetadata.imageUrl } : {}),
+          ...(linkMetadata.siteName ? { siteName: linkMetadata.siteName } : {}),
+          provider: linkMetadata.provider,
+          contentType: linkMetadata.contentType,
+          fetchedAt: linkMetadata.fetchedAt,
+        },
+      } : {}),
       time: "\uBC29\uAE08",
       date: new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "long", day: "numeric" }).format(now),
       pokachips: pokachips.length > 0 ? pokachips : ["\uC784\uC2DC\uC870\uAC01"],
@@ -513,6 +589,15 @@ export const QuickSave = () => {
               </p>
             )}
 
+            {isLinkMetadataLoading && (
+              <p
+                aria-live="polite"
+                className="mt-2 text-[11px] leading-[16px] text-[rgba(120,112,100,0.68)]"
+              >
+                {"\uB9C1\uD06C \uBBF8\uB9AC\uBCF4\uAE30\uB97C \uBD88\uB7EC\uC624\uB294 \uC911..."}
+              </p>
+            )}
+
             {instagramMetadata && (instagramMetadata.username || getInstagramTypeLabel(instagramMetadata)) && (
               <div className="mt-2 flex min-w-0 items-center gap-1.5 text-[11px] leading-[16px] text-[rgba(120,112,100,0.72)]">
                 {instagramMetadata.username && (
@@ -548,6 +633,15 @@ export const QuickSave = () => {
                   ))}
                 </div>
               </div>
+            ) : linkMetadata?.imageUrl && !isLinkThumbnailHidden ? (
+              <div className="mt-2.5 overflow-hidden rounded-[18px] border border-white/70 bg-[#FFFFFF] shadow-[0_6px_18px_rgba(80,70,55,0.06)]">
+                <img
+                  src={linkMetadata.imageUrl}
+                  alt=""
+                  onError={() => setIsLinkThumbnailHidden(true)}
+                  className="h-[142px] w-full object-cover"
+                />
+              </div>
             ) : instagramMetadata?.thumbnailUrl && !isInstagramThumbnailHidden ? (
               <div className="mt-2.5 overflow-hidden rounded-[18px] border border-white/70 bg-[#FFFFFF] shadow-[0_6px_18px_rgba(80,70,55,0.06)]">
                 <img
@@ -580,7 +674,10 @@ export const QuickSave = () => {
               id="quick-save-memo"
               type="text"
               value={memo}
-              onChange={(event) => setMemo(normalizeSingleLineText(event.target.value))}
+              onChange={(event) => {
+                hasUserEditedMemoRef.current = true;
+                setMemo(normalizeSingleLineText(event.target.value));
+              }}
               onKeyDown={(event) => {
                 if (event.key !== "Enter") return;
                 if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) return;

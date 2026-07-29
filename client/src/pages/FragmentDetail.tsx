@@ -82,22 +82,24 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
     : null;
   const storedImages = useFragmentImages(fragment);
   const imageUrl = storedImages[0]?.url;
-  const [failedYouTubeThumbnailUrl, setFailedYouTubeThumbnailUrl] = useState<string | null>(null);
+  const [failedPreviewImageUrl, setFailedPreviewImageUrl] = useState<string | null>(null);
+  const linkMetadataImageUrl = fragment?.linkMetadata?.imageUrl ?? null;
   const youtubeThumbnailUrl = getYouTubeThumbnailUrl(fragment?.url);
   const imageCount = getFragmentImageCount(fragment);
   const hasStoredImage = imageCount > 0;
-  const displayImageUrl = imageUrl || (!hasStoredImage && youtubeThumbnailUrl !== failedYouTubeThumbnailUrl ? youtubeThumbnailUrl : null);
+  const externalPreviewImageUrl = linkMetadataImageUrl ?? youtubeThumbnailUrl;
+  const displayImageUrl = imageUrl || (!hasStoredImage && externalPreviewImageUrl !== failedPreviewImageUrl ? externalPreviewImageUrl : null);
   const viewerImageUrls = hasStoredImage
     ? storedImages.map((image) => image.url)
     : displayImageUrl ? [displayImageUrl] : [];
   const viewerImageUrl = viewerImageUrls[viewerImageIndex] ?? viewerImageUrls[0];
   const instagramUsername = getInstagramUsername(fragment?.title, fragment?.url);
-  const showInstagramPlaceholder = !hasStoredImage && !youtubeThumbnailUrl && isInstagramUrl(fragment?.url);
+  const showInstagramPlaceholder = !hasStoredImage && !linkMetadataImageUrl && !youtubeThumbnailUrl && isInstagramUrl(fragment?.url);
 
   useEffect(() => {
     setIsImageViewerOpen(false);
     setViewerImageIndex(0);
-    setFailedYouTubeThumbnailUrl(null);
+    setFailedPreviewImageUrl(null);
   }, [params.id]);
 
   useEffect(() => {
@@ -379,7 +381,7 @@ export const FragmentDetail = ({ params }: { params: { id: string } }) => {
                 <img
                   src={displayImageUrl}
                   alt=""
-                  onError={() => setFailedYouTubeThumbnailUrl(youtubeThumbnailUrl)}
+                  onError={() => setFailedPreviewImageUrl(displayImageUrl)}
                   className="h-[236px] w-full object-cover transition-transform duration-200 group-active:scale-[0.99]"
                 />
               </button>

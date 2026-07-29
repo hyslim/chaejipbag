@@ -147,11 +147,13 @@ const FragmentCard = ({
 }) => {
   const [, navigate] = useLocation();
   const imageUrl = useFragmentImage(fragment);
-  const [failedYouTubeThumbnailUrl, setFailedYouTubeThumbnailUrl] = useState<string | null>(null);
+  const [failedPreviewImageUrl, setFailedPreviewImageUrl] = useState<string | null>(null);
+  const linkMetadataImageUrl = fragment.linkMetadata?.imageUrl ?? null;
   const youtubeThumbnailUrl = getYouTubeThumbnailUrl(fragment.url);
   const imageCount = getFragmentImageCount(fragment);
   const hasStoredImage = imageCount > 0;
-  const displayImageUrl = imageUrl || (!hasStoredImage && youtubeThumbnailUrl !== failedYouTubeThumbnailUrl ? youtubeThumbnailUrl : null);
+  const externalPreviewImageUrl = linkMetadataImageUrl ?? youtubeThumbnailUrl;
+  const displayImageUrl = imageUrl || (!hasStoredImage && externalPreviewImageUrl !== failedPreviewImageUrl ? externalPreviewImageUrl : null);
   const isYouTubeThumbnail = Boolean(displayImageUrl && !hasStoredImage && displayImageUrl === youtubeThumbnailUrl);
   const [imageHeightState, setImageHeightState] = useState<{ src: string; height: CardImageHeight } | null>(null);
   const imageHeight = isYouTubeThumbnail
@@ -160,7 +162,7 @@ const FragmentCard = ({
       ? imageHeightState.height
       : 200;
   const instagramUsername = getInstagramUsername(fragment.title, fragment.url);
-  const showInstagramPlaceholder = !hasStoredImage && !youtubeThumbnailUrl && isInstagramUrl(fragment.url);
+  const showInstagramPlaceholder = !hasStoredImage && !linkMetadataImageUrl && !youtubeThumbnailUrl && isInstagramUrl(fragment.url);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const longPressTimerRef = useRef<number | null>(null);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -358,7 +360,7 @@ const FragmentCard = ({
                 });
               }}
               onError={() => {
-                if (!imageUrl) setFailedYouTubeThumbnailUrl(youtubeThumbnailUrl);
+                if (!imageUrl) setFailedPreviewImageUrl(displayImageUrl);
               }}
               className="w-full object-cover"
               style={{ height: imageHeight }}
@@ -434,7 +436,11 @@ const SearchResultCard = ({
 }) => {
   const [, navigate] = useLocation();
   const imageUrl = useFragmentImage(fragment);
+  const [failedPreviewImageUrl, setFailedPreviewImageUrl] = useState<string | null>(null);
   const imageCount = getFragmentImageCount(fragment);
+  const hasStoredImage = imageCount > 0;
+  const externalPreviewImageUrl = fragment.linkMetadata?.imageUrl ?? getYouTubeThumbnailUrl(fragment.url);
+  const displayImageUrl = imageUrl || (!hasStoredImage && externalPreviewImageUrl !== failedPreviewImageUrl ? externalPreviewImageUrl : null);
   const SourceIcon = getFragmentSourceIcon(fragment);
 
   return (
@@ -455,9 +461,16 @@ const SearchResultCard = ({
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
         className="home-select-none min-h-[104px] min-w-0 select-none overflow-hidden rounded-[14px] border border-[rgba(120,112,100,0.14)] bg-white shadow-[0_6px_18px_rgba(74,63,48,0.09)]"
       >
-        {imageUrl && (
+        {displayImageUrl && (
           <div className="relative">
-            <img src={imageUrl} alt="" className="h-[112px] w-full object-cover" />
+            <img
+              src={displayImageUrl}
+              alt=""
+              onError={() => {
+                if (!imageUrl) setFailedPreviewImageUrl(displayImageUrl);
+              }}
+              className="h-[112px] w-full object-cover"
+            />
             {imageCount > 1 && (
               <span className="pointer-events-none absolute right-2 top-2 z-10 rounded-full bg-[rgba(32,28,24,0.58)] px-1.5 py-0.5 text-[11px] font-semibold leading-4 text-white shadow-[0_1px_4px_rgba(0,0,0,0.14)] ring-1 ring-white/35">
                 +{imageCount - 1}
