@@ -9,6 +9,7 @@
     "start": "cross-env NODE_ENV=production node dist/index.cjs",
     "check": "tsc",
     "test:backup": "tsx client/src/lib/importBackup.test.ts",
+    "test:search-input": "tsx client/src/lib/searchInput.test.ts",
     "test:search-history": "tsx client/src/data/search-history.test.ts",
     "test:instagram-spike": "tsx api/_instagram-metadata-tests.ts",
     "spike:instagram": "tsx script/instagram-metadata-spike.ts",

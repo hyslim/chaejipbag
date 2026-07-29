@@ -4,6 +4,7 @@ import { Link, useLocation } from "wouter";
 import { getPokachipColor, getRecentPokachips, normalizePokachipName, type Fragment } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { createFragmentNavigationPath } from "@/lib/fragmentNavigation";
+import { isSearchConfirmationKey } from "@/lib/searchInput";
 
 const SearchCard = ({
   fragment,
@@ -60,6 +61,7 @@ const SearchCard = ({
 export const Search = () => {
   const { fragments } = useFragments();
   const inputRef = useRef<HTMLInputElement>(null);
+  const isComposingRef = useRef(false);
   const [query, setQuery] = useState(
     () => new URLSearchParams(window.location.search).get("q") ?? ""
   );
@@ -71,6 +73,7 @@ export const Search = () => {
   }), [fragments]);
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isComposingRef.current) return;
     inputRef.current?.blur();
   };
 
@@ -116,6 +119,17 @@ export const Search = () => {
             type="search"
             value={query}
             onChange={(event) => updateQuery(event.target.value)}
+            onCompositionStart={() => {
+              isComposingRef.current = true;
+            }}
+            onCompositionEnd={() => {
+              isComposingRef.current = false;
+            }}
+            onKeyDown={(event) => {
+              if (!isSearchConfirmationKey(event.nativeEvent)) return;
+              event.preventDefault();
+              inputRef.current?.blur();
+            }}
             placeholder="그 파란 거, 조명, 블렌더..."
             autoComplete="off"
             enterKeyHint="search"
