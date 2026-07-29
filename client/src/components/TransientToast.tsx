@@ -45,7 +45,7 @@ export const TransientToast = ({
       initial={false}
       animate={message ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className="pointer-events-none flex h-8 min-w-0 max-w-full items-center justify-center overflow-hidden whitespace-nowrap rounded-[8px] border border-[rgba(255,255,255,0.78)] bg-[#FFFEFB]/95 px-4 py-1.5 text-center text-[12px] font-semibold leading-4 text-[rgba(54,58,105,0.66)] shadow-[0_4px_14px_rgba(74,63,48,0.09),inset_0_1px_0_rgba(255,255,255,0.72)] backdrop-blur-[12px]"
+      className="pointer-events-none flex h-9 min-w-0 max-w-full items-center justify-center overflow-hidden whitespace-nowrap rounded-[8px] border border-[rgba(255,255,255,0.78)] bg-[#FFFEFB]/95 px-4 py-2 text-center text-[14px] font-semibold leading-5 text-[rgba(54,58,105,0.72)] shadow-[0_4px_14px_rgba(74,63,48,0.09),inset_0_1px_0_rgba(255,255,255,0.72)] backdrop-blur-[12px]"
       style={{ fontFamily: "'Pretendard Variable', sans-serif" }}
     >
       <span className="min-w-0 max-w-full truncate">{message}</span>
