@@ -1,32 +1,11 @@
 import { useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { X } from "lucide-react";
-import { getCleanPokachipName, getPokachipColor, getPokachipCandidates, getPokachipKey, getRecentPokachips, mergePokachips, normalizePokachipName, parsePokachipInput } from "@/data/fragments";
+import { getCleanPokachipName, getPokachipCandidates, getPokachipKey, getPokachipSmallPillStyle, getRecentPokachips, mergePokachips, normalizePokachipName, parsePokachipInput } from "@/data/fragments";
 import { useFragments, type ImageAttachmentInput } from "@/hooks/useFragments";
 import { processSelectedImage } from "@/data/imageProcessing";
 
 const thumbnailColors = ["#f0e8d0", "#f0dce4", "#d4eef4", "#d8eef8", "#dce8f8"];
-const getPokachipShadowColor = (label: string) => {
-  const color = getPokachipColor(label);
-  const rgbaMatch = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-
-  if (rgbaMatch) {
-    const [, red, green, blue] = rgbaMatch;
-    return `rgba(${red},${green},${blue},0.32)`;
-  }
-
-  const hexMatch = color.match(/^#([0-9a-f]{6})$/i);
-
-  if (hexMatch) {
-    const hex = hexMatch[1];
-    const red = parseInt(hex.slice(0, 2), 16);
-    const green = parseInt(hex.slice(2, 4), 16);
-    const blue = parseInt(hex.slice(4, 6), 16);
-    return `rgba(${red},${green},${blue},0.32)`;
-  }
-
-  return color;
-};
 
 type ParsedFragmentInput = {
   title: string;
@@ -365,10 +344,7 @@ export const FragmentCreate = () => {
                     <div
                       key={label}
                       className="flex min-w-0 max-w-full items-center gap-1 rounded-full border border-white/70 px-3 py-1"
-                      style={{
-                        backgroundColor: getPokachipColor(label),
-                        boxShadow: `0 1px 4px ${getPokachipShadowColor(label)}, inset 0 1px 0 rgba(255,255,255,0.8)`,
-                      }}
+                      style={getPokachipSmallPillStyle(label, "selected")}
                     >
                       <span
                         className="min-w-0 truncate text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
@@ -402,10 +378,7 @@ export const FragmentCreate = () => {
                       type="button"
                       onClick={() => toggleChip(label)}
                       className="flex h-[30px] min-w-0 max-w-full items-center rounded-[999px] border border-white/70 px-3"
-                      style={{
-                        backgroundColor: getPokachipColor(label),
-                        boxShadow: `0 1px 4px ${getPokachipShadowColor(label)}, inset 0 1px 0 rgba(255,255,255,0.7)`,
-                      }}
+                      style={getPokachipSmallPillStyle(label)}
                     >
                       <span
                         className="inline-flex h-[17px] min-w-0 items-center truncate text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"

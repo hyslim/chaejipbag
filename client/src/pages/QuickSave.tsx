@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { X } from "lucide-react";
-import { getCleanPokachipName, getPokachipColor, getPokachipCandidates, getPokachipKey, getRecentPokachips, mergePokachips, parsePokachipInput, type FragmentLinkMetadata } from "@/data/fragments";
+import { getCleanPokachipName, getPokachipCandidates, getPokachipKey, getPokachipSmallPillStyle, getRecentPokachips, mergePokachips, parsePokachipInput, type FragmentLinkMetadata } from "@/data/fragments";
 import { useFragments } from "@/hooks/useFragments";
 import { getYouTubeThumbnailUrl, getYouTubeVideoId } from "@/lib/youtube";
 import { getInstagramSuggestedTitle, isInstagramUrl } from "@/lib/instagram";
@@ -739,7 +739,7 @@ export const QuickSave = () => {
                       <div
                         key={chip}
                         className="flex min-w-0 max-w-full items-center gap-1 rounded-full border border-white/70 px-3 py-1 text-[12px] font-medium text-[#5a5248b0] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]"
-                        style={{ backgroundColor: getPokachipColor(chip) }}
+                        style={getPokachipSmallPillStyle(chip, "selected")}
                       >
                         <span className="min-w-0 truncate">{chip}</span>
                         <button
@@ -768,7 +768,7 @@ export const QuickSave = () => {
                         type="button"
                         onClick={() => toggleChip(chip)}
                         className="h-[30px] min-w-0 max-w-full rounded-[999px] border border-white/70 px-3 text-[12px] font-medium text-[#5a5248b0] shadow-[inset_0_1px_0_rgba(255,255,255,0.68)]"
-                        style={{ backgroundColor: getPokachipColor(chip) }}
+                        style={getPokachipSmallPillStyle(chip)}
                       >
                         <span className="block min-w-0 truncate">{chip}</span>
                       </button>

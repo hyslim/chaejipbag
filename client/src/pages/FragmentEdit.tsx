@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { ChevronLeft, X } from "lucide-react";
 import { FragmentSourceIcon, getFragmentSourceMeta } from "@/components/FragmentSourceMeta";
-import { MAX_FRAGMENT_IMAGE_ATTACHMENTS, getCleanPokachipName, getFragmentImageAttachments, getPokachipColor, getPokachipCandidates, getPokachipKey, getRecentPokachips, getUniquePokachips, mergePokachips, normalizePokachipName } from "@/data/fragments";
+import { MAX_FRAGMENT_IMAGE_ATTACHMENTS, getCleanPokachipName, getFragmentImageAttachments, getPokachipCandidates, getPokachipKey, getPokachipSmallPillStyle, getRecentPokachips, getUniquePokachips, mergePokachips, normalizePokachipName } from "@/data/fragments";
 import { useFragments, type ImageAttachmentInput } from "@/hooks/useFragments";
 import { useFragmentImages } from "@/hooks/useFragmentImage";
 import { processSelectedImage } from "@/data/imageProcessing";
@@ -379,10 +379,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
                     <div
                       key={label}
                       className="flex h-[30px] min-w-0 max-w-full items-center gap-1 rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3 py-1"
-                      style={{
-                        backgroundColor: getPokachipColor(label),
-                        boxShadow: "0 2px 4px 0 rgba(180,196,244,0.28), inset 0 1px 0 0 rgba(255,255,255,0.58)",
-                      }}
+                      style={getPokachipSmallPillStyle(label, "selected")}
                     >
                       <span
                         className="min-w-0 truncate text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
@@ -419,10 +416,7 @@ export const FragmentEdit = ({ params }: { params: { id: string } }) => {
                       type="button"
                       onClick={() => toggleChip(label)}
                       className="h-[30px] min-w-0 max-w-full rounded-[999px] border border-[rgba(255,255,255,0.55)] px-3 text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"
-                      style={{
-                        backgroundColor: getPokachipColor(label),
-                        boxShadow: "0 2px 4px 0 rgba(180,196,244,0.24), inset 0 1px 0 0 rgba(255,255,255,0.58)",
-                      }}
+                      style={getPokachipSmallPillStyle(label)}
                     >
                       <span
                         className="min-w-0 truncate text-[12px] font-medium leading-[17px] text-[rgba(50,44,34,0.7)]"

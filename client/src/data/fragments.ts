@@ -47,102 +47,46 @@ export interface Fragment {
   attachments?: FragmentAttachment[];
 }
 
+export type PokachipPaletteToken = {
+  readonly id: string;
+  readonly heroStart: string;
+  readonly heroEnd: string;
+  readonly pill: string;
+  readonly border: string;
+  readonly text: string;
+  readonly glow: string;
+};
+
+const sharedPokachipText = "#6F675E";
+
 export const pokachipColorTokens = [
-  {
-    name: "lavender",
-    pillColor: "#DDD6F5",
-    background: "#E8E3F7",
-    text: "#726A84",
-    border: "#DFD8F1",
-    heroGradient: ["#C5D3F5", "#C6C8F2", "#D0BFF0"],
-  },
-  {
-    name: "coral-pink",
-    pillColor: "#F3C8CF",
-    background: "#F7D9DD",
-    text: "#86676D",
-    border: "#F1D0D4",
-    heroGradient: ["#EEB0A8", "#EEADBA", "#EEAAC4"],
-  },
-  {
-    name: "butter-yellow",
-    pillColor: "#F3E1A6",
-    background: "#F7EAC1",
-    text: "#80734E",
-    border: "#F0E1B0",
-    heroGradient: ["#EED898", "#EED098", "#EEC888"],
-  },
-  {
-    name: "apricot",
-    pillColor: "#F2C7A5",
-    background: "#F6D9C1",
-    text: "#856853",
-    border: "#EFCDAF",
-    heroGradient: ["#F3CEAA", "#F0C1A5", "#EDB4AE"],
-  },
-  {
-    name: "mint",
-    pillColor: "#CBE8DD",
-    background: "#DCEFE7",
-    text: "#607B73",
-    border: "#CDE7DC",
-    heroGradient: ["#AEDAC8", "#ABD7D5", "#A8D4E2"],
-  },
-  {
-    name: "sage",
-    pillColor: "#D5DFBC",
-    background: "#E2E9D0",
-    text: "#6F785F",
-    border: "#D7E0BF",
-    heroGradient: ["#DCE8B9", "#CDE2B0", "#BBD9AE"],
-  },
-  {
-    name: "sky-blue",
-    pillColor: "#C9E4F1",
-    background: "#DAECF4",
-    text: "#5F7782",
-    border: "#CBE3ED",
-    heroGradient: ["#A8DCE8", "#ACD8EB", "#B2D4EE"],
-  },
-  {
-    name: "blue-gray",
-    pillColor: "#D0DCE8",
-    background: "#DFE7EE",
-    text: "#647381",
-    border: "#D1DCE5",
-    heroGradient: ["#CBB8EE", "#D3BDF0", "#DCC6F3"],
-  },
-  {
-    name: "rose-brown",
-    pillColor: "#E3C9C2",
-    background: "#ECDAD4",
-    text: "#806B65",
-    border: "#E3CEC8",
-    heroGradient: ["#EDC4BA", "#E9B8BC", "#E5AEC6"],
-  },
-  {
-    name: "neutral-beige",
-    pillColor: "#E7DED0",
-    background: "#EFE8DE",
-    text: "#7A7267",
-    border: "#E3DBCE",
-    heroGradient: ["#ECE6DE", "#E4DED8", "#DDD7D2"],
-  },
-] as const;
+  { id: "periwinkle", heroStart: "#B8CCF2", heroEnd: "#C4B8EE", pill: "#BEC2F0", border: "rgba(255,255,255,0.55)", text: sharedPokachipText, glow: "#BEC2F0" },
+  { id: "coralPink", heroStart: "#EEB0A8", heroEnd: "#EEAAC4", pill: "#EEADBA", border: "rgba(255,255,255,0.55)", text: sharedPokachipText, glow: "#EEADBA" },
+  { id: "butter", heroStart: "#F1D47F", heroEnd: "#F0CF93", pill: "#F1D289", border: "rgba(255,255,255,0.55)", text: sharedPokachipText, glow: "#F1D289" },
+  { id: "peach", heroStart: "#F2D1C0", heroEnd: "#EFC5BE", pill: "#F1CBC0", border: "rgba(255,255,255,0.55)", text: sharedPokachipText, glow: "#F1CBC0" },
+  { id: "sageAqua", heroStart: "#AEDAC8", heroEnd: "#A8D4E2", pill: "#ABD7D5", border: "rgba(255,255,255,0.55)", text: sharedPokachipText, glow: "#ABD7D5" },
+  { id: "lightSage", heroStart: "#D7E6C1", heroEnd: "#C8DEB8", pill: "#D0E2BC", border: "rgba(255,255,255,0.55)", text: sharedPokachipText, glow: "#D0E2BC" },
+  { id: "skyBlue", heroStart: "#A8DCE8", heroEnd: "#B2D4EE", pill: "#ADD8EB", border: "rgba(255,255,255,0.55)", text: sharedPokachipText, glow: "#ADD8EB" },
+  { id: "lilac", heroStart: "#C8B6F0", heroEnd: "#D8BDF4", pill: "#D0BAF2", border: "rgba(255,255,255,0.55)", text: sharedPokachipText, glow: "#D0BAF2" },
+  { id: "blush", heroStart: "#F1C7D3", heroEnd: "#EFB8CF", pill: "#F0C0D1", border: "rgba(255,255,255,0.55)", text: sharedPokachipText, glow: "#F0C0D1" },
+  { id: "warmGray", heroStart: "#E7E3DE", heroEnd: "#DCD8D5", pill: "#E2DEDA", border: "rgba(255,255,255,0.55)", text: sharedPokachipText, glow: "#E2DEDA" },
+  { id: "iceBlue", heroStart: "#C7E5F1", heroEnd: "#BFDCEC", pill: "#C3E1EF", border: "rgba(255,255,255,0.55)", text: sharedPokachipText, glow: "#C3E1EF" },
+  { id: "softMint", heroStart: "#C6E7D9", heroEnd: "#B9E0DD", pill: "#C0E4DB", border: "rgba(255,255,255,0.55)", text: sharedPokachipText, glow: "#C0E4DB" },
+] as const satisfies readonly PokachipPaletteToken[];
 
 export type PokachipColorToken = (typeof pokachipColorTokens)[number];
-export type PokachipColorTokenName = PokachipColorToken["name"];
+export type PokachipPaletteId = PokachipColorToken["id"];
 
-export const pokachipColorMap: Record<string, PokachipColorTokenName> = {
-  글쓰기: "coral-pink",
-  수조: "sky-blue",
-  조명: "butter-yellow",
-  웹앱: "lavender",
-  블렌더: "sky-blue",
-  사진: "sage",
-  유리: "blue-gray",
-  파랑: "sky-blue",
-  임시조각: "neutral-beige",
+export const pokachipColorMap: Record<string, PokachipPaletteId> = {
+  글쓰기: "coralPink",
+  수조: "skyBlue",
+  조명: "butter",
+  웹앱: "periwinkle",
+  블렌더: "skyBlue",
+  사진: "lightSage",
+  유리: "lilac",
+  파랑: "skyBlue",
+  임시조각: "warmGray",
 };
 
 export const temporaryPokachipColor = "rgba(120,112,100,0.18)";
@@ -202,7 +146,7 @@ export function getPokachipColorIndex(value: string): number {
     ([label]) => getPokachipKey(label) === key
   )?.[1];
   if (mappedTokenName) {
-    return pokachipColorTokens.findIndex(({ name }) => name === mappedTokenName);
+    return pokachipColorTokens.findIndex(({ id }) => id === mappedTokenName);
   }
 
   return getPokachipHash(key) % pokachipColorTokens.length;
@@ -213,7 +157,7 @@ export function getPokachipColorToken(value: string): PokachipColorToken {
 }
 
 export function getPokachipColor(value: string): string {
-  return getPokachipColorToken(value).background;
+  return getColorWithAlpha(getPokachipColorToken(value).pill, 0.55);
 }
 
 export function getColorWithAlpha(color: string, alpha: number): string {
@@ -254,14 +198,14 @@ export function getPokachipSmallPillStyle(
   return {
     backgroundColor: isTemporary
       ? temporaryPokachipColor
-      : getColorWithAlpha(token.pillColor, fillAlpha),
+      : getColorWithAlpha(token.pill, fillAlpha),
     color: isTemporary
       ? "rgba(120,112,100,0.64)"
-      : `rgba(50,44,34,${emphasis === "selected" ? 0.68 : 0.64})`,
-    borderColor: "rgba(255,255,255,0.55)",
+      : getColorWithAlpha(token.text, emphasis === "selected" ? 0.68 : 0.64),
+    borderColor: token.border,
     boxShadow: isTemporary
       ? "0 1px 6px 0 rgba(120,112,100,0.12), inset 0 1px 0 0 rgba(255,255,255,0.58)"
-      : `0 1px 6px 0 ${getColorWithAlpha(token.pillColor, shadowAlpha)}, inset 0 1px 0 0 rgba(255,255,255,0.58)`,
+      : `0 1px 6px 0 ${getColorWithAlpha(token.glow, shadowAlpha)}, inset 0 1px 0 0 rgba(255,255,255,0.58)`,
   };
 }
 const stableFallbackCreatedAtBase = Date.UTC(2026, 0, 1, 9, 0, 0);

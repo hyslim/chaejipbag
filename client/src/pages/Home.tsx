@@ -30,12 +30,14 @@ const sourceIconColor = "rgba(120,112,100,0.72)";
 const getInterestStyle = (label: string, count: number) => {
   const token = getPokachipColorToken(label);
   const growthStrength = Math.min(Math.max(count - 5, 0), 5) / 5;
-  const [start, middle, end] = token.heroGradient;
+  const { heroStart, heroEnd } = token;
 
   return {
-    gradient: `linear-gradient(145deg, ${start} 0%, ${middle} 54%, ${end} 100%)`,
-    shadow: `0 8px 18px ${getColorWithAlpha(token.pillColor, 0.14 + growthStrength * 0.02)}, 0 2px 7px ${getColorWithAlpha(token.border, 0.12)}, inset 0 1px 0 rgba(255,255,255,0.24), inset 0 -1px 0 rgba(255,255,255,0.08)`,
-    text: token.text,
+    gradient: `linear-gradient(145deg, ${heroStart} 0%, ${heroEnd} 100%)`,
+    border: "1px solid rgba(255,255,255,0.82)",
+    shadow: `0 8px 22px ${getColorWithAlpha(token.glow, 0.18 + growthStrength * 0.02)}, inset 0 1px 0 rgba(255,255,255,0.04)`,
+    text: "rgba(255,255,255,0.94)",
+    textShadow: "0 1px 2px rgba(80,70,55,0.12)",
   };
 };
 
@@ -581,7 +583,7 @@ export const Home = (): JSX.Element => {
     const token = getPokachipColorToken(pokachip.label);
     return { ...pokachip, token, isTemporary };
   });
-  const topPokachipKey = displayPokachips.map(({ label, count, token }) => `${label}:${count}:${token.name}`).join("|");
+  const topPokachipKey = displayPokachips.map(({ label, count, token }) => `${label}:${count}:${token.id}`).join("|");
   const visibleFragments = selectedChip
     ? fragments.filter((fragment) =>
         (fragment.pokachips ?? []).some(
@@ -1074,11 +1076,11 @@ export const Home = (): JSX.Element => {
                     type="button"
                     onClick={() => selectHomeFilter(interest.label)}
                     className="home-select-none select-none flex h-20 items-center justify-center rounded-[20px] px-2"
-                    style={{ background: interestStyle.gradient, boxShadow: interestStyle.shadow }}
+                    style={{ background: interestStyle.gradient, border: interestStyle.border, boxShadow: interestStyle.shadow }}
                   >
                     <span
                       className="text-[13px] font-medium"
-                      style={{ color: interestStyle.text, fontFamily: "'Pretendard Variable', sans-serif" }}
+                      style={{ color: interestStyle.text, fontFamily: "'Pretendard Variable', sans-serif", textShadow: interestStyle.textShadow }}
                     >
                       {interest.label}
                     </span>
