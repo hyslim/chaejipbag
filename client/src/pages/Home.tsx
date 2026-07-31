@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from "react";
 import { Pin, Search } from "lucide-react";
 import { FragmentSourceIcon } from "@/components/FragmentSourceMeta";
@@ -15,6 +15,10 @@ import { getYouTubeThumbnailUrl } from "@/lib/youtube";
 import { getInstagramUsername, isInstagramUrl } from "@/lib/instagram";
 import { getCardImageHeight, type CardImageHeight } from "@/lib/cardImageHeight";
 import { createFragmentNavigationPath, type FragmentNavigationSource } from "@/lib/fragmentNavigation";
+import { getHeroInterestAnimationKeys } from "@/lib/heroInterestAnimation";
+
+let hasShownHeroInSession = false;
+let previousPokachipCountsInSession: Map<string, number> | null = null;
 
 const IMAGE_SHARE_DELAY_MS = 700;
 
@@ -535,6 +539,7 @@ const HomeEmptyState = ({ title, description }: { title: string; description: st
 );
 
 export const Home = (): JSX.Element => {
+  const prefersReducedMotion = useReducedMotion();
   const { fragments, toggleFragmentPin, deleteFragment } = useFragments();
   const topPokachipScrollRef = useRef<HTMLDivElement | null>(null);
   const topPokachipDragRef = useRef<{ isDragging: boolean; startX: number; scrollLeft: number }>({
@@ -579,6 +584,17 @@ export const Home = (): JSX.Element => {
     .sort((a, b) => b.count - a.count || b.lastUsedAt - a.lastUsedAt)
     .slice(0, 6);
   const interests = interestCandidates.length >= 3 ? interestCandidates : [];
+  const heroAnimationKeys = getHeroInterestAnimationKeys(
+    interests.map(({ label, count }) => ({ key: getPokachipKey(label), count })),
+    previousPokachipCountsInSession,
+    hasShownHeroInSession
+  );
+  const heroAnimationOrder = new Map(
+    interests
+      .map(({ label }) => getPokachipKey(label))
+      .filter((key) => heroAnimationKeys.has(key))
+      .map((key, index) => [key, index])
+  );
   const hasInterests = interests.length >= 3;
   const displayPokachips = topPokachips.map((pokachip) => {
     const isTemporary = isTemporaryPokachip(pokachip.label);
@@ -628,6 +644,13 @@ export const Home = (): JSX.Element => {
   const homeReturnTo = selectedChip ? `/?chip=${encodeURIComponent(selectedChip)}` : "/";
   const homeNavigationSource: FragmentNavigationSource = selectedChip ? "home-filter" : "home";
   const homeSearchReturnTo = `/?search=${encodeURIComponent(searchQuery)}`;
+  useEffect(() => {
+    previousPokachipCountsInSession = new Map(
+      pokachipUsages.map(({ label, count }) => [getPokachipKey(label), count])
+    );
+    if (hasInterests && !isSearchMode) hasShownHeroInSession = true;
+  }, [fragments, hasInterests, isSearchMode]);
+
 
   const replaceHomeUrl = (params: URLSearchParams) => {
     const search = params.toString();
@@ -1072,21 +1095,80 @@ export const Home = (): JSX.Element => {
             <div className="relative z-10 grid grid-cols-3 gap-2">
               {interests.map((interest) => {
                 const interestStyle = getInterestStyle(interest.label, interest.count);
+                const interestKey = getPokachipKey(interest.label);
+                const shouldAnimate = heroAnimationKeys.has(interestKey);
+                const staggerDelay = (heroAnimationOrder.get(interestKey) ?? 0) * 0.04;
                 return (
-                  <button
+                  <motion.button
                     key={interest.label}
                     type="button"
                     onClick={() => selectHomeFilter(interest.label)}
-                    className="home-select-none select-none flex h-20 items-center justify-center rounded-[20px] px-2"
+                    initial={
+                      shouldAnimate
+                        ? prefersReducedMotion
+                          ? { opacity: 0, scale: 0.98 }
+                          : { opacity: 0, scale: 0.92, scaleX: 1, scaleY: 1, y: 8 }
+                        : false
+                    }
+                    animate={
+                      shouldAnimate
+                        ? prefersReducedMotion
+                          ? { opacity: 1, scale: 1 }
+                          : {
+                              opacity: [0, 1, 1, 1, 1, 1, 1],
+                              scale: [0.92, 1.05, 0.98, 1, 1, 1, 1],
+                              scaleX: [1, 1, 1, 1, 1.03, 0.99, 1],
+                              scaleY: [1, 1, 1, 1, 0.97, 1.01, 1],
+                              y: [8, 0, 0, 0, 0, 0, 0],
+                            }
+                        : undefined
+                    }
+                    transition={
+                      shouldAnimate
+                        ? prefersReducedMotion
+                          ? { duration: 0.16, delay: staggerDelay, ease: "easeOut" }
+                          : {
+                              duration: 0.74,
+                              delay: staggerDelay,
+                              times: [0, 0.28, 0.5, 0.68, 0.78, 0.9, 1],
+                              ease: [0.22, 1, 0.36, 1],
+                            }
+                        : undefined
+                    }
+                    className="home-select-none relative flex h-20 select-none items-center justify-center rounded-[20px] px-2"
                     style={{ background: interestStyle.gradient, border: interestStyle.border, boxShadow: interestStyle.shadow }}
                   >
+                    {shouldAnimate && !prefersReducedMotion && (
+                      <>
+                        {[
+                          { className: "-top-1.5 left-3 h-[2px] w-2.5", rotate: -42 },
+                          { className: "-top-2 left-1/2 h-2.5 w-[2px] -translate-x-1/2", rotate: 0 },
+                          { className: "-right-1.5 top-3 h-[2px] w-2.5", rotate: 35 },
+                        ].map((line, lineIndex) => (
+                          <motion.span
+                            key={lineIndex}
+                            aria-hidden="true"
+                            className={`pointer-events-none absolute z-20 rounded-full bg-white/80 shadow-[0_0_4px_rgba(255,255,255,0.28)] ${line.className}`}
+                            style={{ rotate: line.rotate }}
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: [0, 1, 0], scale: [0.8, 1, 0.9] }}
+                            transition={{
+                              duration: 0.22,
+                              delay: staggerDelay + lineIndex * 0.015,
+                              times: [0, 0.35, 1],
+                              ease: "easeOut",
+                            }}
+                          />
+                        ))}
+                      </>
+                    )}
                     <span
-                      className="text-[13px] font-medium"
+                      className="relative z-10 text-[13px] font-medium"
                       style={{ color: interestStyle.text, fontFamily: "'Pretendard Variable', sans-serif", textShadow: interestStyle.textShadow }}
                     >
                       {interest.label}
                     </span>
-                  </button>
+                  </motion.button>
                 );
               })}
             </div>
