@@ -94,6 +94,27 @@ const saveToastStorageKey = "chaejip-save-toast";
 
 const sourceIconColor = "rgba(120,112,100,0.72)";
 
+const getHeroEmphasisColor = (color: string): string => {
+  const hex = color.match(/^#([0-9a-f]{6})$/i)?.[1];
+  if (!hex) return color;
+
+  const [red, green, blue] = [0, 2, 4].map((offset) => parseInt(hex.slice(offset, offset + 2), 16) / 255);
+  const max = Math.max(red, green, blue);
+  const min = Math.min(red, green, blue);
+  const lightness = (max + min) / 2;
+  const delta = max - min;
+  const saturation = delta === 0 ? 0 : delta / (1 - Math.abs(2 * lightness - 1));
+  let hue = 0;
+
+  if (delta !== 0) {
+    if (max === red) hue = 60 * (((green - blue) / delta) % 6);
+    else if (max === green) hue = 60 * ((blue - red) / delta + 2);
+    else hue = 60 * ((red - green) / delta + 4);
+  }
+
+  return `hsl(${Math.round((hue + 360) % 360)} ${Math.min(82, Math.round(saturation * 100) + 10)}% ${Math.max(42, Math.round(lightness * 100) - 20)}%)`;
+};
+
 const getInterestStyle = (label: string, count: number) => {
   const token = getPokachipColorToken(label);
   const growthStrength = Math.min(Math.max(count - 5, 0), 5) / 5;
@@ -105,6 +126,8 @@ const getInterestStyle = (label: string, count: number) => {
     shadow: `0 8px 22px ${getColorWithAlpha(token.glow, 0.14 + growthStrength * 0.02)}, inset 0 1px 0 rgba(255,255,255,0.04)`,
     text: "rgba(255,255,255,0.94)",
     textShadow: "0 1px 2px rgba(80,70,55,0.12)",
+    emphasis: getHeroEmphasisColor(token.glow),
+    emphasisShadow: `0 0 3px ${getColorWithAlpha(token.glow, 0.24)}`,
   };
 };
 
@@ -1256,21 +1279,31 @@ export const Home = (): JSX.Element => {
                     {shouldAnimate && !prefersReducedMotion && (
                       <>
                         {[
-                          { className: "-top-0.5 left-3 h-[2px] w-2.5", rotate: -42 },
-                          { className: "-top-0.5 left-1/2 h-2.5 w-[2px] -translate-x-1/2", rotate: 0 },
-                          { className: "-right-1.5 top-3 h-[2px] w-2.5", rotate: 35 },
+                          { className: "top-px left-3 h-[2px] w-3", rotate: -40, x: -1.5, y: -1.5 },
+                          { className: "-top-0.5 left-1/2 h-3 w-[2px]", rotate: 0, x: 0, y: -2 },
+                          { className: "-right-1.5 top-3 h-[2px] w-[11px]", rotate: 36, x: 2, y: -1 },
                         ].map((line, lineIndex) => (
                           <motion.span
                             key={lineIndex}
                             aria-hidden="true"
-                            className={`pointer-events-none absolute z-20 rounded-full bg-white/80 shadow-[0_0_4px_rgba(255,255,255,0.28)] ${line.className}`}
-                            style={{ rotate: line.rotate }}
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: [0, 1, 0], scale: [0.8, 1, 0.9] }}
+                            className={`pointer-events-none absolute z-20 rounded-full ${line.className}`}
+                            style={{
+                              rotate: line.rotate,
+                              backgroundColor: interestStyle.emphasis,
+                              boxShadow: interestStyle.emphasisShadow,
+                              marginLeft: lineIndex === 1 ? -1 : undefined,
+                            }}
+                            initial={{ opacity: 0, scale: 0.78, x: 0, y: 0 }}
+                            animate={{
+                              opacity: [0, 1, 0],
+                              scale: [0.78, 1.05, 0.9],
+                              x: [0, line.x, line.x * 1.15],
+                              y: [0, line.y, line.y * 1.15],
+                            }}
                             transition={{
-                              duration: 0.22,
-                              delay: staggerDelay + lineIndex * 0.015,
-                              times: [0, 0.35, 1],
+                              duration: 0.25,
+                              delay: staggerDelay + 0.04 + lineIndex * 0.02,
+                              times: [0, 0.38, 1],
                               ease: "easeOut",
                             }}
                           />
