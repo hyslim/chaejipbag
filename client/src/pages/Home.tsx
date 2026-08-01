@@ -127,7 +127,6 @@ const getInterestStyle = (label: string, count: number) => {
     text: "rgba(255,255,255,0.94)",
     textShadow: "0 1px 2px rgba(80,70,55,0.12)",
     emphasis: getHeroEmphasisColor(token.glow),
-    emphasisShadow: `0 0 3px ${getColorWithAlpha(token.glow, 0.24)}`,
   };
 };
 
@@ -1279,9 +1278,9 @@ export const Home = (): JSX.Element => {
                     {shouldAnimate && !prefersReducedMotion && (
                       <>
                         {[
-                          { className: "top-px left-3 h-[2px] w-3", rotate: -40, x: -1.5, y: -1.5 },
-                          { className: "-top-0.5 left-1/2 h-3 w-[2px]", rotate: 0, x: 0, y: -2 },
-                          { className: "-right-1.5 top-3 h-[2px] w-[11px]", rotate: 36, x: 2, y: -1 },
+                          { className: "-top-0.5 left-[5px] h-[7px] w-[3px]", rotate: -18 },
+                          { className: "-top-1 left-[9px] h-2 w-[3px]", rotate: 0 },
+                          { className: "-top-0.5 left-[13px] h-[7px] w-[3px]", rotate: 18 },
                         ].map((line, lineIndex) => (
                           <motion.span
                             key={lineIndex}
@@ -1290,20 +1289,17 @@ export const Home = (): JSX.Element => {
                             style={{
                               rotate: line.rotate,
                               backgroundColor: interestStyle.emphasis,
-                              boxShadow: interestStyle.emphasisShadow,
-                              marginLeft: lineIndex === 1 ? -1 : undefined,
+                              transformOrigin: "50% 100%",
                             }}
-                            initial={{ opacity: 0, scale: 0.78, x: 0, y: 0 }}
+                            initial={{ opacity: 0, scale: 0.72 }}
                             animate={{
-                              opacity: [0, 1, 0],
-                              scale: [0.78, 1.05, 0.9],
-                              x: [0, line.x, line.x * 1.15],
-                              y: [0, line.y, line.y * 1.15],
+                              opacity: [0, 0.88, 0.88, 0],
+                              scale: [0.72, 1.04, 1, 0.9],
                             }}
                             transition={{
-                              duration: 0.25,
-                              delay: staggerDelay + 0.04 + lineIndex * 0.02,
-                              times: [0, 0.38, 1],
+                              duration: 0.22,
+                              delay: staggerDelay + 0.055 + lineIndex * 0.012,
+                              times: [0, 0.28, 0.5, 1],
                               ease: "easeOut",
                             }}
                           />
