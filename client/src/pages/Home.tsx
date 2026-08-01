@@ -17,8 +17,71 @@ import { getCardImageHeight, type CardImageHeight } from "@/lib/cardImageHeight"
 import { createFragmentNavigationPath, type FragmentNavigationSource } from "@/lib/fragmentNavigation";
 import { getHeroInterestAnimationKeys } from "@/lib/heroInterestAnimation";
 
-let hasShownHeroInSession = false;
-let previousPokachipCountsInSession: Map<string, number> | null = null;
+const HERO_ANIMATION_SESSION_KEY = "chaejip-hero-animation-session-v2";
+
+type HeroAnimationSession = {
+  hasShownHero: boolean;
+  previousHeroKeys: string[];
+};
+
+let heroAnimationSession: HeroAnimationSession | null = null;
+
+const getHeroAnimationSession = (): HeroAnimationSession => {
+  if (heroAnimationSession) return heroAnimationSession;
+
+  try {
+    const stored = window.sessionStorage.getItem(HERO_ANIMATION_SESSION_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored) as Partial<HeroAnimationSession>;
+      if (typeof parsed.hasShownHero === "boolean" && Array.isArray(parsed.previousHeroKeys)) {
+        heroAnimationSession = {
+          hasShownHero: parsed.hasShownHero,
+          previousHeroKeys: parsed.previousHeroKeys.filter(
+            (key): key is string => typeof key === "string"
+          ),
+        };
+        return heroAnimationSession;
+      }
+    }
+  } catch {
+    // Session tracking is an enhancement; animation remains safe if storage is unavailable.
+  }
+
+  heroAnimationSession = { hasShownHero: false, previousHeroKeys: [] };
+  return heroAnimationSession;
+};
+
+const saveHeroAnimationSession = (session: HeroAnimationSession): void => {
+  try {
+    window.sessionStorage.setItem(HERO_ANIMATION_SESSION_KEY, JSON.stringify(session));
+  } catch {
+    // Keep the in-memory session fallback when storage is unavailable.
+  }
+};
+
+const heroEntranceInitial = {
+  opacity: 0,
+  scale: 0.92,
+  scaleX: 1,
+  scaleY: 1,
+  y: 8,
+};
+
+const heroEntranceAnimation = {
+  opacity: [0, 1, 1, 1, 1, 1, 1],
+  scale: [0.92, 1.05, 0.98, 1, 1, 1, 1],
+  scaleX: [1, 1, 1, 1, 1.03, 0.99, 1],
+  scaleY: [1, 1, 1, 1, 0.97, 1.01, 1],
+  y: [8, 0, 0, 0, 0, 0, 0],
+};
+
+const heroEntranceFinal = {
+  opacity: 1,
+  scale: 1,
+  scaleX: 1,
+  scaleY: 1,
+  y: 0,
+};
 
 const IMAGE_SHARE_DELAY_MS = 700;
 
@@ -579,21 +642,37 @@ export const Home = (): JSX.Element => {
   const pokachipUsages = Array.from(pokachipUsage.values());
 
   const topPokachips = [...pokachipUsages].sort((a, b) => b.lastUsedAt - a.lastUsedAt);
+  const currentHeroSession = getHeroAnimationSession();
+  const previousHeroKeys = new Set(currentHeroSession.previousHeroKeys);
   const interestCandidates = [...pokachipUsages]
     .filter(({ label, count }) => count >= 5 && !isTemporaryPokachip(label))
-    .sort((a, b) => b.count - a.count || b.lastUsedAt - a.lastUsedAt)
+    .sort((a, b) =>
+      b.count - a.count
+      || Number(previousHeroKeys.has(getPokachipKey(b.label)))
+        - Number(previousHeroKeys.has(getPokachipKey(a.label)))
+      || b.lastUsedAt - a.lastUsedAt
+      || getPokachipKey(a.label).localeCompare(getPokachipKey(b.label), "ko-KR")
+    )
     .slice(0, 6);
   const interests = interestCandidates.length >= 3 ? interestCandidates : [];
-  const heroAnimationKeys = getHeroInterestAnimationKeys(
-    interests.map(({ label, count }) => ({ key: getPokachipKey(label), count })),
-    previousPokachipCountsInSession,
-    hasShownHeroInSession
+  const heroAnimationItems = interests.map(({ label }) => ({ key: getPokachipKey(label) }));
+  const heroKeysSignature = heroAnimationItems.map(({ key }) => key).join("|");
+  const [pendingHeroAnimations, setPendingHeroAnimations] = useState<Map<string, number>>(
+    () => new Map()
   );
-  const heroAnimationOrder = new Map(
-    interests
-      .map(({ label }) => getPokachipKey(label))
-      .filter((key) => heroAnimationKeys.has(key))
-      .map((key, index) => [key, index])
+  const pendingHeroKeys = new Set(pendingHeroAnimations.keys());
+  const heroAnimationKeys = getHeroInterestAnimationKeys(
+    heroAnimationItems,
+    previousHeroKeys,
+    currentHeroSession.hasShownHero,
+    pendingHeroKeys
+  );
+  const newlyDiscoveredHeroKeys = heroAnimationItems
+    .map(({ key }) => key)
+    .filter((key) => heroAnimationKeys.has(key) && !pendingHeroKeys.has(key));
+  const heroAnimationOrder = new Map(pendingHeroAnimations);
+  newlyDiscoveredHeroKeys.forEach(
+    (key, index) => heroAnimationOrder.set(key, index)
   );
   const hasInterests = interests.length >= 3;
   const displayPokachips = topPokachips.map((pokachip) => {
@@ -645,11 +724,36 @@ export const Home = (): JSX.Element => {
   const homeNavigationSource: FragmentNavigationSource = selectedChip ? "home-filter" : "home";
   const homeSearchReturnTo = `/?search=${encodeURIComponent(searchQuery)}`;
   useEffect(() => {
-    previousPokachipCountsInSession = new Map(
-      pokachipUsages.map(({ label, count }) => [getPokachipKey(label), count])
-    );
-    if (hasInterests && !isSearchMode) hasShownHeroInSession = true;
-  }, [fragments, hasInterests, isSearchMode]);
+    if (isSearchMode) return;
+
+    const currentKeys = heroAnimationItems.map(({ key }) => key);
+    const currentKeySet = new Set(currentKeys);
+    setPendingHeroAnimations((previous) => {
+      const next = new Map(
+        [...previous].filter(([key]) => currentKeySet.has(key))
+      );
+      newlyDiscoveredHeroKeys.forEach((key, index) => {
+        if (!next.has(key)) next.set(key, index);
+      });
+
+      const unchanged = next.size === previous.size
+        && [...next].every(([key, order]) => previous.get(key) === order);
+      return unchanged ? previous : next;
+    });
+
+    currentHeroSession.previousHeroKeys = currentKeys;
+    if (hasInterests) currentHeroSession.hasShownHero = true;
+    saveHeroAnimationSession(currentHeroSession);
+  }, [heroKeysSignature, hasInterests, isSearchMode]);
+
+  const completeHeroAnimation = (key: string): void => {
+    setPendingHeroAnimations((previous) => {
+      if (!previous.has(key)) return previous;
+      const next = new Map(previous);
+      next.delete(key);
+      return next;
+    });
+  };
 
 
   const replaceHomeUrl = (params: URLSearchParams) => {
@@ -1099,29 +1203,21 @@ export const Home = (): JSX.Element => {
                 const shouldAnimate = heroAnimationKeys.has(interestKey);
                 const staggerDelay = (heroAnimationOrder.get(interestKey) ?? 0) * 0.04;
                 return (
-                  <motion.button
-                    key={interest.label}
-                    type="button"
-                    onClick={() => selectHomeFilter(interest.label)}
+                  <motion.div
+                    key={interestKey}
                     initial={
                       shouldAnimate
                         ? prefersReducedMotion
                           ? { opacity: 0, scale: 0.98 }
-                          : { opacity: 0, scale: 0.92, scaleX: 1, scaleY: 1, y: 8 }
+                          : heroEntranceInitial
                         : false
                     }
                     animate={
                       shouldAnimate
                         ? prefersReducedMotion
                           ? { opacity: 1, scale: 1 }
-                          : {
-                              opacity: [0, 1, 1, 1, 1, 1, 1],
-                              scale: [0.92, 1.05, 0.98, 1, 1, 1, 1],
-                              scaleX: [1, 1, 1, 1, 1.03, 0.99, 1],
-                              scaleY: [1, 1, 1, 1, 0.97, 1.01, 1],
-                              y: [8, 0, 0, 0, 0, 0, 0],
-                            }
-                        : undefined
+                          : heroEntranceAnimation
+                        : heroEntranceFinal
                     }
                     transition={
                       shouldAnimate
@@ -1133,16 +1229,35 @@ export const Home = (): JSX.Element => {
                               times: [0, 0.28, 0.5, 0.68, 0.78, 0.9, 1],
                               ease: [0.22, 1, 0.36, 1],
                             }
-                        : undefined
+                        : { duration: 0 }
                     }
-                    className="home-select-none relative flex h-20 select-none items-center justify-center rounded-[20px] px-2"
-                    style={{ background: interestStyle.gradient, border: interestStyle.border, boxShadow: interestStyle.shadow }}
+                    onAnimationComplete={
+                      shouldAnimate ? () => completeHeroAnimation(interestKey) : undefined
+                    }
+                    className="relative h-20 overflow-visible"
                   >
+                    <button
+                      type="button"
+                      onClick={() => selectHomeFilter(interest.label)}
+                      className="home-select-none relative flex h-full w-full select-none items-center justify-center overflow-hidden rounded-[20px] px-2"
+                      style={{
+                        background: interestStyle.gradient,
+                        border: interestStyle.border,
+                        boxShadow: interestStyle.shadow,
+                      }}
+                    >
+                      <span
+                        className="relative z-10 text-[13px] font-medium"
+                        style={{ color: interestStyle.text, fontFamily: "'Pretendard Variable', sans-serif", textShadow: interestStyle.textShadow }}
+                      >
+                        {interest.label}
+                      </span>
+                    </button>
                     {shouldAnimate && !prefersReducedMotion && (
                       <>
                         {[
-                          { className: "-top-1.5 left-3 h-[2px] w-2.5", rotate: -42 },
-                          { className: "-top-2 left-1/2 h-2.5 w-[2px] -translate-x-1/2", rotate: 0 },
+                          { className: "-top-0.5 left-3 h-[2px] w-2.5", rotate: -42 },
+                          { className: "-top-0.5 left-1/2 h-2.5 w-[2px] -translate-x-1/2", rotate: 0 },
                           { className: "-right-1.5 top-3 h-[2px] w-2.5", rotate: 35 },
                         ].map((line, lineIndex) => (
                           <motion.span
@@ -1162,13 +1277,7 @@ export const Home = (): JSX.Element => {
                         ))}
                       </>
                     )}
-                    <span
-                      className="relative z-10 text-[13px] font-medium"
-                      style={{ color: interestStyle.text, fontFamily: "'Pretendard Variable', sans-serif", textShadow: interestStyle.textShadow }}
-                    >
-                      {interest.label}
-                    </span>
-                  </motion.button>
+                  </motion.div>
                 );
               })}
             </div>

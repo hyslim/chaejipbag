@@ -1,28 +1,22 @@
 export type HeroInterestAnimationItem = {
   key: string;
-  count: number;
 };
-
-const HERO_INTEREST_THRESHOLD = 5;
 
 export const getHeroInterestAnimationKeys = (
   interests: HeroInterestAnimationItem[],
-  previousCounts: ReadonlyMap<string, number> | null,
-  hasShownHero: boolean
+  previousHeroKeys: ReadonlySet<string>,
+  hasShownHero: boolean,
+  pendingHeroKeys: ReadonlySet<string> = new Set()
 ): Set<string> => {
-  if (!hasShownHero) {
-    return new Set(interests.map(({ key }) => key));
-  }
+  const currentKeys = new Set(interests.map(({ key }) => key));
+  const animationKeys = new Set<string>();
 
-  if (!previousCounts) return new Set();
+  interests.forEach(({ key }) => {
+    if (!hasShownHero || !previousHeroKeys.has(key)) animationKeys.add(key);
+  });
+  pendingHeroKeys.forEach((key) => {
+    if (currentKeys.has(key)) animationKeys.add(key);
+  });
 
-  return new Set(
-    interests
-      .filter(
-        ({ key, count }) =>
-          count >= HERO_INTEREST_THRESHOLD
-          && (previousCounts.get(key) ?? 0) < HERO_INTEREST_THRESHOLD
-      )
-      .map(({ key }) => key)
-  );
+  return animationKeys;
 };
