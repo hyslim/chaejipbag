@@ -94,7 +94,7 @@ const saveToastStorageKey = "chaejip-save-toast";
 
 const sourceIconColor = "rgba(120,112,100,0.72)";
 
-const getHeroEmphasisColor = (color: string): string => {
+const getHeroJellyAccentColor = (color: string): string => {
   const hex = color.match(/^#([0-9a-f]{6})$/i)?.[1];
   if (!hex) return color;
 
@@ -112,7 +112,7 @@ const getHeroEmphasisColor = (color: string): string => {
     else hue = 60 * ((red - green) / delta + 4);
   }
 
-  return `hsl(${Math.round((hue + 360) % 360)} ${Math.min(82, Math.round(saturation * 100) + 10)}% ${Math.max(42, Math.round(lightness * 100) - 20)}%)`;
+  return `hsl(${Math.round((hue + 360) % 360)} ${Math.min(78, Math.round(saturation * 100) + 8)}% ${Math.min(92, Math.round(lightness * 100) + 10)}%)`;
 };
 
 const getInterestStyle = (label: string, count: number) => {
@@ -126,7 +126,7 @@ const getInterestStyle = (label: string, count: number) => {
     shadow: `0 8px 22px ${getColorWithAlpha(token.glow, 0.14 + growthStrength * 0.02)}, inset 0 1px 0 rgba(255,255,255,0.04)`,
     text: "rgba(255,255,255,0.94)",
     textShadow: "0 1px 2px rgba(80,70,55,0.12)",
-    emphasis: getHeroEmphasisColor(token.glow),
+    jellyAccent: getHeroJellyAccentColor(token.glow),
   };
 };
 
@@ -1276,35 +1276,113 @@ export const Home = (): JSX.Element => {
                       </span>
                     </button>
                     {shouldAnimate && !prefersReducedMotion && (
-                      <>
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-0 z-20"
+                        data-hero-jelly-pop
+                      >
+                        <motion.span
+                          aria-hidden="true"
+                          className="absolute h-[11px] w-[14px]"
+                          data-hero-jelly-center
+                          style={{
+                            left: "50%",
+                            top: "30%",
+                            marginLeft: -7,
+                            marginTop: -5.5,
+                            borderRadius: "55% 45% 52% 48% / 48% 56% 44% 52%",
+                            backgroundColor: "rgba(255,255,255,0.62)",
+                          }}
+                          initial={{ opacity: 0, scaleX: 0.4, scaleY: 0.4 }}
+                          animate={{
+                            opacity: [0, 0.82, 0.6, 0],
+                            scaleX: [0.4, 1.15, 0.92, 0.35],
+                            scaleY: [0.4, 0.88, 1.12, 0.35],
+                          }}
+                          transition={{
+                            duration: 0.22,
+                            delay: staggerDelay + 0.095,
+                            times: [0, 0.32, 0.64, 1],
+                            ease: "easeOut",
+                          }}
+                        />
                         {[
-                          { className: "-top-0.5 left-[5px] h-[7px] w-[3px]", rotate: -18 },
-                          { className: "-top-1 left-[9px] h-2 w-[3px]", rotate: 0 },
-                          { className: "-top-0.5 left-[13px] h-[7px] w-[3px]", rotate: 18 },
-                        ].map((line, lineIndex) => (
+                          {
+                            className: "h-1 w-1",
+                            rotate: 0,
+                            tone: "light",
+                            color: "rgba(255,255,255,0.94)",
+                            to: { x: 0, y: -11 },
+                          },
+                          {
+                            className: "h-1 w-[7px]",
+                            rotate: -6,
+                            tone: "accent",
+                            to: { x: -11, y: -6 },
+                          },
+                          {
+                            className: "h-[6px] w-[5px]",
+                            rotate: 6,
+                            tone: "light",
+                            color: "rgba(255,255,255,0.88)",
+                            to: { x: 9, y: -8 },
+                          },
+                          {
+                            className: "h-1 w-[6px]",
+                            rotate: 4,
+                            tone: "accent",
+                            to: { x: 12, y: 0 },
+                          },
+                        ].map((particle, particleIndex) => (
                           <motion.span
-                            key={lineIndex}
+                            key={particleIndex}
                             aria-hidden="true"
-                            className={`pointer-events-none absolute z-20 rounded-full ${line.className}`}
+                            className={`absolute rounded-full ${particle.className}`}
+                            data-hero-jelly-particle
                             style={{
-                              rotate: line.rotate,
-                              backgroundColor: interestStyle.emphasis,
-                              transformOrigin: "50% 100%",
+                              left: "50%",
+                              top: "30%",
+                              marginLeft: particle.className.includes("w-[7px]")
+                                ? -3.5
+                                : particle.className.includes("w-[6px]")
+                                  ? -3
+                                  : particle.className.includes("w-[5px]")
+                                    ? -2.5
+                                    : -2,
+                              marginTop: particle.className.includes("h-[6px]") ? -3 : -2,
+                              rotate: particle.rotate,
+                              backgroundColor:
+                                particle.tone === "accent"
+                                  ? interestStyle.jellyAccent
+                                  : particle.color,
+                              boxShadow:
+                                particle.tone === "light"
+                                  ? "0 1px 1px rgba(80,70,55,0.10)"
+                                  : "none",
                             }}
-                            initial={{ opacity: 0, scale: 0.72 }}
+                            initial={{
+                              opacity: 0,
+                              scaleX: 0.55,
+                              scaleY: 0.55,
+                              x: 0,
+                              y: 0,
+                            }}
                             animate={{
-                              opacity: [0, 0.88, 0.88, 0],
-                              scale: [0.72, 1.04, 1, 0.9],
+                              opacity: [0, 1, 0.82, 0],
+                              scaleX: [0.55, 1.22, 0.96, 0.45],
+                              scaleY: [0.55, 0.86, 1.12, 0.42],
+                              x: [0, particle.to.x, particle.to.x, particle.to.x],
+                              y: [0, particle.to.y, particle.to.y, particle.to.y + 2],
                             }}
                             transition={{
-                              duration: 0.22,
-                              delay: staggerDelay + 0.055 + lineIndex * 0.012,
-                              times: [0, 0.28, 0.5, 1],
+                              duration: 0.3,
+                              delay: staggerDelay + 0.105 + particleIndex * 0.018,
+                              times: [0, 0.28, 0.62, 1],
                               ease: "easeOut",
                             }}
                           />
                         ))}
-                      </>
+                      </span>
                     )}
                   </motion.div>
                 );
