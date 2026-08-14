@@ -94,27 +94,6 @@ const saveToastStorageKey = "chaejip-save-toast";
 
 const sourceIconColor = "rgba(120,112,100,0.72)";
 
-const getHeroJellyAccentColor = (color: string): string => {
-  const hex = color.match(/^#([0-9a-f]{6})$/i)?.[1];
-  if (!hex) return color;
-
-  const [red, green, blue] = [0, 2, 4].map((offset) => parseInt(hex.slice(offset, offset + 2), 16) / 255);
-  const max = Math.max(red, green, blue);
-  const min = Math.min(red, green, blue);
-  const lightness = (max + min) / 2;
-  const delta = max - min;
-  const saturation = delta === 0 ? 0 : delta / (1 - Math.abs(2 * lightness - 1));
-  let hue = 0;
-
-  if (delta !== 0) {
-    if (max === red) hue = 60 * (((green - blue) / delta) % 6);
-    else if (max === green) hue = 60 * ((blue - red) / delta + 2);
-    else hue = 60 * ((red - green) / delta + 4);
-  }
-
-  return `hsl(${Math.round((hue + 360) % 360)} ${Math.min(78, Math.round(saturation * 100) + 8)}% ${Math.min(92, Math.round(lightness * 100) + 10)}%)`;
-};
-
 const getInterestStyle = (label: string, count: number) => {
   const token = getPokachipColorToken(label);
   const growthStrength = Math.min(Math.max(count - 5, 0), 5) / 5;
@@ -126,7 +105,6 @@ const getInterestStyle = (label: string, count: number) => {
     shadow: `0 8px 22px ${getColorWithAlpha(token.glow, 0.14 + growthStrength * 0.02)}, inset 0 1px 0 rgba(255,255,255,0.04)`,
     text: "rgba(255,255,255,0.94)",
     textShadow: "0 1px 2px rgba(80,70,55,0.12)",
-    jellyAccent: getHeroJellyAccentColor(token.glow),
   };
 };
 
@@ -1275,107 +1253,6 @@ export const Home = (): JSX.Element => {
                         {interest.label}
                       </span>
                     </button>
-                    {shouldAnimate && !prefersReducedMotion && (
-                      <span
-                        aria-hidden="true"
-                        className="pointer-events-none absolute inset-0 z-20"
-                        data-hero-jelly-pop
-                      >
-                        <motion.span
-                          aria-hidden="true"
-                          className="absolute h-5 w-[22px]"
-                          data-hero-jelly-center
-                          style={{
-                            left: "50%",
-                            top: "20%",
-                            marginLeft: -11,
-                            marginTop: -10,
-                            borderRadius: "55% 45% 52% 48% / 48% 56% 44% 52%",
-                            backgroundColor: "rgba(255,252,244,0.94)",
-                            border: "1px solid rgba(112,96,72,0.14)",
-                            boxShadow: "0 1px 1px rgba(80,70,55,0.14)",
-                          }}
-                          initial={{ opacity: 0, scaleX: 0.4, scaleY: 0.4 }}
-                          animate={{
-                            opacity: [0, 0.96, 0.9, 0],
-                            scaleX: [0.4, 1.26, 0.96, 0.32],
-                            scaleY: [0.4, 0.9, 1.12, 0.32],
-                          }}
-                          transition={{
-                            duration: 0.25,
-                            delay: staggerDelay + 0.1,
-                            times: [0, 0.34, 0.66, 1],
-                            ease: "easeOut",
-                          }}
-                        />
-                        {[
-                          {
-                            size: { width: 5, height: 5 },
-                            rotate: 0,
-                            tone: "light",
-                            color: "rgba(255,252,244,0.94)",
-                            to: { x: 0, y: -10 },
-                          },
-                          {
-                            size: { width: 8, height: 5 },
-                            rotate: -4,
-                            tone: "accent",
-                            to: { x: -11, y: -5 },
-                          },
-                          {
-                            size: { width: 6, height: 7 },
-                            rotate: 3,
-                            tone: "light",
-                            color: "rgba(255,252,244,0.9)",
-                            to: { x: 10, y: -7 },
-                          },
-                        ].map((particle, particleIndex) => (
-                          <motion.span
-                            key={particleIndex}
-                            aria-hidden="true"
-                            className="absolute rounded-full"
-                            data-hero-jelly-particle
-                            style={{
-                              left: "50%",
-                              top: "20%",
-                              width: particle.size.width,
-                              height: particle.size.height,
-                              marginLeft: -particle.size.width / 2,
-                              marginTop: -particle.size.height / 2,
-                              rotate: particle.rotate,
-                              backgroundColor:
-                                particle.tone === "accent"
-                                  ? interestStyle.jellyAccent
-                                  : particle.color,
-                              boxShadow:
-                                particle.tone === "light"
-                                  ? "0 1px 1px rgba(80,70,55,0.10)"
-                                  : "none",
-                            }}
-                            initial={{
-                              opacity: 0,
-                              scaleX: 0.6,
-                              scaleY: 0.6,
-                              x: 0,
-                              y: 0,
-                            }}
-                            animate={{
-                              opacity: [0, 0.94, 0.78, 0],
-                              scaleX: [0.6, 1.2, 0.96, 0.4],
-                              scaleY: [0.6, 0.88, 1.1, 0.38],
-                              x: [0, particle.to.x, particle.to.x, particle.to.x],
-                              y: [0, particle.to.y, particle.to.y, particle.to.y + 2],
-                            }}
-                            transition={{
-                              duration: 0.27,
-                              delay: staggerDelay + 0.145 + particleIndex * 0.012,
-                              times: [0, 0.3, 0.62, 1],
-                              ease: "easeOut",
-                            }}
-                          />
-                        ))}
-                      </span>
-                    )}
                   </motion.div>
                 );
               })}
