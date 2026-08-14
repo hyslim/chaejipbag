@@ -6,6 +6,7 @@ import { useFragments } from "@/hooks/useFragments";
 import { getYouTubeThumbnailUrl, getYouTubeVideoId } from "@/lib/youtube";
 import { getInstagramSuggestedTitle, isInstagramUrl } from "@/lib/instagram";
 import { AutoGrowingSingleLineTextarea, normalizeSingleLineText } from "@/components/AutoGrowingSingleLineTextarea";
+import { navigateAfterSuccessfulQuickSave } from "@/lib/quickSaveNavigation";
 
 const urlPattern = /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/i;
 const trailingUrlPunctuationPattern = /[),.;!?]+$/;
@@ -562,7 +563,7 @@ export const QuickSave = () => {
 
     sessionStorage.setItem("chaejip-save-toast", "1");
     sessionStorage.setItem("chaejip-home-reset-view", "1");
-    navigate("/");
+    navigateAfterSuccessfulQuickSave(navigate);
   };
 
   return (
