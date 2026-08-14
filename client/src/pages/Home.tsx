@@ -1283,73 +1283,65 @@ export const Home = (): JSX.Element => {
                       >
                         <motion.span
                           aria-hidden="true"
-                          className="absolute h-[11px] w-[14px]"
+                          className="absolute h-5 w-[22px]"
                           data-hero-jelly-center
                           style={{
                             left: "50%",
-                            top: "30%",
-                            marginLeft: -7,
-                            marginTop: -5.5,
+                            top: "20%",
+                            marginLeft: -11,
+                            marginTop: -10,
                             borderRadius: "55% 45% 52% 48% / 48% 56% 44% 52%",
-                            backgroundColor: "rgba(255,255,255,0.62)",
+                            backgroundColor: "rgba(255,252,244,0.94)",
+                            border: "1px solid rgba(112,96,72,0.14)",
+                            boxShadow: "0 1px 1px rgba(80,70,55,0.14)",
                           }}
                           initial={{ opacity: 0, scaleX: 0.4, scaleY: 0.4 }}
                           animate={{
-                            opacity: [0, 0.82, 0.6, 0],
-                            scaleX: [0.4, 1.15, 0.92, 0.35],
-                            scaleY: [0.4, 0.88, 1.12, 0.35],
+                            opacity: [0, 0.96, 0.9, 0],
+                            scaleX: [0.4, 1.26, 0.96, 0.32],
+                            scaleY: [0.4, 0.9, 1.12, 0.32],
                           }}
                           transition={{
-                            duration: 0.22,
-                            delay: staggerDelay + 0.095,
-                            times: [0, 0.32, 0.64, 1],
+                            duration: 0.25,
+                            delay: staggerDelay + 0.1,
+                            times: [0, 0.34, 0.66, 1],
                             ease: "easeOut",
                           }}
                         />
                         {[
                           {
-                            className: "h-1 w-1",
+                            size: { width: 5, height: 5 },
                             rotate: 0,
                             tone: "light",
-                            color: "rgba(255,255,255,0.94)",
-                            to: { x: 0, y: -11 },
+                            color: "rgba(255,252,244,0.94)",
+                            to: { x: 0, y: -10 },
                           },
                           {
-                            className: "h-1 w-[7px]",
-                            rotate: -6,
+                            size: { width: 8, height: 5 },
+                            rotate: -4,
                             tone: "accent",
-                            to: { x: -11, y: -6 },
+                            to: { x: -11, y: -5 },
                           },
                           {
-                            className: "h-[6px] w-[5px]",
-                            rotate: 6,
+                            size: { width: 6, height: 7 },
+                            rotate: 3,
                             tone: "light",
-                            color: "rgba(255,255,255,0.88)",
-                            to: { x: 9, y: -8 },
-                          },
-                          {
-                            className: "h-1 w-[6px]",
-                            rotate: 4,
-                            tone: "accent",
-                            to: { x: 12, y: 0 },
+                            color: "rgba(255,252,244,0.9)",
+                            to: { x: 10, y: -7 },
                           },
                         ].map((particle, particleIndex) => (
                           <motion.span
                             key={particleIndex}
                             aria-hidden="true"
-                            className={`absolute rounded-full ${particle.className}`}
+                            className="absolute rounded-full"
                             data-hero-jelly-particle
                             style={{
                               left: "50%",
-                              top: "30%",
-                              marginLeft: particle.className.includes("w-[7px]")
-                                ? -3.5
-                                : particle.className.includes("w-[6px]")
-                                  ? -3
-                                  : particle.className.includes("w-[5px]")
-                                    ? -2.5
-                                    : -2,
-                              marginTop: particle.className.includes("h-[6px]") ? -3 : -2,
+                              top: "20%",
+                              width: particle.size.width,
+                              height: particle.size.height,
+                              marginLeft: -particle.size.width / 2,
+                              marginTop: -particle.size.height / 2,
                               rotate: particle.rotate,
                               backgroundColor:
                                 particle.tone === "accent"
@@ -1362,22 +1354,22 @@ export const Home = (): JSX.Element => {
                             }}
                             initial={{
                               opacity: 0,
-                              scaleX: 0.55,
-                              scaleY: 0.55,
+                              scaleX: 0.6,
+                              scaleY: 0.6,
                               x: 0,
                               y: 0,
                             }}
                             animate={{
-                              opacity: [0, 1, 0.82, 0],
-                              scaleX: [0.55, 1.22, 0.96, 0.45],
-                              scaleY: [0.55, 0.86, 1.12, 0.42],
+                              opacity: [0, 0.94, 0.78, 0],
+                              scaleX: [0.6, 1.2, 0.96, 0.4],
+                              scaleY: [0.6, 0.88, 1.1, 0.38],
                               x: [0, particle.to.x, particle.to.x, particle.to.x],
                               y: [0, particle.to.y, particle.to.y, particle.to.y + 2],
                             }}
                             transition={{
-                              duration: 0.3,
-                              delay: staggerDelay + 0.105 + particleIndex * 0.018,
-                              times: [0, 0.28, 0.62, 1],
+                              duration: 0.27,
+                              delay: staggerDelay + 0.145 + particleIndex * 0.012,
+                              times: [0, 0.3, 0.62, 1],
                               ease: "easeOut",
                             }}
                           />
